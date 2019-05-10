@@ -7,7 +7,7 @@ command = 'python {}{}Tools{}i18n{}pygettext.py -d labelme ../labelme/*'.format(
 
 os.system(command)
 
-pot_file = '../locale/labelme.pot'
+pot_file = '../labelme/locale/labelme.pot'
 if os.path.isfile(pot_file):
     os.remove(pot_file)
 os.rename('labelme.pot', pot_file)

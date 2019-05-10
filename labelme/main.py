@@ -3,6 +3,7 @@ import codecs
 import logging
 import os
 import sys
+import gettext
 
 from qtpy import QtWidgets
 
@@ -130,6 +131,15 @@ def _main():
     output = config_from_args.pop('output')
     config_file = config_from_args.pop('config_file')
     config = get_config(config_from_args, config_file)
+
+    # localization
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    locale_dir = os.path.join(current_path, 'locale')
+    if os.path.isfile(os.path.join(locale_dir, config['language'], 'LC_MESSAGES', 'labelme.po')):
+        lang = gettext.translation('labelme', localedir=locale_dir, languages=[config['language']])
+        lang.install()
+    else:
+        gettext.install('labelme')
 
     if not config['labels'] and config['validate_label']:
         logger.error('--labels must be specified with --validatelabel or '
