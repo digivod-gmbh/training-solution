@@ -188,7 +188,7 @@ class MainWindow(QtWidgets.QMainWindow):
         open_ = action('&Open', self.openFile, shortcuts['open'], 'open',
                        'Open image or label file')
         opendir = action('&Open Dir', self.openDirDialog,
-                         shortcuts['open_dir'], 'open', u'Open Dir')
+                         shortcuts['open_dir'], 'dir', u'Open Dir')
         export = action('&Export', self.exportDialog,
                          shortcuts['export'], 'export', u'Export')
         training = action('&Training', self.trainingDialog,
@@ -227,14 +227,14 @@ class MainWindow(QtWidgets.QMainWindow):
             '&Change Output Dir',
             slot=self.changeOutputDirDialog,
             shortcut=shortcuts['save_to'],
-            icon='open',
+            icon='dir',
             tip=u'Change where annotations are loaded/saved'
         )
 
         saveAuto = action(
             text='Save &Automatically',
             slot=lambda x: self.actions.saveAuto.setChecked(x),
-            icon='save',
+            icon='save-auto',
             tip='Save automatically',
             checkable=True,
             enabled=True,
@@ -758,7 +758,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def about(self):
         mb = QtWidgets.QMessageBox
-        msg = "{}\nA ".format(__appname__)
+        msg = '<h1>{}</h1>An easy-to-use tool for training of object detection networks<br><br><i>This software uses icons from <a href="https://icons8.com/">icons8</a></i>'.format(__appname__)
         mb.about(self, 'About', msg)
 
     def toggleAddPointEnabled(self, enabled):
