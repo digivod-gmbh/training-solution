@@ -4,6 +4,8 @@ instance_label_auto_increment: true
 store_data: true
 keep_prev: false
 logger_level: info
+window_width: 1350
+window_height: 850
 
 flags: null
 labels: null
@@ -51,6 +53,9 @@ shortcuts:
   save_as: Ctrl+Shift+S
   save_to: null
   delete_file: Ctrl+Delete
+
+  export: Ctrl+Shift+E
+  training: Ctrl+Shift+T
 
   open_next: [D, Ctrl+Shift+D]
   open_prev: [A, Ctrl+Shift+A]

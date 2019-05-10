@@ -29,6 +29,9 @@ from labelme.widgets import LabelQListWidget
 from labelme.widgets import ToolBar
 from labelme.widgets import ZoomWidget
 
+from windows import ExportWindow
+from windows import TrainingWindow
+
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -186,6 +189,10 @@ class MainWindow(QtWidgets.QMainWindow):
                        'Open image or label file')
         opendir = action('&Open Dir', self.openDirDialog,
                          shortcuts['open_dir'], 'open', u'Open Dir')
+        export = action('&Export', self.exportDialog,
+                         shortcuts['export'], 'export', u'Export')
+        training = action('&Training', self.trainingDialog,
+                         shortcuts['training'], 'training', u'Training')
         openNextImg = action(
             '&Next Image',
             self.openNextImg,
@@ -330,6 +337,9 @@ class MainWindow(QtWidgets.QMainWindow):
         help = action('&Tutorial', self.tutorial, icon='help',
                       tip='Show tutorial page')
 
+        about = action('&About', self.about,
+                      tip='Show about page')
+
         zoom = QtWidgets.QWidgetAction(self)
         zoom.setDefaultWidget(self.zoomWidget)
         self.zoomWidget.setWhatsThis(
@@ -426,7 +436,7 @@ class MainWindow(QtWidgets.QMainWindow):
             fitWindow=fitWindow, fitWidth=fitWidth,
             zoomActions=zoomActions,
             openNextImg=openNextImg, openPrevImg=openPrevImg,
-            fileMenuActions=(open_, opendir, save, saveAs, close, quit),
+            fileMenuActions=(open_, opendir, save, saveAs, export, training, close, quit),
             tool=(),
             editMenu=(edit, copy, delete, None, undo, undoLastPoint,
                       None, color1, color2, None, toggle_keep_prev_mode),
@@ -483,6 +493,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 save,
                 saveAs,
                 saveAuto,
+                export,
+                training,
                 changeOutputDir,
                 close,
                 deleteFile,
@@ -490,7 +502,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 quit,
             ),
         )
-        utils.addActions(self.menus.help, (help,))
+        utils.addActions(self.menus.help, (
+            help,
+            about,
+            ))
         utils.addActions(
             self.menus.view,
             (
@@ -534,6 +549,8 @@ class MainWindow(QtWidgets.QMainWindow):
             openNextImg,
             openPrevImg,
             save,
+            export,
+            training,
             deleteFile,
             None,
             createMode,
@@ -586,7 +603,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings = QtCore.QSettings('labelme', 'labelme')
         # FIXME: QSettings.value can return None on PyQt4
         self.recentFiles = self.settings.value('recentFiles', []) or []
-        size = self.settings.value('window/size', QtCore.QSize(600, 500))
+        size = self.settings.value('window/size', QtCore.QSize(config['window_width'], config['window_height']))
         position = self.settings.value('window/position', QtCore.QPoint(0, 0))
         self.resize(size)
         self.move(position)
@@ -735,8 +752,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
 
     def tutorial(self):
-        url = 'https://github.com/wkentaro/labelme/tree/master/examples/tutorial'  # NOQA
-        webbrowser.open(url)
+        mb = QtWidgets.QMessageBox
+        msg = 'Tutorial not available yet'
+        mb.information(self, 'Tutorial', msg)
+
+    def about(self):
+        mb = QtWidgets.QMessageBox
+        msg = "{}\nA ".format(__appname__)
+        mb.about(self, 'About', msg)
 
     def toggleAddPointEnabled(self, enabled):
         self.actions.addPoint.setEnabled(enabled)
@@ -1553,6 +1576,14 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QFileDialog.ShowDirsOnly |
             QtWidgets.QFileDialog.DontResolveSymlinks))
         self.importDirImages(targetDirPath)
+
+    def exportDialog(self):
+        self.exportWindow = ExportWindow()
+        self.exportWindow.show()
+
+    def trainingDialog(self):
+        self.trainingWindow = TrainingWindow()
+        self.trainingWindow.show()
 
     @property
     def imageList(self):
