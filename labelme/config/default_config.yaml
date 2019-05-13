@@ -4,6 +4,7 @@ instance_label_auto_increment: true
 store_data: true
 keep_prev: false
 logger_level: info
+language: de_DE
 window_width: 1350
 window_height: 850
 
