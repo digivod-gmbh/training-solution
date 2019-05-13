@@ -89,6 +89,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelList = LabelQListWidget()
         self.lastOpenDir = None
 
+        """
         self.flag_dock = self.flag_widget = None
         self.flag_dock = QtWidgets.QDockWidget('Flags', self)
         self.flag_dock.setObjectName('Flags')
@@ -97,6 +98,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.loadFlags({k: False for k in config['flags']})
         self.flag_dock.setWidget(self.flag_widget)
         self.flag_widget.itemChanged.connect(self.setDirty)
+        """
 
         self.labelList.itemActivated.connect(self.labelSelectionChanged)
         self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
@@ -164,7 +166,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(scrollArea)
 
         features = QtWidgets.QDockWidget.DockWidgetFeatures()
-        for dock in ['flag_dock', 'label_dock', 'shape_dock', 'file_dock']:
+        for dock in ['label_dock', 'shape_dock', 'file_dock']: # flag_dock removed
             if self._config[dock]['closable']:
                 features = features | QtWidgets.QDockWidget.DockWidgetClosable
             if self._config[dock]['floatable']:
@@ -175,7 +177,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if self._config[dock]['show'] is False:
                 getattr(self, dock).setVisible(False)
 
-        self.addDockWidget(Qt.RightDockWidgetArea, self.flag_dock)
+        #self.addDockWidget(Qt.RightDockWidgetArea, self.flag_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.label_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.shape_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.file_dock)
@@ -509,7 +511,7 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(
             self.menus.view,
             (
-                self.flag_dock.toggleViewAction(),
+                #self.flag_dock.toggleViewAction(),
                 self.label_dock.toggleViewAction(),
                 self.shape_dock.toggleViewAction(),
                 self.file_dock.toggleViewAction(),
@@ -546,8 +548,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.tool = (
             open_,
             opendir,
-            openNextImg,
             openPrevImg,
+            openNextImg,
             save,
             export,
             training,
