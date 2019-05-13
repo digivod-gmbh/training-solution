@@ -82,6 +82,8 @@ class LabelFile(object):
             )
             lineColor = data['lineColor']
             fillColor = data['fillColor']
+            imageWidth = data.get('imageWidth')
+            imageHeight = data.get('imageHeight')
             shapes = (
                 (
                     s['label'],
@@ -108,6 +110,8 @@ class LabelFile(object):
         self.lineColor = lineColor
         self.fillColor = fillColor
         self.filename = filename
+        self.imageWidth = imageWidth
+        self.imageHeight = imageHeight
         self.otherData = otherData
 
     @staticmethod

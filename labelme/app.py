@@ -56,6 +56,8 @@ class MainWindow(QtWidgets.QMainWindow):
         output_file=None,
         output_dir=None,
     ):
+        self.here = osp.dirname(osp.abspath(__file__))
+
         if output is not None:
             logger.warning(
                 'argument output is deprecated, use output_file instead'
@@ -191,9 +193,9 @@ class MainWindow(QtWidgets.QMainWindow):
         opendir = action(_('&Open Dir'), self.openDirDialog,
                          shortcuts['open_dir'], 'dir', _(u'Open Dir'))
         export = action(_('&Export'), self.exportDialog,
-                         shortcuts['export'], 'export', _(u'Export'), enabled=False)
+                         shortcuts['export'], 'export', _(u'Export'), enabled=True)
         training = action(_('&Training'), self.trainingDialog,
-                         shortcuts['training'], 'training', _(u'Training'), enabled=False)
+                         shortcuts['training'], 'training', _(u'Training'), enabled=True)
         openNextImg = action(
             _('&Next Image'),
             self.openNextImg,
@@ -680,7 +682,7 @@ class MainWindow(QtWidgets.QMainWindow):
             label_file = osp.splitext(self.imagePath)[0] + '.json'
             if self.output_dir:
                 label_file_without_path = osp.basename(label_file)
-                label_file = osp.join(self.output_dir, label_file_without_path)
+                label_file = osp.normpath(osp.join(self.output_dir, label_file_without_path))
             self.saveLabels(label_file)
             return
         self.dirty = True
@@ -1156,7 +1158,7 @@ class MainWindow(QtWidgets.QMainWindow):
         label_file = osp.splitext(filename)[0] + '.json'
         if self.output_dir:
             label_file_without_path = osp.basename(label_file)
-            label_file = osp.join(self.output_dir, label_file_without_path)
+            label_file = osp.normpath(osp.join(self.output_dir, label_file_without_path))
         if QtCore.QFile.exists(label_file) and \
                 LabelFile.is_label_file(label_file):
             try:
@@ -1407,13 +1409,13 @@ class MainWindow(QtWidgets.QMainWindow):
         dlg.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, False)
         basename = osp.basename(osp.splitext(self.filename)[0])
         if self.output_dir:
-            default_labelfile_name = osp.join(
+            default_labelfile_name = osp.normpath(osp.join(
                 self.output_dir, basename + LabelFile.suffix
-            )
+            ))
         else:
-            default_labelfile_name = osp.join(
+            default_labelfile_name = osp.normpath(osp.join(
                 self.currentPath(), basename + LabelFile.suffix
-            )
+            ))
         filename = dlg.getSaveFileName(
             self, 'Choose File', default_labelfile_name,
             'Label files (*%s)' % LabelFile.suffix)
@@ -1580,11 +1582,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.importDirImages(targetDirPath)
 
     def exportDialog(self):
-        self.exportWindow = ExportWindow()
+        self.exportWindow = ExportWindow(self)
         self.exportWindow.show()
 
     def trainingDialog(self):
-        self.trainingWindow = TrainingWindow()
+        self.trainingWindow = TrainingWindow(self)
         self.trainingWindow.show()
 
     @property
@@ -1598,8 +1600,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def importDirImages(self, dirpath, pattern=None, load=True):
         self.actions.openNextImg.setEnabled(True)
         self.actions.openPrevImg.setEnabled(True)
-        self.actions.export.setEnabled(True)
-        self.actions.training.setEnabled(True)
 
         if not self.mayContinue() or not dirpath:
             return
@@ -1613,7 +1613,7 @@ class MainWindow(QtWidgets.QMainWindow):
             label_file = osp.splitext(filename)[0] + '.json'
             if self.output_dir:
                 label_file_without_path = osp.basename(label_file)
-                label_file = osp.join(self.output_dir, label_file_without_path)
+                label_file = osp.normpath(osp.join(self.output_dir, label_file_without_path))
             item = QtWidgets.QListWidgetItem(filename)
             item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
             if QtCore.QFile.exists(label_file) and \
@@ -1632,7 +1632,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for root, dirs, files in os.walk(folderPath):
             for file in files:
                 if file.lower().endswith(tuple(extensions)):
-                    relativePath = osp.join(root, file)
+                    relativePath = osp.normpath(osp.join(root, file))
                     images.append(relativePath)
         images.sort(key=lambda x: x.lower())
         return images
