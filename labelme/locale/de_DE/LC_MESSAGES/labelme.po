@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2019-05-10 13:12+0200\n"
-"PO-Revision-Date: 2019-05-10 13:14+0200\n"
+"PO-Revision-Date: 2019-05-13 09:18+0200\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -23,7 +23,7 @@ msgstr ""
 
 #: ../labelme\app.py:106
 msgid "Polygon Labels"
-msgstr ""
+msgstr "Annotationen"
 
 #: ../labelme\app.py:112
 msgid "Select label to start annotating for it. Press 'Esc' to deselect."
@@ -31,15 +31,15 @@ msgstr ""
 
 #: ../labelme\app.py:118
 msgid "Label List"
-msgstr ""
+msgstr "Labels"
 
 #: ../labelme\app.py:123
 msgid "Search Filename"
-msgstr ""
+msgstr "Datei suchen"
 
 #: ../labelme\app.py:134
 msgid "File List"
-msgstr ""
+msgstr "Dateien"
 
 #: ../labelme\app.py:184
 msgid "&Quit"
@@ -47,7 +47,7 @@ msgstr "Beenden"
 
 #: ../labelme\app.py:185
 msgid "Quit application"
-msgstr ""
+msgstr "Beenden"
 
 #: ../labelme\app.py:186
 msgid "&Open"
@@ -63,7 +63,7 @@ msgstr "Ordner öffnen"
 
 #: ../labelme\app.py:189
 msgid "Open Dir"
-msgstr ""
+msgstr "Ordner öffnen"
 
 #: ../labelme\app.py:191
 msgid "&Next Image"
@@ -155,7 +155,7 @@ msgstr ""
 
 #: ../labelme\app.py:256
 msgid "Create Polygons"
-msgstr ""
+msgstr "Polygon erstellen"
 
 #: ../labelme\app.py:260
 msgid "Start drawing polygons"
@@ -163,7 +163,7 @@ msgstr ""
 
 #: ../labelme\app.py:264
 msgid "Create Rectangle"
-msgstr ""
+msgstr "Rechteck erstellen"
 
 #: ../labelme\app.py:268
 msgid "Start drawing rectangles"
@@ -171,7 +171,7 @@ msgstr ""
 
 #: ../labelme\app.py:272
 msgid "Create Circle"
-msgstr ""
+msgstr "Kreis  erstellen"
 
 #: ../labelme\app.py:276
 msgid "Start drawing circles"
@@ -179,7 +179,7 @@ msgstr ""
 
 #: ../labelme\app.py:280
 msgid "Create Line"
-msgstr ""
+msgstr "Linie erstellen"
 
 #: ../labelme\app.py:284
 msgid "Start drawing lines"
@@ -187,7 +187,7 @@ msgstr ""
 
 #: ../labelme\app.py:288
 msgid "Create Point"
-msgstr ""
+msgstr "Punkt erstellen"
 
 #: ../labelme\app.py:292
 msgid "Start drawing points"
@@ -195,7 +195,7 @@ msgstr ""
 
 #: ../labelme\app.py:296
 msgid "Create LineStrip"
-msgstr ""
+msgstr "LineStrip erstellen"
 
 #: ../labelme\app.py:300
 msgid "Start drawing linestrip. Ctrl+LeftClick ends creation."
@@ -203,7 +203,7 @@ msgstr ""
 
 #: ../labelme\app.py:303
 msgid "Edit Polygons"
-msgstr ""
+msgstr "Polygon bearbeiten"
 
 #: ../labelme\app.py:305
 msgid "Move and edit polygons"
@@ -211,15 +211,15 @@ msgstr ""
 
 #: ../labelme\app.py:307
 msgid "Delete Polygon"
-msgstr ""
+msgstr "Polygon löschen"
 
 #: ../labelme\app.py:309
 msgid "Delete"
-msgstr ""
+msgstr "Löschen"
 
 #: ../labelme\app.py:310
 msgid "Duplicate Polygon"
-msgstr ""
+msgstr "Polygon duplizieren"
 
 #: ../labelme\app.py:312
 msgid "Create a duplicate of the selected polygon"
@@ -243,7 +243,7 @@ msgstr ""
 
 #: ../labelme\app.py:321
 msgid "Undo"
-msgstr ""
+msgstr "Rückgängig"
 
 #: ../labelme\app.py:322
 msgid "Undo last add and edit of shape"
@@ -284,7 +284,7 @@ msgstr ""
 
 #: ../labelme\app.py:350
 msgid "Zoom &In"
-msgstr ""
+msgstr "Zoom +"
 
 #: ../labelme\app.py:352
 msgid "Increase zoom level"
@@ -292,7 +292,7 @@ msgstr ""
 
 #: ../labelme\app.py:353
 msgid "&Zoom Out"
-msgstr ""
+msgstr "Zoom -"
 
 #: ../labelme\app.py:356
 msgid "&Original size"
@@ -300,11 +300,11 @@ msgstr ""
 
 #: ../labelme\app.py:359
 msgid "Zoom to original size"
-msgstr ""
+msgstr "Originalgröße"
 
 #: ../labelme\app.py:360
 msgid "&Fit Window"
-msgstr ""
+msgstr "Zoom Fenster"
 
 #: ../labelme\app.py:362
 msgid "Zoom follows window size"
@@ -312,7 +312,7 @@ msgstr ""
 
 #: ../labelme\app.py:364
 msgid "Fit &Width"
-msgstr ""
+msgstr "Zoom Breite"
 
 #: ../labelme\app.py:366
 msgid "Zoom follows window width"
@@ -320,7 +320,7 @@ msgstr ""
 
 #: ../labelme\app.py:380
 msgid "&Edit Label"
-msgstr ""
+msgstr "Label bearbeiten"
 
 #: ../labelme\app.py:381
 msgid "Modify the label of the selected polygon"
@@ -352,23 +352,23 @@ msgstr ""
 
 #: ../labelme\app.py:468
 msgid "&File"
-msgstr ""
+msgstr "Datei"
 
 #: ../labelme\app.py:469
 msgid "&Edit"
-msgstr ""
+msgstr "Bearbeiten"
 
 #: ../labelme\app.py:470
 msgid "&View"
-msgstr ""
+msgstr "Ansicht"
 
 #: ../labelme\app.py:471
 msgid "&Help"
-msgstr ""
+msgstr "Hilfe"
 
 #: ../labelme\app.py:472
 msgid "Open &Recent"
-msgstr ""
+msgstr "Zuletzt geöffnet"
 
 #: ../labelme\app.py:525
 msgid "&Copy here"
@@ -380,11 +380,11 @@ msgstr ""
 
 #: ../labelme\app.py:530
 msgid "Tools"
-msgstr ""
+msgstr "Werkzeuge"
 
 #: ../labelme\app.py:553
 msgid "%s started."
-msgstr ""
+msgstr "%s gestartet."
 
 #: ../labelme\app.py:558
 msgid ""
