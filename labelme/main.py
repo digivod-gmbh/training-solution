@@ -4,8 +4,15 @@ import logging
 import os
 import sys
 import gettext
+import time
+import traceback
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from qtpy import QtWidgets
+from qtpy import QtGui
 
 from labelme import __appname__
 from labelme import __version__
@@ -14,6 +21,7 @@ from labelme.config import get_config
 from labelme.logger import logger
 from labelme.utils import newIcon
 
+LOG_LEVEL = None
 
 def main():
     try:
@@ -108,6 +116,8 @@ def _main():
         print('{0} {1}'.format(__appname__, __version__))
         sys.exit(0)
 
+    global LOG_LEVEL
+    LOG_LEVEL = args.logger_level.upper()
     logger.setLevel(getattr(logging, args.logger_level.upper()))
 
     if hasattr(args, 'flags'):
@@ -172,7 +182,33 @@ def _main():
 
     win.show()
     win.raise_()
+    sys.excepthook = excepthook
     sys.exit(app.exec_())
+
+
+def excepthook(exctype, excvalue, tracebackobj):
+
+    app = QtWidgets.QApplication.instance()
+    app.closeAllWindows()
+
+    tbinfofile = StringIO()
+    traceback.print_tb(tracebackobj, None, tbinfofile)
+    tbinfofile.seek(0)
+    tbinfo = tbinfofile.read()
+    notice = _('An error occured with following message')
+    errmsg = '%s:\n\n%s' % (notice, str(excvalue))
+    
+    global LOG_LEVEL
+    if LOG_LEVEL == 'DEBUG':
+        msg = '\n'.join([errmsg, '-' * 80, tbinfo])
+        logger.error(msg)
+    else:
+        msg = errmsg
+        logger.error(errmsg)
+
+    errorbox = QtWidgets.QMessageBox()
+    errorbox.setText(msg)
+    errorbox.exec_()
 
 
 # this main block is required to generate executable by pyinstaller
