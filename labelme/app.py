@@ -89,16 +89,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelList = LabelQListWidget()
         self.lastOpenDir = None
 
-        """
-        self.flag_dock = self.flag_widget = None
-        self.flag_dock = QtWidgets.QDockWidget(_('Flags'), self)
-        self.flag_dock.setObjectName('Flags')
-        self.flag_widget = QtWidgets.QListWidget()
-        if config['flags']:
-            self.loadFlags({k: False for k in config['flags']})
-        self.flag_dock.setWidget(self.flag_widget)
-        self.flag_widget.itemChanged.connect(self.setDirty)
-        """
+        # self.flag_dock = self.flag_widget = None
+        # self.flag_dock = QtWidgets.QDockWidget(_('Flags'), self)
+        # self.flag_dock.setObjectName('Flags')
+        # self.flag_widget = QtWidgets.QListWidget()
+        # if config['flags']:
+        #     self.loadFlags({k: False for k in config['flags']})
+        # self.flag_dock.setWidget(self.flag_widget)
+        # self.flag_widget.itemChanged.connect(self.setDirty)
 
         self.labelList.itemActivated.connect(self.labelSelectionChanged)
         self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
@@ -193,9 +191,9 @@ class MainWindow(QtWidgets.QMainWindow):
         opendir = action(_('&Open Dir'), self.openDirDialog,
                          shortcuts['open_dir'], 'dir', _(u'Open Dir'))
         export = action(_('&Export'), self.exportDialog,
-                         shortcuts['export'], 'export', _(u'Export'))
+                         shortcuts['export'], 'export', _(u'Export'), enabled=False)
         training = action(_('&Training'), self.trainingDialog,
-                         shortcuts['training'], 'training', _(u'Training'))
+                         shortcuts['training'], 'training', _(u'Training'), enabled=False)
         openNextImg = action(
             _('&Next Image'),
             self.openNextImg,
@@ -340,8 +338,8 @@ class MainWindow(QtWidgets.QMainWindow):
         help = action(_('&Tutorial'), self.tutorial, icon='help',
                       tip=_('Show tutorial page'))
 
-        about = action('&About', self.about,
-                      tip='Show about page')
+        about = action(_('&About'), self.about,
+                      tip=_('Show about page'))
 
         zoom = QtWidgets.QWidgetAction(self)
         zoom.setDefaultWidget(self.zoomWidget)
@@ -439,6 +437,7 @@ class MainWindow(QtWidgets.QMainWindow):
             fitWindow=fitWindow, fitWidth=fitWidth,
             zoomActions=zoomActions,
             openNextImg=openNextImg, openPrevImg=openPrevImg,
+            export=export, training=training,
             fileMenuActions=(open_, opendir, save, saveAs, export, training, close, quit),
             tool=(),
             editMenu=(edit, copy, delete, None, undo, undoLastPoint,
@@ -966,12 +965,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.loadShapes(s)
 
     def loadFlags(self, flags):
-        self.flag_widget.clear()
+        #self.flag_widget.clear()
         for key, flag in flags.items():
             item = QtWidgets.QListWidgetItem(key)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             item.setCheckState(Qt.Checked if flag else Qt.Unchecked)
-            self.flag_widget.addItem(item)
+            #self.flag_widget.addItem(item)
 
     def saveLabels(self, filename):
         lf = LabelFile()
@@ -989,11 +988,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         shapes = [format_shape(shape) for shape in self.labelList.shapes]
         flags = {}
-        for i in range(self.flag_widget.count()):
-            item = self.flag_widget.item(i)
-            key = item.text()
-            flag = item.checkState() == Qt.Checked
-            flags[key] = flag
+        # for i in range(self.flag_widget.count()):
+        #     item = self.flag_widget.item(i)
+        #     key = item.text()
+        #     flag = item.checkState() == Qt.Checked
+        #     flags[key] = flag
         try:
             imagePath = osp.relpath(
                 self.imagePath, osp.dirname(filename))
@@ -1447,16 +1446,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def deleteFile(self):
         mb = QtWidgets.QMessageBox
-        msg = 'You are about to permanently delete this label file, ' \
-              'proceed anyway?'
-        answer = mb.warning(self, 'Attention', msg, mb.Yes | mb.No)
+        msg = _('You are about to permanently delete this label file, ' \
+              'proceed anyway?')
+        answer = mb.warning(self, _('Attention'), msg, mb.Yes | mb.No)
         if answer != mb.Yes:
             return
 
         label_file = self.getLabelFile()
         if osp.exists(label_file):
             os.remove(label_file)
-            logger.info('Label file is removed: {}'.format(label_file))
+            logger.info(_('Label file is removed: {}').format(label_file))
 
             item = self.fileListWidget.currentItem()
             item.setCheckState(Qt.Unchecked)
@@ -1467,8 +1466,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def hasLabels(self):
         if not self.labelList.itemsToShapes:
             self.errorMessage(
-                'No objects labeled',
-                'You must label at least one object to save the file.')
+                _('No objects labeled'),
+                _('You must label at least one object to save the file.'))
             return False
         return True
 
@@ -1483,9 +1482,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.dirty:
             return True
         mb = QtWidgets.QMessageBox
-        msg = 'Save annotations to "{}" before closing?'.format(self.filename)
+        msg = _('Save annotations to "{}" before closing?').format(self.filename)
         answer = mb.question(self,
-                             'Save annotations?',
+                             _('Save annotations?'),
                              msg,
                              mb.Save | mb.Discard | mb.Cancel,
                              mb.Save)
@@ -1506,7 +1505,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def chooseColor1(self):
         color = self.colorDialog.getColor(
-            self.lineColor, 'Choose line color', default=DEFAULT_LINE_COLOR)
+            self.lineColor, _('Choose line color'), default=DEFAULT_LINE_COLOR)
         if color:
             self.lineColor = color
             # Change the color for all shape lines:
@@ -1516,7 +1515,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def chooseColor2(self):
         color = self.colorDialog.getColor(
-            self.fillColor, 'Choose fill color', default=DEFAULT_FILL_COLOR)
+            self.fillColor, _('Choose fill color'), default=DEFAULT_FILL_COLOR)
         if color:
             self.fillColor = color
             Shape.fill_color = self.fillColor
@@ -1528,9 +1527,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def deleteSelectedShape(self):
         yes, no = QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No
-        msg = 'You are about to permanently delete this polygon, ' \
-              'proceed anyway?'
-        if yes == QtWidgets.QMessageBox.warning(self, 'Attention', msg,
+        msg = _('You are about to permanently delete this polygon, ' \
+              'proceed anyway?')
+        if yes == QtWidgets.QMessageBox.warning(self, _('Attention'), msg,
                                                 yes | no):
             self.remLabel(self.canvas.deleteSelected())
             self.setDirty()
@@ -1540,7 +1539,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def chshapeLineColor(self):
         color = self.colorDialog.getColor(
-            self.lineColor, 'Choose line color', default=DEFAULT_LINE_COLOR)
+            self.lineColor, _('Choose line color'), default=DEFAULT_LINE_COLOR)
         if color:
             self.canvas.selectedShape.line_color = color
             self.canvas.update()
@@ -1548,7 +1547,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def chshapeFillColor(self):
         color = self.colorDialog.getColor(
-            self.fillColor, 'Choose fill color', default=DEFAULT_FILL_COLOR)
+            self.fillColor, _('Choose fill color'), default=DEFAULT_FILL_COLOR)
         if color:
             self.canvas.selectedShape.fill_color = color
             self.canvas.update()
@@ -1575,7 +1574,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.filename else '.'
 
         targetDirPath = str(QtWidgets.QFileDialog.getExistingDirectory(
-            self, '%s - Open Directory' % __appname__, defaultOpenDirPath,
+            self, _('%s - Open Directory') % __appname__, defaultOpenDirPath,
             QtWidgets.QFileDialog.ShowDirsOnly |
             QtWidgets.QFileDialog.DontResolveSymlinks))
         self.importDirImages(targetDirPath)
@@ -1599,6 +1598,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def importDirImages(self, dirpath, pattern=None, load=True):
         self.actions.openNextImg.setEnabled(True)
         self.actions.openPrevImg.setEnabled(True)
+        self.actions.export.setEnabled(True)
+        self.actions.training.setEnabled(True)
 
         if not self.mayContinue() or not dirpath:
             return
