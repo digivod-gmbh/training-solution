@@ -11,15 +11,30 @@ import sys
 import importlib
 import subprocess
 
+class Export():
+
+    @staticmethod
+    def config(key = None):
+        config = {
+            'default_dataset_name': 'dataset',
+            'formats': {
+                '_imagerecord': _('ImageRecord'),
+                '_test': 'Test'
+            },
+            'extensions': {
+                '_imagerecord': '.rec',
+                '_test': '.tst'
+            }
+        }
+        if key is not None:
+            if key in config:
+                return config[key]
+        return config
+
+
 class ExportWindow(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
-
-        self.config = {
-            'formats': {
-                _('ImageRecord'): '_imagerecord'
-            }
-        }
         self.parent = parent
 
         super(ExportWindow, self).__init__(parent)
@@ -31,8 +46,8 @@ class ExportWindow(QtWidgets.QDialog):
         self.setLayout(layout)
 
         self.formats = QtWidgets.QComboBox()
-        for key in self.config['formats']:
-            self.formats.addItem(key)
+        for key, val in Export.config('formats').items():
+            self.formats.addItem(val)
 
         format_group = QtWidgets.QGroupBox()
         format_group.setTitle(_('Format'))
@@ -41,17 +56,19 @@ class ExportWindow(QtWidgets.QDialog):
         format_group_layout.addWidget(self.formats)
         layout.addWidget(format_group)
 
-        self.dataset_folder = QtWidgets.QLineEdit()
+        self.data_folder = QtWidgets.QLineEdit()
+        if self.parent.lastOpenDir is not None:
+            self.data_folder.setText(self.parent.lastOpenDir)
         dataset_browse_btn = QtWidgets.QPushButton(_('Browse'))
         dataset_browse_btn.clicked.connect(self.dataset_browse_btn_clicked)
 
-        dataset_folder_group = QtWidgets.QGroupBox()
-        dataset_folder_group.setTitle(_('Dataset folder'))
-        dataset_folder_group_layout = QtWidgets.QHBoxLayout()
-        dataset_folder_group.setLayout(dataset_folder_group_layout)
-        dataset_folder_group_layout.addWidget(self.dataset_folder)
-        dataset_folder_group_layout.addWidget(dataset_browse_btn)
-        layout.addWidget(dataset_folder_group)
+        data_folder_group = QtWidgets.QGroupBox()
+        data_folder_group.setTitle(_('Data folder'))
+        data_folder_group_layout = QtWidgets.QHBoxLayout()
+        data_folder_group.setLayout(data_folder_group_layout)
+        data_folder_group_layout.addWidget(self.data_folder)
+        data_folder_group_layout.addWidget(dataset_browse_btn)
+        layout.addWidget(data_folder_group)
 
         self.export_folder = QtWidgets.QLineEdit()
         export_browse_btn = QtWidgets.QPushButton(_('Browse'))
@@ -73,16 +90,25 @@ class ExportWindow(QtWidgets.QDialog):
         layout.addWidget(button_box)
 
     def export_btn_clicked(self):
+        data_folder = self.data_folder.text()
+        if not data_folder or not os.path.isdir(data_folder):
+            mb = QtWidgets.QMessageBox
+            mb.warning(self, _('Export'), _('Please enter a valid data folder'))
+            return
 
-        # Get number of label files
-        dataset_folder = self.dataset_folder.text()
+        export_folder = self.export_folder.text()
+        if not export_folder or not os.path.isdir(export_folder):
+            mb = QtWidgets.QMessageBox
+            mb.warning(self, _('Export'), _('Please enter a valid export folder'))
+            return
+
         label_files = []
-        for root, dirs, files in os.walk(dataset_folder):
+        for root, dirs, files in os.walk(data_folder):
             for f in files:
                 if LabelFile.is_label_file(f):
-                    label_files.append(os.path.normpath(os.path.join(dataset_folder, f)))
+                    label_files.append(os.path.normpath(os.path.join(data_folder, f)))
         num_label_files = len(label_files)
-        logger.debug('{} label files found in dataset folder "{}"'.format(num_label_files, dataset_folder))
+        logger.debug('{} label files found in dataset folder "{}"'.format(num_label_files, data_folder))
 
         self.progress = QtWidgets.QProgressDialog(_('Exporting dataset ...'), _('Cancel'), 0, 100, self)
         self.set_default_window_flags(self.progress)
@@ -90,15 +116,27 @@ class ExportWindow(QtWidgets.QDialog):
         self.progress.setValue(0)
         self.progress.show()
 
-        export_folder = self.export_folder.text()
+        val = self.formats.currentText()
+        formats = Export.config('formats')
+        func_name = None
+        for key in formats:
+            if val in formats[key]:
+                func_name = key
+        
+        if func_name is None:
+            logger.error('Export format {} could not be found'.format(val))
+            return
 
-        key = self.formats.currentText()
-        if key in self.config['formats']:
-            func_name = self.config['formats'][key]
-            export_func = getattr(self, func_name)
-            export_func(dataset_folder, export_folder, label_files)
+        export_func = getattr(self, func_name)
+        export_func(data_folder, export_folder, label_files)
+
+        if self.progress.wasCanceled():
+            self.progress.close()
+            return
 
         self.progress.close()
+
+        self.parent.lastExportDir = export_folder
 
         mb = QtWidgets.QMessageBox
         mb.information(self, _('Export'), _('Dataset has been exported successfully to: {}').format(export_folder))
@@ -108,8 +146,8 @@ class ExportWindow(QtWidgets.QDialog):
         self.close()
 
     def dataset_browse_btn_clicked(self):
-        dataset_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select dataset folder'))
-        self.dataset_folder.setText(dataset_folder)
+        data_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select data folder'))
+        self.data_folder.setText(data_folder)
 
     def export_browse_btn_clicked(self):
         export_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select export folder'))
@@ -119,7 +157,7 @@ class ExportWindow(QtWidgets.QDialog):
         obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
 
     # Export functions
-    def _imagerecord(self, dataset_folder, export_folder, label_files):
+    def _imagerecord(self, data_folder, export_folder, label_files):
 
         num_label_files = len(label_files)
         self.progress.setMaximum(num_label_files * 2)
@@ -127,7 +165,10 @@ class ExportWindow(QtWidgets.QDialog):
         # First, create lst file
         lst_file = export.make_lst_file(export_folder, label_files, self.progress)
 
+        if self.progress.wasCanceled():
+            return
+
         # Then, create rec file from lst file
-        export.im2rec(lst_file, dataset_folder, progress=self.progress, num_label_files=num_label_files, no_shuffle=False, pass_through=True, pack_label=True)
+        export.im2rec(lst_file, data_folder, progress=self.progress, num_label_files=num_label_files, no_shuffle=False, pass_through=True, pack_label=True)
 
     

@@ -90,6 +90,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.labelList = LabelQListWidget()
         self.lastOpenDir = None
+        self.lastExportDir = None
 
         # self.flag_dock = self.flag_widget = None
         # self.flag_dock = QtWidgets.QDockWidget(_('Flags'), self)

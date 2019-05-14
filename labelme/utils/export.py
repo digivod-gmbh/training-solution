@@ -5,14 +5,9 @@ import itertools
 
 from labelme.label_file import LabelFile
 from labelme.logger import logger
-from labelme.scripts import im2rec
 from labelme.utils.map import Map
 from labelme.utils.im2rec import *
-
-try:
-    import multiprocessing
-except ImportError:
-    multiprocessing = None
+from labelme.windows import Export
 
 # https://gluon-cv.mxnet.io/build/examples_datasets/detection_custom.html#recordfiledetection-for-entire-dataset-packed-in-single-mxnet-recordfile
 def write_line(img_path, im_shape, boxes, ids, idx):
@@ -39,7 +34,7 @@ def write_line(img_path, im_shape, boxes, ids, idx):
 
 def make_lst_file(export_folder, label_files, progress):
     num_label_files = len(label_files)
-    lst_file = os.path.join(export_folder, 'dataset.lst')
+    lst_file = os.path.join(export_folder, '{}.lst'.format(Export.config('default_dataset_name')))
 
     # Update progress bar
     start_value = progress.value()
@@ -76,6 +71,8 @@ def make_lst_file(export_folder, label_files, progress):
             f.write(line)
             # Update progress bar
             progress.setValue(idx + start_value + 1)
+            if progress.wasCanceled():
+                break
 
     return lst_file
 
@@ -116,7 +113,7 @@ def im2rec(prefix, root, progress, num_label_files, list=False, exts=['.jpeg', '
         count = 0
         for fname in files:
             if fname.startswith(args.prefix) and fname.endswith('.lst'):
-                print('Creating .rec file from', fname, 'in', working_dir)
+                print('Creating', Export.config('extensions')['_imagerecord'], 'file from', fname, 'in', working_dir)
                 count += 1
                 image_list = read_list(fname)
 
@@ -125,54 +122,31 @@ def im2rec(prefix, root, progress, num_label_files, list=False, exts=['.jpeg', '
                 progress.setLabelText('Creating rec file ...') # no translation possible with _()
 
                 # -- write_record -- #
-                if args.num_thread > 1 and multiprocessing is not None:
-                    q_in = [multiprocessing.Queue(1024) for i in range(args.num_thread)]
-                    q_out = multiprocessing.Queue(1024)
-                    # define the process
-                    read_process = [multiprocessing.Process(target=read_worker, args=(args, q_in[i], q_out)) \
-                                    for i in range(args.num_thread)]
-                    # process images with num_thread process
-                    for p in read_process:
-                        p.start()
-                    # only use one process to write .rec to avoid race-condtion
-                    write_process = multiprocessing.Process(target=write_worker, args=(q_out, fname, working_dir))
-                    write_process.start()
-                    # put the image list into input queue
-                    for i, item in enumerate(image_list):
-                        q_in[i % len(q_in)].put((i, item))
-                    for q in q_in:
-                        q.put(None)
-                    for p in read_process:
-                        p.join()
-
-                    q_out.put(None)
-                    write_process.join()
-                else:
-                    print('multiprocessing not available, fall back to single threaded encoding')
-                    try:
-                        import Queue as queue
-                    except ImportError:
-                        import queue
-                    q_out = queue.Queue()
-                    fname = os.path.basename(fname)
-                    fname_rec = os.path.splitext(fname)[0] + '.rec'
-                    fname_idx = os.path.splitext(fname)[0] + '.idx'
-                    record = mx.recordio.MXIndexedRecordIO(os.path.join(working_dir, fname_idx),
-                                                           os.path.join(working_dir, fname_rec), 'w')
-                    cnt = 0
-                    pre_time = time.time()
-                    for i, item in enumerate(image_list):
-                        image_encode(args, i, item, q_out)
-                        if q_out.empty():
-                            continue
-                        _, s, _ = q_out.get()
-                        record.write_idx(item[0], s)
-                        if cnt % 1000 == 0:
-                            cur_time = time.time()
-                            print('time:', cur_time - pre_time, ' count:', cnt)
-                            pre_time = cur_time
-                        cnt += 1
-                        progress.setValue(i + start_value + 1)
+                try:
+                    import Queue as queue
+                except ImportError:
+                    import queue
+                q_out = queue.Queue()
+                fname = os.path.basename(fname)
+                fname_rec = os.path.splitext(fname)[0] + Export.config('extensions')['_imagerecord']
+                fname_idx = os.path.splitext(fname)[0] + '.idx'
+                record = mx.recordio.MXIndexedRecordIO(os.path.join(working_dir, fname_idx), os.path.join(working_dir, fname_rec), 'w')
+                cnt = 0
+                pre_time = time.time()
+                for i, item in enumerate(image_list):
+                    image_encode(args, i, item, q_out)
+                    if q_out.empty():
+                        continue
+                    _, s, _ = q_out.get()
+                    record.write_idx(item[0], s)
+                    if cnt % 1000 == 0:
+                        cur_time = time.time()
+                        print('time:', cur_time - pre_time, ' count:', cnt)
+                        pre_time = cur_time
+                    cnt += 1
+                    progress.setValue(i + start_value + 1)
+                    if progress.wasCanceled():
+                        return
         if not count:
             print('Did not find and list file with prefix %s'%args.prefix)
 
