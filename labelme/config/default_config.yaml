@@ -16,7 +16,7 @@ validate_label: null
 
 # main
 flag_dock:
-  show: true
+  show: false
   closable: true
   movable: true
   floatable: true

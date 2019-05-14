@@ -29,8 +29,8 @@ from labelme.widgets import LabelQListWidget
 from labelme.widgets import ToolBar
 from labelme.widgets import ZoomWidget
 
-from windows import ExportWindow
-from windows import TrainingWindow
+from labelme.windows import ExportWindow
+from labelme.windows import TrainingWindow
 
 
 # FIXME
@@ -277,38 +277,38 @@ class MainWindow(QtWidgets.QMainWindow):
             _('Start drawing rectangles'),
             enabled=False,
         )
-        createCircleMode = action(
-            _('Create Circle'),
-            lambda: self.toggleDrawMode(False, createMode='circle'),
-            shortcuts['create_circle'],
-            'objects',
-            _('Start drawing circles'),
-            enabled=False,
-        )
-        createLineMode = action(
-            _('Create Line'),
-            lambda: self.toggleDrawMode(False, createMode='line'),
-            shortcuts['create_line'],
-            'objects',
-            _('Start drawing lines'),
-            enabled=False,
-        )
-        createPointMode = action(
-            _('Create Point'),
-            lambda: self.toggleDrawMode(False, createMode='point'),
-            shortcuts['create_point'],
-            'objects',
-            _('Start drawing points'),
-            enabled=False,
-        )
-        createLineStripMode = action(
-            _('Create LineStrip'),
-            lambda: self.toggleDrawMode(False, createMode='linestrip'),
-            shortcuts['create_linestrip'],
-            'objects',
-            _('Start drawing linestrip. Ctrl+LeftClick ends creation.'),
-            enabled=False,
-        )
+        # createCircleMode = action(
+        #     _('Create Circle'),
+        #     lambda: self.toggleDrawMode(False, createMode='circle'),
+        #     shortcuts['create_circle'],
+        #     'objects',
+        #     _('Start drawing circles'),
+        #     enabled=False,
+        # )
+        # createLineMode = action(
+        #     _('Create Line'),
+        #     lambda: self.toggleDrawMode(False, createMode='line'),
+        #     shortcuts['create_line'],
+        #     'objects',
+        #     _('Start drawing lines'),
+        #     enabled=False,
+        # )
+        # createPointMode = action(
+        #     _('Create Point'),
+        #     lambda: self.toggleDrawMode(False, createMode='point'),
+        #     shortcuts['create_point'],
+        #     'objects',
+        #     _('Start drawing points'),
+        #     enabled=False,
+        # )
+        # createLineStripMode = action(
+        #     _('Create LineStrip'),
+        #     lambda: self.toggleDrawMode(False, createMode='linestrip'),
+        #     shortcuts['create_linestrip'],
+        #     'objects',
+        #     _('Start drawing linestrip. Ctrl+LeftClick ends creation.'),
+        #     enabled=False,
+        # )
         editMode = action(_('Edit Polygons'), self.setEditMode,
                           shortcuts['edit_polygon'], 'edit',
                           _('Move and edit polygons'), enabled=False)
@@ -430,10 +430,10 @@ class MainWindow(QtWidgets.QMainWindow):
             addPoint=addPoint,
             createMode=createMode, editMode=editMode,
             createRectangleMode=createRectangleMode,
-            createCircleMode=createCircleMode,
-            createLineMode=createLineMode,
-            createPointMode=createPointMode,
-            createLineStripMode=createLineStripMode,
+            #createCircleMode=createCircleMode,
+            #createLineMode=createLineMode,
+            #createPointMode=createPointMode,
+            #createLineStripMode=createLineStripMode,
             shapeLineColor=shapeLineColor, shapeFillColor=shapeFillColor,
             zoom=zoom, zoomIn=zoomIn, zoomOut=zoomOut, zoomOrg=zoomOrg,
             fitWindow=fitWindow, fitWidth=fitWidth,
@@ -448,16 +448,16 @@ class MainWindow(QtWidgets.QMainWindow):
             menu=(
                 createMode,
                 createRectangleMode,
-                createCircleMode,
-                createLineMode,
-                createPointMode,
-                createLineStripMode,
+                #createCircleMode,
+                #createLineMode,
+                #createPointMode,
+                #createLineStripMode,
                 editMode,
                 edit,
                 copy,
                 delete,
-                shapeLineColor,
-                shapeFillColor,
+                #shapeLineColor,
+                #shapeFillColor,
                 undo,
                 undoLastPoint,
                 addPoint,
@@ -466,10 +466,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 close,
                 createMode,
                 createRectangleMode,
-                createCircleMode,
-                createLineMode,
-                createPointMode,
-                createLineStripMode,
+                #createCircleMode,
+                #createLineMode,
+                #createPointMode,
+                #createLineStripMode,
                 editMode,
             ),
             onShapesPresent=(saveAs, hideAll, showAll),
@@ -669,10 +669,10 @@ class MainWindow(QtWidgets.QMainWindow):
         actions = (
             self.actions.createMode,
             self.actions.createRectangleMode,
-            self.actions.createCircleMode,
-            self.actions.createLineMode,
-            self.actions.createPointMode,
-            self.actions.createLineStripMode,
+            #self.actions.createCircleMode,
+            #self.actions.createLineMode,
+            #self.actions.createPointMode,
+            #self.actions.createLineStripMode,
             self.actions.editMode,
         )
         utils.addActions(self.menus.edit, actions + self.actions.editMenu)
@@ -698,10 +698,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.save.setEnabled(False)
         self.actions.createMode.setEnabled(True)
         self.actions.createRectangleMode.setEnabled(True)
-        self.actions.createCircleMode.setEnabled(True)
-        self.actions.createLineMode.setEnabled(True)
-        self.actions.createPointMode.setEnabled(True)
-        self.actions.createLineStripMode.setEnabled(True)
+        #self.actions.createCircleMode.setEnabled(True)
+        #self.actions.createLineMode.setEnabled(True)
+        #self.actions.createPointMode.setEnabled(True)
+        #self.actions.createLineStripMode.setEnabled(True)
         title = __appname__
         if self.filename is not None:
             title = '{} - {}'.format(title, self.filename)
@@ -784,53 +784,53 @@ class MainWindow(QtWidgets.QMainWindow):
         if edit:
             self.actions.createMode.setEnabled(True)
             self.actions.createRectangleMode.setEnabled(True)
-            self.actions.createCircleMode.setEnabled(True)
-            self.actions.createLineMode.setEnabled(True)
-            self.actions.createPointMode.setEnabled(True)
-            self.actions.createLineStripMode.setEnabled(True)
+            #self.actions.createCircleMode.setEnabled(True)
+            #self.actions.createLineMode.setEnabled(True)
+            #self.actions.createPointMode.setEnabled(True)
+            #self.actions.createLineStripMode.setEnabled(True)
         else:
             if createMode == 'polygon':
                 self.actions.createMode.setEnabled(False)
                 self.actions.createRectangleMode.setEnabled(True)
-                self.actions.createCircleMode.setEnabled(True)
-                self.actions.createLineMode.setEnabled(True)
-                self.actions.createPointMode.setEnabled(True)
-                self.actions.createLineStripMode.setEnabled(True)
+                #self.actions.createCircleMode.setEnabled(True)
+                #self.actions.createLineMode.setEnabled(True)
+                #self.actions.createPointMode.setEnabled(True)
+                #self.actions.createLineStripMode.setEnabled(True)
             elif createMode == 'rectangle':
                 self.actions.createMode.setEnabled(True)
                 self.actions.createRectangleMode.setEnabled(False)
-                self.actions.createCircleMode.setEnabled(True)
-                self.actions.createLineMode.setEnabled(True)
-                self.actions.createPointMode.setEnabled(True)
-                self.actions.createLineStripMode.setEnabled(True)
-            elif createMode == 'line':
-                self.actions.createMode.setEnabled(True)
-                self.actions.createRectangleMode.setEnabled(True)
-                self.actions.createCircleMode.setEnabled(True)
-                self.actions.createLineMode.setEnabled(False)
-                self.actions.createPointMode.setEnabled(True)
-                self.actions.createLineStripMode.setEnabled(True)
-            elif createMode == 'point':
-                self.actions.createMode.setEnabled(True)
-                self.actions.createRectangleMode.setEnabled(True)
-                self.actions.createCircleMode.setEnabled(True)
-                self.actions.createLineMode.setEnabled(True)
-                self.actions.createPointMode.setEnabled(False)
-                self.actions.createLineStripMode.setEnabled(True)
-            elif createMode == "circle":
-                self.actions.createMode.setEnabled(True)
-                self.actions.createRectangleMode.setEnabled(True)
-                self.actions.createCircleMode.setEnabled(False)
-                self.actions.createLineMode.setEnabled(True)
-                self.actions.createPointMode.setEnabled(True)
-                self.actions.createLineStripMode.setEnabled(True)
-            elif createMode == "linestrip":
-                self.actions.createMode.setEnabled(True)
-                self.actions.createRectangleMode.setEnabled(True)
-                self.actions.createCircleMode.setEnabled(True)
-                self.actions.createLineMode.setEnabled(True)
-                self.actions.createPointMode.setEnabled(True)
-                self.actions.createLineStripMode.setEnabled(False)
+                #self.actions.createCircleMode.setEnabled(True)
+                #self.actions.createLineMode.setEnabled(True)
+                #self.actions.createPointMode.setEnabled(True)
+                #self.actions.createLineStripMode.setEnabled(True)
+            # elif createMode == 'line':
+            #     self.actions.createMode.setEnabled(True)
+            #     self.actions.createRectangleMode.setEnabled(True)
+            #     self.actions.createCircleMode.setEnabled(True)
+            #     self.actions.createLineMode.setEnabled(False)
+            #     self.actions.createPointMode.setEnabled(True)
+            #     self.actions.createLineStripMode.setEnabled(True)
+            # elif createMode == 'point':
+            #     self.actions.createMode.setEnabled(True)
+            #     self.actions.createRectangleMode.setEnabled(True)
+            #     self.actions.createCircleMode.setEnabled(True)
+            #     self.actions.createLineMode.setEnabled(True)
+            #     self.actions.createPointMode.setEnabled(False)
+            #     self.actions.createLineStripMode.setEnabled(True)
+            # elif createMode == "circle":
+            #     self.actions.createMode.setEnabled(True)
+            #     self.actions.createRectangleMode.setEnabled(True)
+            #     self.actions.createCircleMode.setEnabled(False)
+            #     self.actions.createLineMode.setEnabled(True)
+            #     self.actions.createPointMode.setEnabled(True)
+            #     self.actions.createLineStripMode.setEnabled(True)
+            # elif createMode == "linestrip":
+            #     self.actions.createMode.setEnabled(True)
+            #     self.actions.createRectangleMode.setEnabled(True)
+            #     self.actions.createCircleMode.setEnabled(True)
+            #     self.actions.createLineMode.setEnabled(True)
+            #     self.actions.createPointMode.setEnabled(True)
+            #     self.actions.createLineStripMode.setEnabled(False)
             else:
                 raise ValueError('Unsupported createMode: %s' % createMode)
         self.actions.editMode.setEnabled(not edit)
