@@ -79,6 +79,9 @@ def make_lst_file(export_folder, label_files, progress):
 def im2rec(prefix, root, progress, num_label_files, list=False, exts=['.jpeg', '.jpg', '.png'], chunks=1, train_ratio=1.0, 
     test_ratio=0.0, recursive=False, no_shuffle=True, pass_through=False, resize=0, 
     center_crop=False, quality=95, num_thread=1, color=1, encoding='.jpg', pack_label=False):
+
+    global _
+
     args = Map({
         'prefix': prefix,
         'root': root,
@@ -119,7 +122,7 @@ def im2rec(prefix, root, progress, num_label_files, list=False, exts=['.jpeg', '
 
                 # Update progress bar
                 start_value = progress.value()
-                progress.setLabelText('Creating rec file ...') # no translation possible with _()
+                progress.setLabelText(_('Creating rec file ...'))
 
                 # -- write_record -- #
                 try:
