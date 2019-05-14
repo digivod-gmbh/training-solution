@@ -7,7 +7,7 @@ sys.path.append(os.path.join(curr_path, "../python"))
 import mxnet as mx
 import random
 import argparse
-import cv2
+from PIL import Image
 import time
 import traceback
 
@@ -157,7 +157,7 @@ def image_encode(args, i, item, q_out):
         return
 
     try:
-        img = cv2.imread(fullpath, args.color)
+        img = Image.open(fullpath)
     except:
         traceback.print_exc()
         print('imread error trying to load file: %s ' % fullpath)
@@ -179,7 +179,7 @@ def image_encode(args, i, item, q_out):
             newsize = (args.resize, img.shape[0] * args.resize // img.shape[1])
         else:
             newsize = (img.shape[1] * args.resize // img.shape[0], args.resize)
-        img = cv2.resize(img, newsize)
+        img = img.thumbnail(newsize, Image.ANTIALIAS)
 
     try:
         s = mx.recordio.pack_img(header, img, quality=args.quality, img_fmt=args.encoding)
