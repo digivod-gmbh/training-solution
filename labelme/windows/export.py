@@ -19,11 +19,9 @@ class Export():
             'default_dataset_name': 'dataset',
             'formats': {
                 '_imagerecord': _('ImageRecord'),
-                '_test': 'Test'
             },
             'extensions': {
                 '_imagerecord': '.rec',
-                '_test': '.tst'
             }
         }
         if key is not None:
@@ -108,7 +106,7 @@ class ExportWindow(QtWidgets.QDialog):
                 if LabelFile.is_label_file(f):
                     label_files.append(os.path.normpath(os.path.join(data_folder, f)))
         num_label_files = len(label_files)
-        logger.debug('{} label files found in dataset folder "{}"'.format(num_label_files, data_folder))
+        logger.debug('Found {} label files in dataset folder "{}"'.format(num_label_files, data_folder))
 
         self.progress = QtWidgets.QProgressDialog(_('Exporting dataset ...'), _('Cancel'), 0, 100, self)
         self.set_default_window_flags(self.progress)
@@ -158,17 +156,21 @@ class ExportWindow(QtWidgets.QDialog):
 
     # Export functions
     def _imagerecord(self, data_folder, export_folder, label_files):
-
         num_label_files = len(label_files)
         self.progress.setMaximum(num_label_files * 2)
 
-        # First, create lst file
-        lst_file = export.make_lst_file(export_folder, label_files, self.progress)
+        # First, generate class list
+        label_list_file = export.make_label_list(export_folder, label_files, self.progress)
+
+        # Create lst file
+        lst_file = export.make_lst_file(export_folder, label_files, label_list_file, self.progress)
 
         if self.progress.wasCanceled():
             return
 
         # Then, create rec file from lst file
-        export.im2rec(lst_file, data_folder, progress=self.progress, num_label_files=num_label_files, no_shuffle=False, pass_through=True, pack_label=True)
+        rec_file = export.im2rec(lst_file, data_folder, progress=self.progress, num_label_files=num_label_files, no_shuffle=False, pass_through=True, pack_label=True)
+
+        self.parent.lastExportFile = rec_file
 
     

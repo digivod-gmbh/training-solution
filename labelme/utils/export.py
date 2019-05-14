@@ -32,7 +32,7 @@ def write_line(img_path, im_shape, boxes, ids, idx):
     line = '\t'.join(str_idx + str_header + str_labels + str_path) + '\n'
     return line
 
-def make_lst_file(export_folder, label_files, progress):
+def make_lst_file(export_folder, label_files, label_list_file, progress):
     num_label_files = len(label_files)
     lst_file = os.path.join(export_folder, '{}.lst'.format(Export.config('default_dataset_name')))
 
@@ -41,7 +41,13 @@ def make_lst_file(export_folder, label_files, progress):
     progress.setLabelText(_('Creating lst file ...'))
 
     # Get all labels with index
-    label_to_idx = get_label_to_idx_dict(label_files)
+    label_list = None
+    with open(label_list_file) as f:
+        label_list = f.read().split('\n')
+    if label_list is None:
+        logger.error('No labels found in label list file: {}'.format(label_list_files))
+        return
+    label_to_idx = get_label_to_idx_dict(label_list)
 
     # Open (new) lst file
     with open(lst_file, 'w+') as f:
@@ -149,12 +155,17 @@ def im2rec(prefix, root, progress, num_label_files, list=False, exts=['.jpeg', '
                     cnt += 1
                     progress.setValue(i + start_value + 1)
                     if progress.wasCanceled():
-                        return
+                        return None
+                return os.path.join(working_dir, fname_rec)
         if not count:
             print('Did not find and list file with prefix %s'%args.prefix)
 
-def get_label_to_idx_dict(label_files):
+    return None
+
+def make_label_list(export_folder, label_files, progress):
+    global _
     num_label_files = len(label_files)
+    progress.setLabelText(_('Creating label list file ...'))
     label_set = set()
     for idx in range(num_label_files):
         label_file = LabelFile(label_files[idx])
@@ -163,10 +174,17 @@ def get_label_to_idx_dict(label_files):
             label_set.add(s)
     label_list = list(label_set)
     label_list.sort()
+    logger.debug('Found {} labels in dataset: {}'.format(len(label_list), label_list))
+    label_list_file = os.path.normpath(os.path.join(export_folder, '{}.labels'.format(Export.config('default_dataset_name'))))
+    with open(label_list_file, 'w+') as f:
+        for label in label_list:
+            f.write('{}\n'.format(label))
+    return label_list_file
+
+def get_label_to_idx_dict(label_list):
     label_dict = {}
     for idx, label in enumerate(label_list):
         label_dict[label] = idx
-    logger.debug('Found {} labels in dataset: {}'.format(len(label_list), label_dict))
     return label_dict
 
 def shape_points_to_rectangle(shape_type, points):

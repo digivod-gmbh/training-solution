@@ -6,6 +6,7 @@ from qtpy import QtWidgets
 import importlib
 import time
 import os
+import mxnet as mx
 
 from labelme.logger import logger
 from labelme.windows import Export
@@ -51,10 +52,13 @@ class TrainingWindow(QtWidgets.QDialog):
 
         self.dataset_file = QtWidgets.QLineEdit()
         if self.parent.lastExportDir is not None:
-            self.dataset_file.setText(self.parent.lastExportDir)
+            # TODO: Make dataset name variable
+            lastExportFile = os.path.normpath(os.path.join(self.parent.lastExportDir, 'dataset.rec'))
+            self.dataset_file.setText(lastExportFile)
         dataset_browse_btn = QtWidgets.QPushButton(_('Browse'))
         dataset_browse_btn.clicked.connect(self.dataset_browse_btn_clicked)
-        self.dataset_format_label = QtWidgets.QLabel('')
+        self.dataset_format_label = QtWidgets.QLabel('Dataset format: unknown')
+        self.dataset_format_label.setVisible(False)
 
         dataset_file_group = QtWidgets.QGroupBox()
         dataset_file_group.setTitle(_('Dataset file'))
@@ -64,6 +68,52 @@ class TrainingWindow(QtWidgets.QDialog):
         dataset_file_group_layout.addWidget(dataset_browse_btn, 0, 1)
         dataset_file_group_layout.addWidget(self.dataset_format_label, 1, 0, 1, 2)
         layout.addWidget(dataset_file_group)
+
+        self.output_folder = QtWidgets.QLineEdit()
+        output_browse_btn = QtWidgets.QPushButton(_('Browse'))
+        output_browse_btn.clicked.connect(self.output_browse_btn_clicked)
+
+        output_folder_group = QtWidgets.QGroupBox()
+        output_folder_group.setTitle(_('Output folder'))
+        output_folder_group_layout = QtWidgets.QGridLayout()
+        output_folder_group.setLayout(output_folder_group_layout)
+        output_folder_group_layout.addWidget(self.output_folder, 0, 0)
+        output_folder_group_layout.addWidget(output_browse_btn, 0, 1)
+        layout.addWidget(output_folder_group)
+
+        args_epochs_label = QtWidgets.QLabel(_('Epochs'))
+        self.args_epochs = QtWidgets.QSpinBox()
+        self.args_epochs.setValue(10)
+        self.args_epochs.setMinimum(1)
+        self.args_epochs.setMaximum(100)
+
+        args_batch_size_label = QtWidgets.QLabel(_('Batch size'))
+        self.args_batch_size = QtWidgets.QComboBox()
+        self.args_batch_size.addItems(['4', '8', '16', '32', '64'])
+        self.args_batch_size.setCurrentIndex(1)
+
+        args_gpus_label = QtWidgets.QLabel(_('GPUs'))
+        self.gpus = mx.test_utils.list_gpus()
+        self.gpu_checkboxes = []
+        for i in self.gpus:
+            checkbox = QtWidgets.QCheckBox('GPU {}'.format(i))
+            checkbox.setChecked(i == 0)
+            self.gpu_checkboxes.append(checkbox)
+
+        settings_group = QtWidgets.QGroupBox()
+        settings_group.setTitle(_('Settings'))
+        settings_group_layout = QtWidgets.QGridLayout()
+        settings_group.setLayout(settings_group_layout)
+        settings_group_layout.addWidget(args_epochs_label, 0, 0)
+        settings_group_layout.addWidget(self.args_epochs, 0, 1)
+        settings_group_layout.addWidget(args_batch_size_label, 1, 0)
+        settings_group_layout.addWidget(self.args_batch_size, 1, 1)
+        settings_group_layout.addWidget(args_gpus_label, 2, 0)
+        row = 2
+        for i, checkbox in enumerate(self.gpu_checkboxes):
+            settings_group_layout.addWidget(checkbox, row, 1)
+            row += 1
+        layout.addWidget(settings_group)
 
         button_box = QtWidgets.QDialogButtonBox()
         training_btn = button_box.addButton(_('Start Training'), QtWidgets.QDialogButtonBox.AcceptRole)
@@ -97,11 +147,8 @@ class TrainingWindow(QtWidgets.QDialog):
             logger.error('Network {} could not be found'.format(val))
             return
 
-        key = self.networks.currentText()
-        if key in Training.config('networks'):
-            func_name = Training.config('networks')[key]
-            training_func = getattr(self, func_name)
-            training_func()
+        training_func = getattr(self, func_name)
+        training_func()
 
         if self.progress.wasCanceled():
             self.progress.close()
@@ -116,6 +163,10 @@ class TrainingWindow(QtWidgets.QDialog):
     def cancel_btn_clicked(self):
         self.close()
 
+    def output_browse_btn_clicked(self):
+        output_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select output folder'))
+        self.output_folder.setText(output_folder)
+
     def dataset_browse_btn_clicked(self):
         formats = Export.config('formats')
         extensions = Export.config('extensions')
@@ -129,8 +180,10 @@ class TrainingWindow(QtWidgets.QDialog):
 
         dataset_file, selected_filter = QtWidgets.QFileDialog.getOpenFileName(self, _('Select dataset file'), self.parent.lastExportDir, filters)
 
-        self.dataset_format_label.setText(_('Dataset format: {}').format(filter2format[selected_filter]))
-        self.dataset_file.setText(dataset_file)
+        if dataset_file:
+            self.dataset_format_label.setText(_('Dataset format: {}').format(filter2format[selected_filter]))
+            self.dataset_format_label.setVisible(True)
+            self.dataset_file.setText(dataset_file)
 
     def create_extension_filters(self):
         for key, val in Export.config('extensions'):
@@ -141,4 +194,21 @@ class TrainingWindow(QtWidgets.QDialog):
         obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
 
     def _yolov3(self):
-        time.sleep(1)
+        from labelme.networks import yolov3
+
+        output_dir = self.output_folder.text()
+        data_shape = 416
+        batch_size = int(self.args_batch_size.currentText())
+        gpus = '0'
+        epochs = int(self.args_epochs.value())
+        learning_rate = 0.0001
+        no_random_shape = True
+        dataset = self.dataset_file.text()
+        dataset_dir = os.path.normpath(os.path.dirname(dataset))
+        classes_list = os.path.join(dataset_dir, '{}.labels'.format(Export.config('default_dataset_name')))
+
+        self.progress.setMaximum(epochs)
+
+        yolov3.train_yolov3(output_dir, self.progress, data_shape=data_shape, batch_size=batch_size, gpus=gpus, 
+            epochs=epochs, lr=learning_rate, no_random_shape=no_random_shape, classes_list=classes_list)
+
