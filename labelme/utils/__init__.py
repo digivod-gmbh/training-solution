@@ -28,4 +28,6 @@ from .qt import distance
 from .qt import distancetoline
 from .qt import fmtShortcut
 
+from .threads import *
+
 from .export import *

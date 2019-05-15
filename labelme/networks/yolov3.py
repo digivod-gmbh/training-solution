@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import time
 import warnings
@@ -22,7 +23,9 @@ from gluoncv.utils import LRScheduler
 from gluoncv.utils import download, viz
 from matplotlib import pyplot as plt
 
+from labelme.logger import logger
 from labelme.utils.map import Map
+from labelme.windows import Training
 
    
 def read_classes(args):
@@ -32,7 +35,10 @@ def read_classes(args):
 def get_dataset(args):
     train_dataset = gcv.data.RecordFileDetection(args.train_dataset)
     val_dataset = gcv.data.RecordFileDetection(args.validate_dataset)
-    classes = read_classes(args.classes_list)
+    classes = read_classes(args)
+
+    logger.debug('Read classes: {}'.format(classes))
+
     val_metric = VOC07MApMetric(iou_thresh=0.5, class_names=classes)
    
     if args.num_samples < 0:
@@ -99,8 +105,8 @@ def validate(net, val_data, ctx, eval_metric):
             # split ground truths
             gt_ids.append(y.slice_axis(axis=-1, begin=4, end=5))
             gt_bboxes.append(y.slice_axis(axis=-1, begin=0, end=4))
-            gt_difficults.append(y.slice_axis(axis=-1, begin=5, end=6) if y.shape[-1] > 5 else None)
- 
+            gt_difficults.append(y.slice_axis(axis=-1, begin=5, end=6) if y.shape[-1] > 5 else [None])
+
         # update metric
         eval_metric.update(det_bboxes, det_ids, det_scores, gt_bboxes, gt_ids, gt_difficults)
     return eval_metric.get()
@@ -155,7 +161,13 @@ def train(net, train_data, val_data, eval_metric, ctx, args):
     logger.info(args)
     logger.info('Start training from [Epoch {}]'.format(args.start_epoch))
     best_map = [0]
+    epoch_count = 0
+    progress_start = 4
+
     for epoch in range(args.start_epoch, args.epochs):
+        args.worker.update.emit(_('Training epoch {} ...').format(epoch + 1), progress_start + epoch_count)
+        epoch_count += 1
+
         if args.mixup:
             # TODO(zhreshold): more elegant way to control mixup during runtime
             try:
@@ -218,19 +230,25 @@ def train(net, train_data, val_data, eval_metric, ctx, args):
         if not (epoch + 1) % args.val_interval:
             print("validate:", epoch + 1)
             # consider reduce the frequency of validation to save time
-            #map_name, mean_ap = validate(net, val_data, ctx, eval_metric)
-            #val_msg = '\n'.join(['{}={}'.format(k, v) for k, v in zip(map_name, mean_ap)])
-            #logger.info('[Epoch {}] Validation: \n{}'.format(epoch, val_msg))
-            #current_map = float(mean_ap[-1])
-            current_map = 0.
+            map_name, mean_ap = validate(net, val_data, ctx, eval_metric)
+            val_msg = '\n'.join(['{}={}'.format(k, v) for k, v in zip(map_name, mean_ap)])
+            logger.info('[Epoch {}] Validation: \n{}'.format(epoch, val_msg))
+            current_map = float(mean_ap[-1])
+            #current_map = 0.
         else:
             current_map = 0.
         #save_params(net, best_map, current_map, epoch, args.save_interval, args.save_prefix)
-        net.save_parameters('yolo3_pikachu')
-    net.save_parameters('yolo3_pikachu')
+        param_file = '{}_{}_{}_{}.params'.format(Training.config('default_training_name'), best_map, current_map, epoch)
+        net.save_parameters(os.path.join(args.output_dir, param_file))
+
+        if current_map > best_map[0]:
+            best_map[0] = current_map
+
+    param_file = '{}.params'.format(Training.config('default_training_name'))
+    net.save_parameters(os.path.join(args.output_dir, param_file))
  
 
-def train_yolov3(output_dir, progress, data_shape=416, batch_size=8, num_workers=1, gpus='0', epochs=10, resume='',
+def train_yolov3(worker, output_dir, data_shape=416, batch_size=8, num_workers=1, gpus='0', epochs=10, resume='',
     start_epoch=0, lr=0.001, lr_mode='step', lr_decay=0.1, lr_decay_period=0,
     lr_decay_epoch='160,180', warmup_lr=0.0, warmup_epochs=0, momentum=0.9, wd=0.0005,
     log_interval=100, save_prefix='', save_interval=1, val_interval=1, seed=42,
@@ -239,8 +257,8 @@ def train_yolov3(output_dir, progress, data_shape=416, batch_size=8, num_workers
     pretrained=0, label_smooth=False, only_inference=False):
 
     args = Map({
+        'worker': worker,
         'output_dir': output_dir,
-        #'network': 'yolo',
         'data_shape': data_shape,
         'batch_size': batch_size,
         'num_workers': num_workers,
@@ -278,21 +296,22 @@ def train_yolov3(output_dir, progress, data_shape=416, batch_size=8, num_workers
 
     # fix seed for mxnet, numpy and python builtin random generator.
     gutils.random.seed(args.seed)
- 
-    # training contexts
-    ctx = [mx.gpu(int(i)) for i in args.gpus.split(',') if i.strip()]
-    ctx = ctx if ctx else [mx.cpu()]
- 
+
+    worker.update.emit(_('Loading model ...'), 1)
+
     # network
     net_name = 'yolo3_darknet53_coco'
     args.save_prefix += net_name
     # use sync bn if specified
-    num_sync_bn_devices = len(ctx) if args.syncbn else -1
+    #num_sync_bn_devices = len(ctx) if args.syncbn else -1
+    num_sync_bn_devices = 1
     
     classes = read_classes(args)
     
     if not args.only_inference:
         
+        worker.update.emit(_('Loading model ...'), 1)
+
         net = None
         if num_sync_bn_devices > 1:
             print("num_sync_bn_devices > 1")
@@ -306,12 +325,22 @@ def train_yolov3(output_dir, progress, data_shape=416, batch_size=8, num_workers
         else:
             print("num_sync_bn_devices <= 1")        
             if args.pretrained == 0:
-                net = get_model(net_name, pretrained=True)            
+                net = get_model(net_name, pretrained=True)
             else:
                 net = get_model(net_name, pretrained_base=True)
             net.reset_class(classes)            
             async_net = net
-               
+
+        # training contexts
+        ctx = [mx.gpu(int(i)) for i in args.gpus.split(',') if i.strip()]
+        try:
+            net.collect_params().reset_ctx(ctx)
+        except:
+            ctx = [mx.cpu()]
+        logger.debug('Use context: {}'.format(ctx))
+
+        worker.update.emit(_('Loading weights ...'), 2)
+
         if args.resume.strip():
             net.load_parameters(args.resume.strip())
             async_net.load_parameters(args.resume.strip())
@@ -321,16 +350,21 @@ def train_yolov3(output_dir, progress, data_shape=416, batch_size=8, num_workers
                 net.initialize()
                 async_net.initialize()
      
+        worker.update.emit(_('Loading dataset ...'), 3)
+
         # training data
         train_dataset, val_dataset, eval_metric = get_dataset(args)
         train_data, val_data = get_dataloader(
             async_net, train_dataset, val_dataset, args.data_shape, args.batch_size, args.num_workers, args)
      
+        worker.update.emit(_('Start training ...'), 4)
+
         # training
         train(net, train_data, val_data, eval_metric, ctx, args)
         
         # export
-        net.export('export_yolo3_pikachu')
+        training_name = '{}_{}'.format(Training.config('default_training_name'), net_name)
+        net.export(os.path.join(args.output_dir, training_name))
     
     # test_url = 'https://raw.githubusercontent.com/zackchase/mxnet-the-straight-dope/master/img/pikachu.jpg'
     # download(test_url, 'pikachu_test.jpg')
@@ -342,3 +376,4 @@ def train_yolov3(output_dir, progress, data_shape=416, batch_size=8, num_workers
     # cid, score, bbox = net(x)
     # ax = viz.plot_bbox(image, bbox[0], score[0], cid[0], class_names=classes)
     # plt.show()
+

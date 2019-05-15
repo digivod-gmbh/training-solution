@@ -29,7 +29,7 @@ from labelme.widgets import LabelQListWidget
 from labelme.widgets import ToolBar
 from labelme.widgets import ZoomWidget
 
-from labelme.windows import ExportWindow
+from labelme.windows import ExportWindow, ExportState
 from labelme.windows import TrainingWindow
 
 
@@ -90,8 +90,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.labelList = LabelQListWidget()
         self.lastOpenDir = None
-        self.lastExportDir = None
-        self.lastExportFile = None
+        self.exportState = ExportState()
 
         # self.flag_dock = self.flag_widget = None
         # self.flag_dock = QtWidgets.QDockWidget(_('Flags'), self)
@@ -606,7 +605,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # XXX: Could be completely declarative.
         # Restore application settings.
-        self.settings = QtCore.QSettings('labelme', 'labelme')
+        self.settings = QtCore.QSettings('digivod', 'labelme')
         # FIXME: QSettings.value can return None on PyQt4
         self.recentFiles = self.settings.value('recentFiles', []) or []
         size = self.settings.value('window/size', QtCore.QSize(config['window_width'], config['window_height']))
