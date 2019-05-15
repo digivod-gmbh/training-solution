@@ -30,10 +30,13 @@ del here
 
 install_requires = [
     'matplotlib',
-    'numpy',
+    'numpy==1.14.6',
     'Pillow>=2.8.0',
     'PyYAML',
     'qtpy',
+    'mxnet==1.4.0.post0',
+	'mxnet-cu100mkl==1.4.0.post0',
+	'gluoncv==0.3.0',
     'termcolor',
 ]
 
@@ -96,25 +99,19 @@ if sys.argv[1] == 'release':
 def get_long_description():
     with open('README.md') as f:
         long_description = f.read()
-    try:
-        import github2pypi
-        return github2pypi.replace_url(
-            slug='wkentaro/labelme', content=long_description
-        )
-    except Exception:
-        return long_description
+    return long_description
 
 
 setup(
     name='labelme',
     version=version,
     packages=find_packages(),
-    description='Image Polygonal Annotation with Python',
+    description='Digivod Training Solution',
     long_description=get_long_description(),
     long_description_content_type='text/markdown',
-    author='Kentaro Wada',
-    author_email='www.kentaro.wada@gmail.com',
-    url='https://github.com/wkentaro/labelme',
+    author='Digivod GmbH',
+    author_email='entwicklung@digivod.de',
+    url='https://github.com/digivod-gmbh/training-solution',
     install_requires=install_requires,
     license='GPLv3',
     keywords='Image Annotation, Machine Learning',
@@ -131,11 +128,7 @@ setup(
     package_data={'labelme': ['icons/*', 'config/*.yaml']},
     entry_points={
         'console_scripts': [
-            'labelme=labelme.main:main',
-            'labelme_draw_json=labelme.cli.draw_json:main',
-            'labelme_draw_label_png=labelme.cli.draw_label_png:main',
-            'labelme_json_to_dataset=labelme.cli.json_to_dataset:main',
-            'labelme_on_docker=labelme.cli.on_docker:main',
+            'digivod_training=labelme.main:main',
         ],
     },
 )

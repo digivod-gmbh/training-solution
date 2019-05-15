@@ -6,6 +6,7 @@ import sys
 import gettext
 import time
 import traceback
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -167,7 +168,7 @@ def _main():
 
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName(__appname__)
-    app.setWindowIcon(newIcon('icon'))
+    app.setWindowIcon(newIcon('digivod'))
     win = MainWindow(
         config=config,
         filename=filename,
