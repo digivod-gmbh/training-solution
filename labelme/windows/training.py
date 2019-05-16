@@ -7,12 +7,11 @@ import importlib
 import time
 import os
 import mxnet as mx
-import threading
-import multiprocessing
 
 from labelme.logger import logger
 from labelme.windows import Export
 from labelme.utils import Worker, TrainingObject
+from labelme.utils import Application
 
 class Training():
 
@@ -231,50 +230,50 @@ class TrainingWindow(QtWidgets.QDialog):
         self.progress.setLabelText(_('Initializing training thread ...'))
         self.progress.setValue(0)
 
-        self.worker = Worker(self) # TODO: Try to use self.parent
-        self.worker_object = TrainingObject(self.worker, self.start_training_progress, self.update_training_progress)
-        self.worker.addObject(self.worker_object)
-        self.worker.start()
-
-        """
-        thread = threading.Thread(target = yolov3.train_yolov3, kwargs = {
-            'callback_func': self.update_training_progress, 'output_dir': output_dir, 
-            'train_dataset': dataset_train_file, 'validate_dataset': dataset_val_file, 
-            'data_shape': data_shape, 'batch_size': batch_size, 'gpus': gpus, 
-            'epochs': epochs, 'lr': learning_rate, 'no_random_shape': no_random_shape, 
-            'classes_list': classes_list
-        })
-        thread.start()
-        """
-
-        """
-        yolov3.train_yolov3(self._update_training_progress, output_dir, self.progress, train_dataset=dataset_train_file, validate_dataset=dataset_val_file, 
-            data_shape=data_shape, batch_size=batch_size, gpus=gpus, epochs=epochs, lr=learning_rate, 
-            no_random_shape=no_random_shape, classes_list=classes_list)
-        """
+        worker_idx, worker = Application.createWorker()
+        self.worker_idx = worker_idx
+        self.worker_object = TrainingObject(worker, self.start_training_progress, self.update_training_progress)
+        self.progress.canceled.disconnect()
+        self.progress.canceled.connect(self.abort_training_progress)
+        worker.addObject(self.worker_object)
+        worker.start()
 
     def start_training_progress(self):
-        from labelme.networks import yolov3
+        from labelme.networks import NetworkYoloV3
 
         output_dir = self.output_folder.text()
-        data_shape = 416
         batch_size = int(self.args_batch_size.currentText())
         gpus = '0' # TODO: Make configurable
         epochs = int(self.args_epochs.value())
-        learning_rate = 0.0001
-        no_random_shape = True
+
         dataset_train_file = os.path.normpath(self.dataset_train_file.text())
-        dataset_val_file = os.path.normpath(self.dataset_val_file.text())
+        dataset_val_file = ''
+        if self.dataset_val_file.text():
+            dataset_val_file = os.path.normpath(self.dataset_val_file.text())
+
         dataset_dir = os.path.normpath(os.path.dirname(dataset_train_file))
         classes_list = os.path.join(dataset_dir, '{}.labels'.format(Export.config('default_dataset_name')))
 
-        yolov3.train_yolov3(self.worker_object, output_dir, train_dataset=dataset_train_file, validate_dataset=dataset_val_file, 
-            data_shape=data_shape, batch_size=batch_size, gpus=gpus, epochs=epochs, lr=learning_rate, 
-            no_random_shape=no_random_shape, classes_list=classes_list)
+        network = NetworkYoloV3(self.worker_object, output_dir, train_dataset=dataset_train_file, validate_dataset=dataset_val_file, 
+            batch_size=batch_size, gpus=gpus, epochs=epochs, classes_list=classes_list)
+        self.worker_object.setAbortFunc(network.abort)
+        network.start()
 
     def update_training_progress(self, msg=None, value=None):
+        if self.progress.wasCanceled():
+            return
         if msg is not None:
             self.progress.setLabelText(msg)
         if value is not None:
             self.progress.setValue(value)
+
+    def abort_training_progress(self):
+        self.progress.setLabelText(_('Cancelling ...'))
+        #self.progress.setValue(0)
+        self.progress.setMaximum(0)
+        self.worker_object.abort()
+        worker = Application.getWorker(self.worker_idx)
+        worker.wait()
+        self.progress.cancel()
+        Application.destroyWorker(self.worker_idx)
 

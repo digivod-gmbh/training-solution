@@ -29,5 +29,5 @@ from .qt import distancetoline
 from .qt import fmtShortcut
 
 from .threads import *
-
+from .application import *
 from .export import *
