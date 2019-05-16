@@ -9,6 +9,7 @@ window_width: 1350
 window_height: 850
 
 flags: null
+label_flags: null
 labels: null
 file_search: null
 sort_labels: true

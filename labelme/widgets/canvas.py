@@ -148,7 +148,7 @@ class Canvas(QtWidgets.QWidget):
         """Update line with last point and current coordinates."""
         try:
             if QT5:
-                pos = self.transformPos(ev.pos())
+                pos = self.transformPos(ev.localPos())
             else:
                 pos = self.transformPos(ev.posF())
         except AttributeError:
@@ -280,7 +280,7 @@ class Canvas(QtWidgets.QWidget):
 
     def mousePressEvent(self, ev):
         if QT5:
-            pos = self.transformPos(ev.pos())
+            pos = self.transformPos(ev.localPos())
         else:
             pos = self.transformPos(ev.posF())
         if ev.button() == QtCore.Qt.LeftButton:
@@ -643,9 +643,10 @@ class Canvas(QtWidgets.QWidget):
         elif key == QtCore.Qt.Key_Return and self.canCloseShape():
             self.finalise()
 
-    def setLastLabel(self, text):
+    def setLastLabel(self, text, flags):
         assert text
         self.shapes[-1].label = text
+        self.shapes[-1].flags = flags
         self.shapesBackups.pop()
         self.storeShapes()
         return self.shapes[-1]

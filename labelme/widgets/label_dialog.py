@@ -1,3 +1,5 @@
+import re
+
 from qtpy import QT_VERSION
 from qtpy import QtCore
 from qtpy import QtGui
@@ -29,7 +31,7 @@ class LabelDialog(QtWidgets.QDialog):
 
     def __init__(self, text="Enter object label", parent=None, labels=None,
                  sort_labels=True, show_text_field=True,
-                 completion='startswith', fit_to_content=None):
+                 completion='startswith', fit_to_content=None, flags=None):
         if fit_to_content is None:
             fit_to_content = {'row': False, 'column': True}
         self._fit_to_content = fit_to_content
@@ -39,6 +41,8 @@ class LabelDialog(QtWidgets.QDialog):
         self.edit.setPlaceholderText(text)
         self.edit.setValidator(labelme.utils.labelValidator())
         self.edit.editingFinished.connect(self.postProcess)
+        if flags:
+            self.edit.textChanged.connect(self.updateFlags)
         layout = QtWidgets.QVBoxLayout()
         if show_text_field:
             layout.addWidget(self.edit)
@@ -74,6 +78,14 @@ class LabelDialog(QtWidgets.QDialog):
         self.labelList.currentItemChanged.connect(self.labelSelected)
         self.edit.setListWidget(self.labelList)
         layout.addWidget(self.labelList)
+        # label_flags
+        if flags is None:
+            flags = {}
+        self._flags = flags
+        self.flagsLayout = QtWidgets.QVBoxLayout()
+        self.resetFlags()
+        layout.addItem(self.flagsLayout)
+        self.edit.textChanged.connect(self.updateFlags)
         self.setLayout(layout)
         # completion
         completer = QtWidgets.QCompleter()
@@ -122,7 +134,47 @@ class LabelDialog(QtWidgets.QDialog):
             text = text.trimmed()
         self.edit.setText(text)
 
-    def popUp(self, text=None, move=True):
+    def updateFlags(self, label_new):
+        # keep state of shared flags
+        flags_old = self.getFlags()
+
+        flags_new = {}
+        for pattern, keys in self._flags.items():
+            if re.match(pattern, label_new):
+                for key in keys:
+                    flags_new[key] = flags_old.get(key, False)
+        self.setFlags(flags_new)
+
+    def deleteFlags(self):
+        for i in reversed(range(self.flagsLayout.count())):
+            item = self.flagsLayout.itemAt(i).widget()
+            self.flagsLayout.removeWidget(item)
+            item.setParent(None)
+
+    def resetFlags(self, label=''):
+        flags = {}
+        for pattern, keys in self._flags.items():
+            if re.match(pattern, label):
+                for key in keys:
+                    flags[key] = False
+        self.setFlags(flags)
+
+    def setFlags(self, flags):
+        self.deleteFlags()
+        for key in flags:
+            item = QtWidgets.QCheckBox(key, self)
+            item.setChecked(flags[key])
+            self.flagsLayout.addWidget(item)
+            item.show()
+
+    def getFlags(self):
+        flags = {}
+        for i in range(self.flagsLayout.count()):
+            item = self.flagsLayout.itemAt(i).widget()
+            flags[item.text()] = item.isChecked()
+        return flags
+
+    def popUp(self, text=None, move=True, flags=None):
         if self._fit_to_content['row']:
             self.labelList.setMinimumHeight(
                 self.labelList.sizeHintForRow(0) * self.labelList.count() + 2
@@ -134,6 +186,10 @@ class LabelDialog(QtWidgets.QDialog):
         # if text is None, the previous label in self.edit is kept
         if text is None:
             text = self.edit.text()
+        if flags:
+            self.setFlags(flags)
+        else:
+            self.resetFlags(text)
         self.edit.setText(text)
         self.edit.setSelection(0, len(text))
         items = self.labelList.findItems(text, QtCore.Qt.MatchFixedString)
@@ -146,4 +202,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.edit.setFocus(QtCore.Qt.PopupFocusReason)
         if move:
             self.move(QtGui.QCursor.pos())
-        return self.edit.text() if self.exec_() else None
+        if self.exec_():
+            return self.edit.text(), self.getFlags()
+        else:
+            return None, None
