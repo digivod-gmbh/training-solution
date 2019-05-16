@@ -147,6 +147,12 @@ class TrainingWindow(QtWidgets.QDialog):
             mb.warning(self, _('Training'), _('Please select a valid training dataset file'))
             return
 
+        output_dir = self.output_folder.text()
+        if not output_dir or not os.path.isdir(output_dir):
+            mb = QtWidgets.QMessageBox
+            mb.warning(self, _('Training'), _('Please select a valid output folder'))
+            return
+
         network = self.networks.currentText()
 
         self.progress = QtWidgets.QProgressDialog(_('Training {} ...').format(network), _('Cancel'), 0, 100, self)
@@ -167,16 +173,6 @@ class TrainingWindow(QtWidgets.QDialog):
 
         training_func = getattr(self, func_name)
         training_func()
-
-        # if self.progress.wasCanceled():
-        #     self.progress.close()
-        #     return
-
-        # self.progress.close()
-
-        # mb = QtWidgets.QMessageBox
-        # mb.information(self, _('Training'), _('Network {} has been trained successfully').format(network))
-        # self.close()
 
     def cancel_btn_clicked(self):
         self.close()
@@ -232,7 +228,7 @@ class TrainingWindow(QtWidgets.QDialog):
 
         worker_idx, worker = Application.createWorker()
         self.worker_idx = worker_idx
-        self.worker_object = TrainingObject(worker, self.start_training_progress, self.update_training_progress)
+        self.worker_object = TrainingObject(worker, self.start_training_progress, self.error_training_progress, self.update_training_progress, self.finish_training_progress)
         self.progress.canceled.disconnect()
         self.progress.canceled.connect(self.abort_training_progress)
         worker.addObject(self.worker_object)
@@ -242,7 +238,9 @@ class TrainingWindow(QtWidgets.QDialog):
         from labelme.networks import NetworkYoloV3
 
         output_dir = self.output_folder.text()
+        
         batch_size = int(self.args_batch_size.currentText())
+        #self.args_gpus
         gpus = '0' # TODO: Make configurable
         epochs = int(self.args_epochs.value())
 
@@ -269,11 +267,21 @@ class TrainingWindow(QtWidgets.QDialog):
 
     def abort_training_progress(self):
         self.progress.setLabelText(_('Cancelling ...'))
-        #self.progress.setValue(0)
         self.progress.setMaximum(0)
         self.worker_object.abort()
         worker = Application.getWorker(self.worker_idx)
         worker.wait()
         self.progress.cancel()
         Application.destroyWorker(self.worker_idx)
+
+    def finish_training_progress(self):
+        network = self.networks.currentText()
+        mb = QtWidgets.QMessageBox()
+        mb.information(self, _('Training'), _('Network {} has been trained successfully').format(network))
+        self.close()
+
+    def error_training_progress(self, e):
+        self.progress.cancel()
+        mb = QtWidgets.QMessageBox()
+        mb.warning(self, _('Training'), _('Error during training of network:\n{}').format(str(e)))
 

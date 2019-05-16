@@ -1,6 +1,10 @@
 from qtpy import QtCore
 from labelme.logger import logger
 
+class AbortWorkerException(Exception):
+    pass
+
+
 class Worker(QtCore.QThread):
 
     def __init__(self, parent=None):
@@ -30,24 +34,49 @@ class Worker(QtCore.QThread):
 class WorkerObject(QtCore.QObject):
 
     success = QtCore.Signal()
-    aborted = QtCore.Signal()
     error = QtCore.Signal(str)
 
     def __init__(self, worker):
         super().__init__()
-        self.start_func = None
-        self.abort_func = None
         self.moveToThread(worker)
         self.success.connect(worker.success)
-        self.aborted.connect(worker.abort)
         self.error.connect(worker.error)
+
+
+class TrainingObject(WorkerObject):
+
+    handleError = QtCore.Signal(str)
+    finished = QtCore.Signal()
+    update = QtCore.Signal(str, int)
+    aborted = QtCore.Signal()
+
+    def __init__(self, worker, start_func, error_func, update_func=None, finish_func=None):
+        super().__init__(worker)
+
+        self.start_func = start_func
+        self.error_func = error_func
+        self.update_func = update_func
+        self.finish_func = finish_func
+        self.abort_func = None
+
+        self.update.connect(self.update_func)
+        self.finished.connect(self.finish_func)
+        self.handleError.connect(self.error_func)
+        self.aborted.connect(worker.abort)
+
+    def setAbortFunc(self, abort_func):
+        self.abort_func = abort_func
 
     def start(self):
         try:
             self.start_func()
+        except AbortWorkerException as e:
+            return
         except Exception as e:
+            self.handleError.emit(str(e))
             self.error.emit(str(e))
-        self.success.emit()
+            return
+        self.finish()
 
     def abort(self):
         try:
@@ -56,17 +85,9 @@ class WorkerObject(QtCore.QObject):
         except Exception as e:
             self.error.emit(str(e))
 
-    def setAbortFunc(self, abort_func):
-        self.abort_func = abort_func
-
-
-class TrainingObject(WorkerObject):
-
-    update = QtCore.Signal(str, int)
-
-    def __init__(self, worker, start_func, update_func):
-        super().__init__(worker)
-        self.start_func = start_func
-        self.update_func = update_func
-        self.update.connect(update_func)
-
+    def finish(self):
+        try:
+            self.finished.emit()
+            self.success.emit()
+        except Exception as e:
+            self.error.emit(str(e))

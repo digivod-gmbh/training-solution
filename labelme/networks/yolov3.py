@@ -25,7 +25,7 @@ from matplotlib import pyplot as plt
 from labelme.utils.map import Map
 from labelme.logger import logger
 from labelme.windows import Training
-from labelme.networks import Network, AbortException
+from labelme.networks import Network
 
    
 class NetworkYoloV3(Network):
@@ -102,16 +102,12 @@ class NetworkYoloV3(Network):
         self.net_name = 'yolo3_darknet53_coco'
 
     def start(self):
-        try:
-            self.prepare()
-            self.thread.update.emit(_('Start training ...'), 4)
-            self.train()
-            training_name = '{}_{}'.format(Training.config('default_training_name'), self.net_name)
-            self.net.export(os.path.join(self.args.output_dir, training_name))
-            self.thread.update.emit(_('Finished training'), self.args.epochs + 4)
-        except AbortException:
-            logger.debug('Training of YoloV3 stopped')
-            return
+        self.prepare()
+        self.thread.update.emit(_('Start training ...'), 4)
+        self.train()
+        training_name = '{}_{}'.format(Training.config('default_training_name'), self.net_name)
+        self.net.export(os.path.join(self.args.output_dir, training_name))
+        self.thread.update.emit(_('Finished training'), self.args.epochs + 4)
 
     def prepare(self):
         # fix seed for mxnet, numpy and python builtin random generator.

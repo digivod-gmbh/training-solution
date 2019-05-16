@@ -1,7 +1,5 @@
 import sys
-
-class AbortException(Exception):
-    pass
+from labelme.utils.threads import AbortWorkerException
 
 class Network():
 
@@ -14,7 +12,7 @@ class Network():
     
     def checkAborted(self):
         if self.isAborted:
-            raise AbortException()
+            raise AbortWorkerException()
 
     def abort(self):
         self.isAborted = True
