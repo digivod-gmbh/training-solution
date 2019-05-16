@@ -1,6 +1,5 @@
 import os
 import sys
-import logging
 import time
 import warnings
 import numpy as np
@@ -23,8 +22,8 @@ from gluoncv.utils import LRScheduler
 from gluoncv.utils import download, viz
 from matplotlib import pyplot as plt
 
-from labelme.logger import logger
 from labelme.utils.map import Map
+from labelme.logger import logger
 from labelme.windows import Training
 from labelme.networks import Network, AbortException
 
@@ -297,13 +296,6 @@ class NetworkYoloV3(Network):
         scale_metrics = mx.metric.Loss('BoxScaleLoss')
         cls_metrics = mx.metric.Loss('ClassLoss')
     
-        # set up logger
-        log_file_path = os.path.join(self.args.output_dir, self.args.save_prefix + '_train.log')
-        log_dir = os.path.dirname(log_file_path)
-        if log_dir and not os.path.exists(log_dir):
-            os.makedirs(log_dir)
-        fh = logging.FileHandler(log_file_path)
-        logger.addHandler(fh)
         logger.info(self.args)
         logger.info('Start training from [Epoch {}]'.format(self.args.start_epoch))
         best_map = [0]

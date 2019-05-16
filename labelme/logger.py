@@ -4,6 +4,8 @@ import termcolor
 
 from . import __appname__
 
+import os
+
 
 COLORS = {
     'WARNING': 'yellow',
@@ -16,8 +18,10 @@ COLORS = {
 
 class ColoredFormatter(logging.Formatter):
 
+    date_format = '%Y-%m-%d %H:%M:%S'
+
     def __init__(self, msg, use_color=True):
-        logging.Formatter.__init__(self, msg)
+        logging.Formatter.__init__(self, msg, ColoredFormatter.date_format)
         self.use_color = use_color
 
     def format(self, record):
@@ -33,17 +37,28 @@ class ColoredFormatter(logging.Formatter):
 class ColoredLogger(logging.Logger):
 
     fmt_filename = termcolor.colored('%(filename)s', attrs={'bold': True})
-    FORMAT = '%(levelname)s %(message)s ({}:%(lineno)d)'.format(fmt_filename)
+    FORMAT = '%(asctime)s %(levelname)s %(message)s ({}:%(lineno)d)'.format(fmt_filename)
 
     def __init__(self, name):
         logging.Logger.__init__(self, name, logging.INFO)
 
-        color_formatter = ColoredFormatter(self.FORMAT)
+        # Write log to file
+        home = os.path.expanduser('~/.digivod/')
+        log_file_path = os.path.join(home, 'training_solution.log')
+        log_dir = os.path.dirname(log_file_path)
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        file_format = '%(asctime)s %(levelname)s %(message)s (%(filename)s:%(lineno)d)'
+        file_formatter = ColoredFormatter(file_format, False)
+        file_log = logging.FileHandler(log_file_path)
+        file_log.setFormatter(file_formatter)
+        self.addHandler(file_log)
 
+        color_formatter = ColoredFormatter(self.FORMAT)
         console = logging.StreamHandler()
         console.setFormatter(color_formatter)
-
         self.addHandler(console)
+
         return
 
 
