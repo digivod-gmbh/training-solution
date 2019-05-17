@@ -7,26 +7,70 @@ import importlib
 import time
 import os
 import mxnet as mx
+import json
 
 from labelme.logger import logger
 from labelme.windows import Export
-from labelme.utils import Worker, TrainingObject
-from labelme.utils import Application
+from labelme.utils import Worker, TrainingObject, Application
+from labelme.utils.map import Map
+from labelme.networks import NetworkYoloV3
+
 
 class Training():
 
     @staticmethod
     def config(key = None):
         config = {
-            'default_training_name': 'training',
+            'config_file_extension': '.train',
             'networks': {
-                '_yolov3': _('YoloV3')
+                'yolov3': _('YoloV3')
+            },
+            'objects': {
+                'yolov3': lambda: NetworkYoloV3()
             }
         }
         if key is not None:
             if key in config:
                 return config[key]
+            return None
         return config
+
+    @staticmethod
+    def create_training_config(config_file, network, dataset_format, label_list, datasets, args):
+        data = {
+            'network': network,
+            'dataset_format': dataset_format,
+            'label_list': label_list,
+            'datasets': datasets,
+            'args': args,
+            'architecture': None,
+            'weights': None,
+        }
+        logger.debug('Create training config: {}'.format(data))
+        with open(config_file, 'w+') as f:
+            json.dump(data, f, indent=2)
+            logger.debug('Saved training config in file: {}'.format(config_file))
+    
+    @staticmethod
+    def update_training_config(config_file, new_data):
+        old_data = {}
+        with open(config_file, 'r') as f:
+            old_data = json.loads(f.read())
+            logger.debug('Loaded training config: {}'.format(old_data))
+        data = old_data.copy()
+        data.update(new_data)
+        logger.debug('Update training config: {}'.format(new_data))
+        with open(config_file, 'w+') as f:
+            json.dump(data, f, indent=2)
+            logger.debug('Saved training config in file: {}'.format(config_file))
+
+    @staticmethod
+    def read_training_config(config_file):
+        data = {}
+        with open(config_file, 'r') as f:
+            data = json.loads(f.read())
+            logger.debug('Read training config: {}'.format(data))
+        return Map(data)
 
 
 class TrainingWindow(QtWidgets.QDialog):
@@ -55,45 +99,29 @@ class TrainingWindow(QtWidgets.QDialog):
         network_group_layout.addWidget(self.networks)
         layout.addWidget(network_group)
 
-        dataset_train_file_label = QtWidgets.QLabel(_('Training dataset'))
-        self.dataset_train_file = QtWidgets.QLineEdit()
-        dataset_train_browse_btn = QtWidgets.QPushButton(_('Browse'))
-        dataset_train_browse_btn.clicked.connect(self.dataset_train_browse_btn_clicked)
+        self.dataset_file = QtWidgets.QLineEdit()
+        dataset_file_browse_btn = QtWidgets.QPushButton(_('Browse'))
+        dataset_file_browse_btn.clicked.connect(self.dataset_file_browse_btn_clicked)
 
-        dataset_val_file_label = QtWidgets.QLabel(_('Validation dataset'))
-        self.dataset_val_file = QtWidgets.QLineEdit()
-        if self.parent.exportState.lastFileVal is not None:
-            self.dataset_val_file.setText(self.parent.exportState.lastFileVal)
-        dataset_val_browse_btn = QtWidgets.QPushButton(_('Browse'))
-        dataset_val_browse_btn.clicked.connect(self.dataset_val_browse_btn_clicked)
-        dataset_format_label = QtWidgets.QLabel(_('Dataset format:'))
-        self.dataset_format_value_label = QtWidgets.QLabel('-')
+        dataset_file_group = QtWidgets.QGroupBox()
+        dataset_file_group.setTitle(_('Dataset'))
+        dataset_file_group_layout = QtWidgets.QGridLayout()
+        dataset_file_group.setLayout(dataset_file_group_layout)
+        dataset_file_group_layout.addWidget(self.dataset_file, 0, 0)
+        dataset_file_group_layout.addWidget(dataset_file_browse_btn, 0, 1)
+        layout.addWidget(dataset_file_group)
 
-        dataset_files_group = QtWidgets.QGroupBox()
-        dataset_files_group.setTitle(_('Dataset files'))
-        dataset_files_group_layout = QtWidgets.QGridLayout()
-        dataset_files_group.setLayout(dataset_files_group_layout)
-        dataset_files_group_layout.addWidget(dataset_train_file_label, 0, 0, 1, 3)
-        dataset_files_group_layout.addWidget(self.dataset_train_file, 1, 0, 1, 2)
-        dataset_files_group_layout.addWidget(dataset_train_browse_btn, 1, 2)
-        dataset_files_group_layout.addWidget(dataset_val_file_label, 2, 0, 1, 3)
-        dataset_files_group_layout.addWidget(self.dataset_val_file, 3, 0, 1, 2)
-        dataset_files_group_layout.addWidget(dataset_val_browse_btn, 3, 2)
-        dataset_files_group_layout.addWidget(dataset_format_label, 4, 0)
-        dataset_files_group_layout.addWidget(self.dataset_format_value_label, 4, 1, 1, 2)
-        layout.addWidget(dataset_files_group)
-
-        self.output_folder = QtWidgets.QLineEdit()
+        self.output_file = QtWidgets.QLineEdit()
         output_browse_btn = QtWidgets.QPushButton(_('Browse'))
         output_browse_btn.clicked.connect(self.output_browse_btn_clicked)
 
-        output_folder_group = QtWidgets.QGroupBox()
-        output_folder_group.setTitle(_('Output folder'))
-        output_folder_group_layout = QtWidgets.QGridLayout()
-        output_folder_group.setLayout(output_folder_group_layout)
-        output_folder_group_layout.addWidget(self.output_folder, 0, 0)
-        output_folder_group_layout.addWidget(output_browse_btn, 0, 1)
-        layout.addWidget(output_folder_group)
+        output_file_group = QtWidgets.QGroupBox()
+        output_file_group.setTitle(_('Output file'))
+        output_file_group_layout = QtWidgets.QGridLayout()
+        output_file_group.setLayout(output_file_group_layout)
+        output_file_group_layout.addWidget(self.output_file, 0, 0)
+        output_file_group_layout.addWidget(output_browse_btn, 0, 1)
+        layout.addWidget(output_file_group)
 
         args_epochs_label = QtWidgets.QLabel(_('Epochs'))
         self.args_epochs = QtWidgets.QSpinBox()
@@ -136,22 +164,29 @@ class TrainingWindow(QtWidgets.QDialog):
         cancel_btn.clicked.connect(self.cancel_btn_clicked)
         layout.addWidget(button_box)
 
-        # Init data
-        if self.parent.exportState.lastFileTrain is not None:
-            self.init_dataset_file_input(True, self.parent.exportState.lastFileTrain, Export.extension2format(self.parent.exportState.lastExtension))
-
     def training_btn_clicked(self):
-        dataset_train_file = self.dataset_train_file.text()
-        if not dataset_train_file or not os.path.isfile(dataset_train_file):
+        dataset_file = self.dataset_file.text()
+        dataset_file_name = os.path.splitext(os.path.basename(dataset_file))[0]
+        dataset_dir = os.path.dirname(dataset_file)
+        if not dataset_file or not os.path.isfile(dataset_file):
             mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Training'), _('Please select a valid training dataset file'))
+            mb.warning(self, _('Training'), _('Please select a valid dataset file'))
             return
 
-        output_dir = self.output_folder.text()
+        output_file = self.output_file.text()
+        output_file_name = os.path.splitext(os.path.basename(output_file))[0]
+        output_dir = os.path.dirname(output_file)
         if not output_dir or not os.path.isdir(output_dir):
             mb = QtWidgets.QMessageBox
             mb.warning(self, _('Training'), _('Please select a valid output folder'))
             return
+
+        if len(os.listdir(output_dir)) > 0:
+            mb = QtWidgets.QMessageBox
+            msg = _('The selected output directory "{}" is not empty. Containing files could be overwritten. Are you sure to continue?').format(output_dir)
+            clicked_btn = mb.warning(self, _('Training'), msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+            if clicked_btn == QtWidgets.QMessageBox.No:
+                return
 
         network = self.networks.currentText()
 
@@ -171,91 +206,89 @@ class TrainingWindow(QtWidgets.QDialog):
             logger.error('Network {} could not be found'.format(val))
             return
 
+        # Training settings
+        dataset_data = Export.read_dataset_config(dataset_file)
+        network_idx = func_name
+        gpus = []
+        for i, gpu in enumerate(self.gpu_checkboxes):
+            if gpu.checkState() == Qt.Checked:
+                gpus.append(str(i))
+        gpus = ','.join(gpus)
+        dataset_dir = os.path.normpath(os.path.dirname(dataset_file))
+        label_list_file = os.path.normpath(os.path.join(dataset_dir, dataset_data.label_list))
+        label_list = os.path.relpath(label_list_file, output_dir)
+        dataset_train = os.path.normpath(os.path.join(dataset_dir, dataset_data.datasets['training']))
+        dataset_val = os.path.normpath(os.path.join(dataset_dir, dataset_data.datasets['validation']))
+        datasets = Map({
+            'training': os.path.relpath(dataset_train, output_dir),
+            'validation': os.path.relpath(dataset_val, output_dir),
+        })
+        args = Map({
+            'training_name': output_file_name,
+            'output_dir': output_dir,
+            'batch_size': int(self.args_batch_size.currentText()),
+            'gpus': gpus,
+            'epochs': int(self.args_epochs.value()),
+        })
+    
+        Training.create_training_config(output_file, network_idx, dataset_data.format, label_list, datasets, args)
+
+        # Pass full paths to training function
+        datasets.training = os.path.normpath(os.path.join(output_dir, datasets.training))
+        datasets.validation = os.path.normpath(os.path.join(output_dir, datasets.validation))
+        args.classes_list = label_list_file
+
+        # Start training
         training_func = getattr(self, func_name)
-        training_func()
+        training_func(datasets, args)
 
     def cancel_btn_clicked(self):
         self.close()
 
-    def output_browse_btn_clicked(self):
-        last_dir = self.parent.settings.value('training/last_output_dir', '')
-        logger.debug('Restored value "{}" for setting training/last_output_dir'.format(last_dir))
-        output_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select output folder'), last_dir)
-        if output_folder:
-            output_folder = os.path.normpath(output_folder)
-            self.parent.settings.setValue('training/last_output_dir', output_folder)
-        self.output_folder.setText(output_folder)
-
-    def browse_dataset_file(self):
-        dataset_file, selected_filter = QtWidgets.QFileDialog.getOpenFileName(self, _('Select dataset file'), self.parent.exportState.lastDir, Export.filters())
+    def dataset_file_browse_btn_clicked(self):
+        filters = _('Dataset file') + ' (*{})'.format(Export.config('config_file_extension'))
+        dataset_file, selected_filter = QtWidgets.QFileDialog.getOpenFileName(self, _('Select dataset file'), self.parent.exportState.lastFile, filters)
         if dataset_file:
             dataset_file = os.path.normpath(dataset_file)
-        return dataset_file, Export.filter2format(selected_filter)
+            self.dataset_file.setText(dataset_file)
 
-    def init_dataset_file_input(self, isTrain=True, dataset_file=None, selected_format=None):
-        if dataset_file:
-            if selected_format:
-                self.dataset_format_value_label.setText(selected_format)
-                self.dataset_format_init = True
-            if isTrain:
-                self.dataset_train_file.setText(dataset_file)
-            if not isTrain:
-                self.dataset_val_file.setText(dataset_file)
-
-    def dataset_train_browse_btn_clicked(self):
-        dataset_file, selected_format = self.browse_dataset_file()
-        if selected_format != self.dataset_format_value_label.text() and self.dataset_format_init:
-            mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Training'), _('Training an validation dataset must have the same format'))
-        self.init_dataset_file_input(True, dataset_file, selected_format)
-
-    def dataset_val_browse_btn_clicked(self):
-        dataset_file, selected_format = self.browse_dataset_file()
-        if selected_format != self.dataset_format_value_label.text() and self.dataset_format_init:
-            mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Training'), _('Training an validation dataset must have the same format'))
-        self.init_dataset_file_input(False, dataset_file, selected_format)
+    def output_browse_btn_clicked(self):
+        last_file = self.parent.settings.value('training/last_output_file', '')
+        logger.debug('Restored value "{}" for setting training/last_output_file'.format(last_file))
+        filters = _('Training file') + ' (*{})'.format(Training.config('config_file_extension'))
+        output_file, selected_filter = QtWidgets.QFileDialog.getSaveFileName(self, _('Save output file as'), last_file, filters)
+        if output_file:
+            output_file = os.path.normpath(output_file)
+            self.parent.settings.setValue('training/last_output_file', output_file)
+            self.output_file.setText(output_file)
 
     def set_default_window_flags(self, obj):
         obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
 
-    def _yolov3(self):
-
-        epochs = int(self.args_epochs.value())
-        self.progress.setMaximum(epochs + 4)
+    def yolov3(self, datasets, args):
+        self.progress.setMaximum(args.epochs + 4)
         self.progress.setLabelText(_('Initializing training thread ...'))
         self.progress.setValue(0)
 
+        network = NetworkYoloV3()
         worker_idx, worker = Application.createWorker()
         self.worker_idx = worker_idx
-        self.worker_object = TrainingObject(worker, self.start_training_progress, self.error_training_progress, self.update_training_progress, self.finish_training_progress)
+        self.worker_object = TrainingObject(worker, network.training, self.error_training_progress, network.abort, self.update_training_progress, self.finish_training_progress)
+        network.init_training(self.worker_object, args.training_name, args.output_dir, args.classes_list, datasets.training, 
+            validate_dataset=datasets.validation, batch_size=args.batch_size, gpus=args.gpus, epochs=args.epochs)
+
+        output_file = self.output_file.text()
+        data = {
+            'architecture': network.getArchitectureFilename(),
+            'weights': network.getWeightsFilename(),
+            'args': network.getArgs(),
+        }
+        Training.update_training_config(output_file, data)
+
         self.progress.canceled.disconnect()
         self.progress.canceled.connect(self.abort_training_progress)
         worker.addObject(self.worker_object)
         worker.start()
-
-    def start_training_progress(self):
-        from labelme.networks import NetworkYoloV3
-
-        output_dir = self.output_folder.text()
-        
-        batch_size = int(self.args_batch_size.currentText())
-        #self.args_gpus
-        gpus = '0' # TODO: Make configurable
-        epochs = int(self.args_epochs.value())
-
-        dataset_train_file = os.path.normpath(self.dataset_train_file.text())
-        dataset_val_file = ''
-        if self.dataset_val_file.text():
-            dataset_val_file = os.path.normpath(self.dataset_val_file.text())
-
-        dataset_dir = os.path.normpath(os.path.dirname(dataset_train_file))
-        classes_list = os.path.join(dataset_dir, '{}.labels'.format(Export.config('default_dataset_name')))
-
-        network = NetworkYoloV3(self.worker_object, output_dir, train_dataset=dataset_train_file, validate_dataset=dataset_val_file, 
-            batch_size=batch_size, gpus=gpus, epochs=epochs, classes_list=classes_list)
-        self.worker_object.setAbortFunc(network.abort)
-        network.start()
 
     def update_training_progress(self, msg=None, value=None):
         if self.progress.wasCanceled():

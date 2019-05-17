@@ -24,13 +24,18 @@ from matplotlib import pyplot as plt
 
 from labelme.utils.map import Map
 from labelme.logger import logger
-from labelme.windows import Training
 from labelme.networks import Network
 
    
 class NetworkYoloV3(Network):
 
-    def __init__(self, thread, output_dir, train_dataset, 
+    def __init__(self):
+        super().__init__()
+        self.net_name = 'yolo3_darknet53_coco'
+        self.architecture_filename = self.net_name
+        self.weights_filename = self.net_name
+
+    def init_training(self, thread, training_name, output_dir, classes_list, train_dataset, 
         validate_dataset='', 
         data_shape=416,
         batch_size=8, 
@@ -38,7 +43,7 @@ class NetworkYoloV3(Network):
         epochs=10, 
         resume='',
         start_epoch=0,
-        num_workers=1,  
+        num_workers=0,  
         lr=0.0001, 
         lr_mode='step', 
         lr_decay=0.1, 
@@ -59,13 +64,16 @@ class NetworkYoloV3(Network):
         no_wd=False, 
         mixup=False, 
         no_mixup_epochs=20, 
-        classes_list='', 
         pretrained=0, 
         label_smooth=False,
     ):
-        super().__init__(thread)
+        self.thread = thread
         self.args = Map({
+            'training_name': training_name,
             'output_dir': output_dir,
+            'classes_list': classes_list,
+            'train_dataset': train_dataset,
+            'validate_dataset': validate_dataset,
             'data_shape': data_shape,
             'batch_size': batch_size,
             'num_workers': num_workers,
@@ -93,21 +101,46 @@ class NetworkYoloV3(Network):
             'no_wd': no_wd,
             'mixup': mixup,
             'no_mixup_epochs': no_mixup_epochs,
-            'train_dataset': train_dataset,
-            'validate_dataset': validate_dataset,
-            'classes_list': classes_list,
             'pretrained': pretrained,
             'label_smooth': label_smooth,
         })
-        self.net_name = 'yolo3_darknet53_coco'
+        logger.debug(self.args)
+        self.architecture_filename = '{}_{}'.format(self.args.training_name, self.architecture_filename)
+        self.weights_filename = '{}_{}'.format(self.args.training_name, self.weights_filename)
 
-    def start(self):
+    def training(self):
         self.prepare()
         self.thread.update.emit(_('Start training ...'), 4)
         self.train()
-        training_name = '{}_{}'.format(Training.config('default_training_name'), self.net_name)
-        self.net.export(os.path.join(self.args.output_dir, training_name))
+        training_name = '{}_{}'.format(self.args.training_name, self.net_name)
+        self.net.export(os.path.join(self.args.output_dir, self.architecture_filename))
         self.thread.update.emit(_('Finished training'), self.args.epochs + 4)
+
+    def inference(self, input_image_file, classes_list, architecture_file, weights_file, args):
+        logger.debug('Try loading network from files "{}" and "{}"'.format(architecture_file, weights_file))
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            ctx = self.get_context()
+            net = gluon.nn.SymbolBlock.imports(architecture_file, ['data'], weights_file, ctx=ctx)
+            classes = self.read_classes(classes_list)
+            net.collect_params().reset_ctx(ctx)
+            x, image = gcv.data.transforms.presets.yolo.load_test(input_image_file, args.data_shape)
+            cid, score, bbox = net(x)
+            ax = viz.plot_bbox(image, bbox[0], score[0], cid[0], class_names=classes, thresh=0.5)
+            plt.show()
+
+    def get_context(self, gpus=None):
+        if gpus is None:
+            return [mx.cpu()]
+        ctx = [mx.gpu(int(i)) for i in gpus.split(',') if i.strip()]
+        try:
+            tmp = mx.nd.array([1, 2, 3], ctx=ctx[0])
+        except mx.MXNetError as e:
+            ctx = [mx.cpu()]
+            logger.error(e)
+            logger.warning('Unable to use GPU. Using CPU instead')
+        logger.debug('Use context: {}'.format(ctx))
+        return ctx
 
     def prepare(self):
         # fix seed for mxnet, numpy and python builtin random generator.
@@ -118,22 +151,14 @@ class NetworkYoloV3(Network):
 
         self.thread.update.emit(_('Loading model ...'), 1)
 
-        # training contexts
-        self.ctx = [mx.gpu(int(i)) for i in self.args.gpus.split(',') if i.strip()]
-        try:
-            tmp = mx.nd.array([1, 2, 3], ctx=self.ctx[0])
-        except mx.MXNetError as e:
-            self.ctx = [mx.gpu()]
-            logger.error(e)
-            logger.warning('Unable to use GPU. Using CPU instead')
-        logger.debug('Use context: {}'.format(self.ctx))
+        self.ctx = self.get_context(self.args.gpus)
 
         # network
         self.args.save_prefix += self.net_name
         # use sync bn if specified
         num_sync_bn_devices = len(self.ctx) if self.args.syncbn else -1
         
-        classes = self.read_classes()
+        classes = self.read_classes(self.args.classes_list)
             
         self.thread.update.emit(_('Loading model ...'), 1)
 
@@ -173,8 +198,8 @@ class NetworkYoloV3(Network):
         train_dataset, val_dataset, self.eval_metric = self.get_dataset()
         self.train_data, self.val_data = self.get_dataloader(async_net, train_dataset, val_dataset, self.args.data_shape, self.args.batch_size, self.args.num_workers)
 
-    def read_classes(self):
-        with open(self.args.classes_list) as f:
+    def read_classes(self, classes_list):
+        with open(classes_list) as f:
             return f.read().split('\n')
     
     def get_dataset(self):
@@ -182,7 +207,7 @@ class NetworkYoloV3(Network):
         val_dataset = None
         if self.args.validate_dataset:
             val_dataset = gcv.data.RecordFileDetection(self.args.validate_dataset)
-        classes = self.read_classes()
+        classes = self.read_classes(self.args.classes_list)
         logger.debug('Read classes: {}'.format(classes))
         val_metric = VOC07MApMetric(iou_thresh=0.5, class_names=classes)
         if self.args.num_samples < 0:
@@ -214,15 +239,15 @@ class NetworkYoloV3(Network):
                 batch_size, True, batchify_fn=val_batchify_fn, last_batch='keep', num_workers=num_workers)
         return train_loader, val_loader
     
-    # def save_params(self, net, best_map, current_map, epoch, save_interval, prefix):
-    #     current_map = float(current_map)
-    #     if current_map > best_map[0]:
-    #         best_map[0] = current_map
-    #         net.save_parameters('{:s}_best.params'.format(prefix, epoch, current_map))
-    #         with open(prefix+'_best_map.log', 'a') as f:
-    #             f.write('{:04d}:\t{:.4f}\n'.format(epoch, current_map))
-    #     if save_interval and epoch % save_interval == 0:
-    #         net.save_parameters('{:s}_{:04d}_{:.4f}.params'.format(prefix, epoch, current_map))
+    def save_params(self, best_map, current_map, epoch, save_interval, prefix):
+        current_map = float(current_map)
+        if current_map > best_map[0]:
+            best_map[0] = current_map
+            self.net.save_parameters('{:s}_best.params'.format(prefix, epoch, current_map))
+            with open(prefix+'_best_map.log', 'a') as f:
+                f.write('{:04d}:\t{:.4f}\n'.format(epoch, current_map))
+        if save_interval and epoch % save_interval == 0:
+            self.net.save_parameters('{:s}_{:04d}_{:.4f}.params'.format(prefix, epoch, current_map))
     
     def validate(self):
         """Test on validation dataset."""
@@ -292,9 +317,8 @@ class NetworkYoloV3(Network):
         scale_metrics = mx.metric.Loss('BoxScaleLoss')
         cls_metrics = mx.metric.Loss('ClassLoss')
     
-        logger.info(self.args)
         logger.info('Start training from [Epoch {}]'.format(self.args.start_epoch))
-        best_map = [0]
+        best_map = [0.]
         epoch_count = 0
         progress_start = 4
 
@@ -366,7 +390,7 @@ class NetworkYoloV3(Network):
             logger.info('[Epoch {}] Training cost: {:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}'.format(
                 epoch, (time.time()-tic), name1, loss1, name2, loss2, name3, loss3, name4, loss4))
             if self.val_data and not (epoch + 1) % self.args.val_interval:
-                logger.debug("validate:", epoch + 1)
+                logger.debug('validate: {}'.format(epoch + 1))
                 # consider reduce the frequency of validation to save time
                 map_name, mean_ap = self.validate()
                 val_msg = '\n'.join(['{}={}'.format(k, v) for k, v in zip(map_name, mean_ap)])
@@ -375,13 +399,14 @@ class NetworkYoloV3(Network):
                 #current_map = 0.
             else:
                 current_map = 0.
-            #save_params(self.net, best_map, current_map, epoch, self.args.save_interval, self.args.save_prefix)
-            param_file = '{}_{}_{}_{}.params'.format(Training.config('default_training_name'), best_map, current_map, epoch)
-            self.net.save_parameters(os.path.join(self.args.output_dir, param_file))
+            self.save_params(best_map, current_map, epoch, self.args.save_interval, os.path.join(self.args.output_dir, self.args.save_prefix))
+            #param_file = '{}_{:.4g}_{:.4g}_{}.params'.format(self.args.training_name, best_map[0], current_map, epoch)
+            #self.net.save_parameters(os.path.join(self.args.output_dir, param_file))
 
             if current_map > best_map[0]:
                 best_map[0] = current_map
 
-        param_file = '{}.params'.format(Training.config('default_training_name'))
+        param_file = '{}.params'.format(self.args.training_name)
         self.net.save_parameters(os.path.join(self.args.output_dir, param_file))
+        
     

@@ -31,6 +31,7 @@ from labelme.widgets import ZoomWidget
 
 from labelme.windows import ExportWindow, ExportState
 from labelme.windows import TrainingWindow
+from labelme.windows import ValidationWindow
 
 
 # FIXME
@@ -198,6 +199,8 @@ class MainWindow(QtWidgets.QMainWindow):
                          shortcuts['export'], 'export', _(u'Export'), enabled=True)
         training = action(_('&Training'), self.trainingDialog,
                          shortcuts['training'], 'training', _(u'Training'), enabled=True)
+        validation = action(_('&Validation'), self.validationDialog,
+                         shortcuts['validation'], 'validation', _(u'Validation'), enabled=True)
         openNextImg = action(
             _('&Next Image'),
             self.openNextImg,
@@ -441,8 +444,8 @@ class MainWindow(QtWidgets.QMainWindow):
             fitWindow=fitWindow, fitWidth=fitWidth,
             zoomActions=zoomActions,
             openNextImg=openNextImg, openPrevImg=openPrevImg,
-            export=export, training=training,
-            fileMenuActions=(open_, opendir, save, saveAs, export, training, close, quit),
+            export=export, training=training, validation=validation,
+            fileMenuActions=(open_, opendir, save, saveAs, export, training, validation, close, quit),
             tool=(),
             editMenu=(edit, copy, delete, None, undo, undoLastPoint,
                       None, color1, color2, None, toggle_keep_prev_mode),
@@ -501,6 +504,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 saveAuto,
                 export,
                 training,
+                validation,
                 changeOutputDir,
                 close,
                 deleteFile,
@@ -555,10 +559,12 @@ class MainWindow(QtWidgets.QMainWindow):
             openPrevImg,
             openNextImg,
             save,
+            None,
             export,
             training,
-            deleteFile,
+            validation,
             None,
+            deleteFile,
             createMode,
             editMode,
             copy,
@@ -1615,6 +1621,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def trainingDialog(self):
         self.trainingWindow = TrainingWindow(self)
         self.trainingWindow.show()
+
+    def validationDialog(self):
+        self.validationWindow = ValidationWindow(self)
+        self.validationWindow.show()
 
     @property
     def imageList(self):

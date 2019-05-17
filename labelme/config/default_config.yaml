@@ -58,6 +58,7 @@ shortcuts:
 
   export: Ctrl+Shift+E
   training: Ctrl+Shift+T
+  validation: Ctrl+Shift+V
 
   open_next: [D, Ctrl+Shift+D]
   open_prev: [A, Ctrl+Shift+A]

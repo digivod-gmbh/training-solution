@@ -38,13 +38,15 @@ def write_line(img_path, im_shape, boxes, ids, idx):
     line = '\t'.join(str_idx + str_header + str_labels + str_path) + '\n'
     return line
 
-def make_lst_file(export_folder, label_files, label_list_file, progress, validation_ratio=0.0):
+def make_lst_file(export_file, label_files, label_list_file, progress, validation_ratio=0.0):
     # Update progress bar
     progress.setLabelText(_('Creating lst file ...'))
 
+    export_folder = os.path.dirname(export_file)
+    export_file_name = os.path.splitext(os.path.basename(export_file))[0]
     num_label_files = len(label_files)
-    lst_file_train = os.path.normpath(os.path.join(export_folder, '{}_train.lst'.format(Export.config('default_dataset_name'))))
-    lst_file_val = os.path.normpath(os.path.join(export_folder, '{}_val.lst'.format(Export.config('default_dataset_name'))))
+    lst_file_train = os.path.normpath(os.path.join(export_folder, '{}_train.lst'.format(export_file_name)))
+    lst_file_val = os.path.normpath(os.path.join(export_folder, '{}_val.lst'.format(export_file_name)))
 
     # Get all labels with index
     label_list = None
@@ -102,9 +104,8 @@ def write_lst_file(lst_file, label_files, label_to_idx, progress):
             # Update progress bar
             progress.setValue(idx + start_value + 1)
 
-def make_label_list(export_folder, label_files, progress):
+def make_label_list(label_list_file, label_files):
     num_label_files = len(label_files)
-    progress.setLabelText(_('Creating label list file ...'))
     label_list = []
     for idx in range(num_label_files):
         label_file = LabelFile(label_files[idx])
@@ -114,11 +115,8 @@ def make_label_list(export_folder, label_files, progress):
     label_list = list(set(label_list))
     label_list.sort()
     logger.debug('Found {} labels in dataset: {}'.format(len(label_list), label_list))
-    label_list_file = os.path.normpath(os.path.join(export_folder, '{}.labels'.format(Export.config('default_dataset_name'))))
     with open(label_list_file, 'w+') as f:
-        for label in label_list:
-            f.write('{}\n'.format(label))
-    return label_list_file
+        f.write('\n'.join(label_list))
 
 def lst2rec(prefix, root, progress, num_label_files, pass_through=False, resize=0, 
     center_crop=False, quality=95, encoding='.jpg', pack_label=False):
@@ -146,7 +144,7 @@ def lst2rec(prefix, root, progress, num_label_files, pass_through=False, resize=
     count = 0
     for fname in files:
         if fname.startswith(args.prefix) and fname.endswith('.lst'):
-            print('Creating', Export.config('extensions')['_imagerecord'], 'file from', fname, 'in', working_dir)
+            print('Creating', Export.config('extensions')['imagerecord'], 'file from', fname, 'in', working_dir)
             count += 1
             image_list = read_list(fname)
 
@@ -161,7 +159,7 @@ def lst2rec(prefix, root, progress, num_label_files, pass_through=False, resize=
                 import queue
             q_out = queue.Queue()
             fname = os.path.basename(fname)
-            fname_rec = os.path.splitext(fname)[0] + Export.config('extensions')['_imagerecord']
+            fname_rec = os.path.splitext(fname)[0] + Export.config('extensions')['imagerecord']
             fname_idx = os.path.splitext(fname)[0] + '.idx'
             record = mx.recordio.MXIndexedRecordIO(os.path.join(working_dir, fname_idx), os.path.join(working_dir, fname_rec), 'w')
             cnt = 0
