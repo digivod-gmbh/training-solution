@@ -126,7 +126,7 @@ def main():
     global LOG_LEVEL
     LOG_LEVEL = args.logger_level.upper()
 
-    if args.debug_mode:
+    if hasattr(args, 'debug_mode'):
         LOG_LEVEL = 'DEBUG'
         logger.addStreamHandler()
         
