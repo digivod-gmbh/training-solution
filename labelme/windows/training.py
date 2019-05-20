@@ -308,13 +308,12 @@ class TrainingWindow(QtWidgets.QDialog):
         Application.destroyWorker(self.worker_idx)
 
     def finish_training_progress(self):
-        network = self.networks.currentText()
         mb = QtWidgets.QMessageBox()
-        mb.information(self, _('Training'), _('Network {} has been trained successfully').format(network))
+        mb.information(self, _('Training'), _('Network has been trained successfully'))
         self.close()
 
     def error_training_progress(self, e):
         self.progress.cancel()
         mb = QtWidgets.QMessageBox()
-        mb.warning(self, _('Training'), _('Error during training of network:\n{}').format(str(e)))
+        mb.warning(self, _('Training'), _('An error occured during training of network'))
 
