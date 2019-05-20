@@ -316,14 +316,14 @@ class MainWindow(QtWidgets.QMainWindow):
         # )
         editMode = action(_('Edit Polygons'), self.setEditMode,
                           shortcuts['edit_polygon'], 'edit',
-                          _('Move and edit polygons'), enabled=False)
+                          _('Move and edit the selected polygons'), enabled=False)
 
-        delete = action(_('Delete Polygon'), self.deleteSelectedShape,
+        delete = action(_('Delete Polygons'), self.deleteSelectedShape,
                         shortcuts['delete_polygon'], 'cancel',
-                        _('Delete'), enabled=False)
-        copy = action(_('Duplicate Polygon'), self.copySelectedShape,
+                        _('Delete the selected polygons'), enabled=False)
+        copy = action(_('Duplicate Polygons'), self.copySelectedShape,
                       shortcuts['duplicate_polygon'], 'copy',
-                      _('Create a duplicate of the selected polygon'),
+                      _('Create a duplicate of the selected polygons'),
                       enabled=False)
         undoLastPoint = action(_('Undo last point'), self.canvas.undoLastPoint,
                                shortcuts['undo_last_point'], 'undo',
@@ -933,21 +933,23 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.loadFile(filename)
 
     # React to canvas signals.
-    def shapeSelectionChanged(self, selected=False):
-        if self._noSelectionSlot:
-            self._noSelectionSlot = False
-        else:
-            shape = self.canvas.selectedShape
-            if shape:
-                item = self.labelList.get_item_from_shape(shape)
-                item.setSelected(True)
-            else:
-                self.labelList.clearSelection()
-        self.actions.delete.setEnabled(selected)
-        self.actions.copy.setEnabled(selected)
-        self.actions.edit.setEnabled(selected)
-        self.actions.shapeLineColor.setEnabled(selected)
-        self.actions.shapeFillColor.setEnabled(selected)
+    def shapeSelectionChanged(self, selected_shapes):
+        self._noSelectionSlot = True
+        for shape in self.canvas.selectedShapes:
+            shape.selected = False
+        self.labelList.clearSelection()
+        self.canvas.selectedShapes = selected_shapes
+        for shape in self.canvas.selectedShapes:
+            shape.selected = True
+            item = self.labelList.get_item_from_shape(shape)
+            item.setSelected(True)
+        self._noSelectionSlot = False
+        n_selected = len(selected_shapes)
+        self.actions.delete.setEnabled(n_selected)
+        self.actions.copy.setEnabled(n_selected)
+        self.actions.edit.setEnabled(n_selected == 1)
+        self.actions.shapeLineColor.setEnabled(n_selected)
+        self.actions.shapeFillColor.setEnabled(n_selected)
 
     def addLabel(self, shape):
         item = QtWidgets.QListWidgetItem(shape.label)
@@ -962,13 +964,17 @@ class MainWindow(QtWidgets.QMainWindow):
         for action in self.actions.onShapesPresent:
             action.setEnabled(True)
 
-    def remLabel(self, shape):
-        item = self.labelList.get_item_from_shape(shape)
-        self.labelList.takeItem(self.labelList.row(item))
+    def remLabels(self, shapes):
+        for shape in shapes:
+            item = self.labelList.get_item_from_shape(shape)
+            self.labelList.takeItem(self.labelList.row(item))
 
     def loadShapes(self, shapes, replace=True):
+        self._noSelectionSlot = True
         for shape in shapes:
             self.addLabel(shape)
+        self.labelList.clearSelection()
+        self._noSelectionSlot = False
         self.canvas.loadShapes(shapes, replace=replace)
 
     def loadLabels(self, shapes):
@@ -1061,16 +1067,22 @@ class MainWindow(QtWidgets.QMainWindow):
             return False
 
     def copySelectedShape(self):
-        self.addLabel(self.canvas.copySelectedShape())
-        # fix copy and delete
-        self.shapeSelectionChanged(True)
+        added_shapes = self.canvas.copySelectedShapes()
+        self.labelList.clearSelection()
+        for shape in added_shapes:
+            self.addLabel(shape)
+        self.setDirty()
 
     def labelSelectionChanged(self):
-        item = self.currentItem()
-        if item and self.canvas.editing():
-            self._noSelectionSlot = True
-            shape = self.labelList.get_shape_from_item(item)
-            self.canvas.selectShape(shape)
+        if self._noSelectionSlot:
+            return
+        if self.canvas.editing():
+            selected_shapes = []
+            for item in self.labelList.selectedItems():
+                shape = self.labelList.get_shape_from_item(item)
+                selected_shapes.append(shape)
+            if selected_shapes:
+                self.canvas.selectShapes(selected_shapes)
 
     def labelItemChanged(self, item):
         shape = self.labelList.get_shape_from_item(item)
@@ -1109,6 +1121,7 @@ class MainWindow(QtWidgets.QMainWindow):
                               .format(text, self._config['validate_label']))
             text = ''
         if text:
+            self.labelList.clearSelection()
             self.addLabel(self.canvas.setLastLabel(text, flags))
             self.actions.editMode.setEnabled(True)
             self.actions.undoLastPoint.setEnabled(False)
@@ -1562,11 +1575,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def deleteSelectedShape(self):
         yes, no = QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No
-        msg = _('You are about to permanently delete this polygon, ' \
-              'proceed anyway?')
+        msg = _('You are about to permanently delete {} polygons, ' \
+              'proceed anyway?').format(len(self.canvas.selectedShapes))
         if yes == QtWidgets.QMessageBox.warning(self, _('Attention'), msg,
                                                 yes | no):
-            self.remLabel(self.canvas.deleteSelected())
+            self.remLabels(self.canvas.deleteSelected())
             self.setDirty()
             if self.noShapes():
                 for action in self.actions.onShapesPresent:
@@ -1576,7 +1589,8 @@ class MainWindow(QtWidgets.QMainWindow):
         color = self.colorDialog.getColor(
             self.lineColor, _('Choose line color'), default=DEFAULT_LINE_COLOR)
         if color:
-            self.canvas.selectedShape.line_color = color
+            for shape in self.canvas.selectedShapes:
+                shape.line_color = color
             self.canvas.update()
             self.setDirty()
 
@@ -1584,13 +1598,16 @@ class MainWindow(QtWidgets.QMainWindow):
         color = self.colorDialog.getColor(
             self.fillColor, _('Choose fill color'), default=DEFAULT_FILL_COLOR)
         if color:
-            self.canvas.selectedShape.fill_color = color
+            for shape in self.canvas.selectedShapes:
+                shape.fill_color = color
             self.canvas.update()
             self.setDirty()
 
     def copyShape(self):
         self.canvas.endMove(copy=True)
-        self.addLabel(self.canvas.selectedShape)
+        self.labelList.clearSelection()
+        for shape in self.canvas.selectedShapes:
+            self.addLabel(shape)
         self.setDirty()
 
     def moveShape(self):
