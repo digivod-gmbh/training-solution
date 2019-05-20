@@ -36,7 +36,7 @@ install_requires = [
     'qtpy',
     'mxnet==1.4.0.post0',
 	'mxnet-cu100mkl==1.4.0.post0',
-	'gluoncv==0.3.0',
+	'gluoncv==0.4.0.post0',
     'termcolor',
 ]
 
