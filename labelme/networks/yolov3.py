@@ -17,7 +17,8 @@ from gluoncv.data.transforms.presets.yolo import YOLO3DefaultValTransform
 from gluoncv.data.dataloader import RandomTransformDataLoader
 from gluoncv.utils.metrics.voc_detection import VOC07MApMetric
 from gluoncv.utils.metrics.coco_detection import COCODetectionMetric
-from gluoncv.utils import LRScheduler
+from gluoncv.utils import LRScheduler, export_block
+from gluoncv.model_zoo.yolo.yolo3 import YOLOOutputV3
  
 from gluoncv.utils import download, viz
 from matplotlib import pyplot as plt
@@ -31,7 +32,8 @@ class NetworkYoloV3(Network):
 
     def __init__(self):
         super().__init__()
-        self.net_name = 'yolo3_darknet53_coco'
+        self.net_name = 'yolo3_darknet53_coco' # yolo3_mobilenet1.0_coco
+        self.model_file_name = 'yolo3_darknet53_coco-09767802.params' # yolo3_mobilenet1.0_coco-66dbbae6.params
         self.architecture_filename = self.net_name
         self.weights_filename = self.net_name
 
@@ -162,24 +164,7 @@ class NetworkYoloV3(Network):
             
         self.thread.update.emit(_('Loading model ...'), 1)
 
-        self.net = None
-        if num_sync_bn_devices > 1:
-            logger.debug("num_sync_bn_devices > 1")
-            if self.args.pretrained == 0:
-                self.net = get_model(self.net_name, pretrained=True, num_sync_bn_devices=num_sync_bn_devices)
-            else:        
-                self.net = get_model(self.net_name, pretrained_base=True, num_sync_bn_devices=num_sync_bn_devices)
-            
-            self.net.reset_class(classes)            
-            async_net = get_model(self.net_name, pretrained_base=False)  # used by cpu worker
-        else:
-            logger.debug("num_sync_bn_devices <= 1")        
-            if self.args.pretrained == 0:
-                self.net = get_model(self.net_name, pretrained=True)
-            else:
-                self.net = get_model(self.net_name, pretrained_base=True)
-            self.net.reset_class(classes)            
-            async_net = self.net
+        self.net = get_model(self.net_name, pretrained=False, ctx=self.ctx)
 
         self.thread.update.emit(_('Loading weights ...'), 2)
 
@@ -187,6 +172,11 @@ class NetworkYoloV3(Network):
             self.net.load_parameters(self.args.resume.strip())
             async_net.load_parameters(self.args.resume.strip())
         else:
+            model_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../networks/models'))
+            weights_file = os.path.join(model_path, self.model_file_name)
+            self.net.load_parameters(weights_file, ctx=self.ctx)
+            self.net.reset_class(classes)
+            async_net = self.net
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 self.net.initialize()
@@ -346,9 +336,6 @@ class NetworkYoloV3(Network):
             mx.nd.waitall()
             self.net.hybridize()
             for i, batch in enumerate(self.train_data):
-
-                self.checkAborted()
-
                 batch_size = batch[0].shape[0]
                 data = gluon.utils.split_and_load(batch[0], ctx_list=self.ctx, batch_axis=0)
                 # objectness, center_targets, scale_targets, weights, class_targets
@@ -381,6 +368,11 @@ class NetworkYoloV3(Network):
                     name4, loss4 = cls_metrics.get()
                     logger.info('[Epoch {}][Batch {}], LR: {:.2E}, Speed: {:.3f} samples/sec, {}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}'.format(
                         epoch, i, trainer.learning_rate, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4))
+
+                    self.thread.update.emit(_('Training epoch {}\nBatch {}, Speed: {:.3f} samples/sec\n{}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}')
+                        .format(epoch + 1, i + 1, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4), None)
+                    self.checkAborted()
+
                 btic = time.time()
     
             name1, loss1 = obj_metrics.get()
