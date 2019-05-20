@@ -58,6 +58,7 @@ shortcuts:
   delete_file: Ctrl+Delete
 
   export: Ctrl+Shift+E
+  merge: Ctrl+Shift+M
   training: Ctrl+Shift+T
   validation: Ctrl+Shift+V
 

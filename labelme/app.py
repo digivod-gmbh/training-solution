@@ -32,6 +32,7 @@ from labelme.widgets import ZoomWidget
 from labelme.windows import ExportWindow, ExportState
 from labelme.windows import TrainingWindow
 from labelme.windows import ValidationWindow
+from labelme.windows import MergeWindow
 
 
 # FIXME
@@ -197,6 +198,8 @@ class MainWindow(QtWidgets.QMainWindow):
                          shortcuts['open_dir'], 'dir', _(u'Open Dir'))
         export = action(_('&Export'), self.exportDialog,
                          shortcuts['export'], 'export', _(u'Export'), enabled=True)
+        merge = action(_('&Merge'), self.mergeDialog,
+                         shortcuts['merge'], 'merge', _(u'Merge'), enabled=True)
         training = action(_('&Training'), self.trainingDialog,
                          shortcuts['training'], 'training', _(u'Training'), enabled=True)
         validation = action(_('&Validation'), self.validationDialog,
@@ -444,8 +447,8 @@ class MainWindow(QtWidgets.QMainWindow):
             fitWindow=fitWindow, fitWidth=fitWidth,
             zoomActions=zoomActions,
             openNextImg=openNextImg, openPrevImg=openPrevImg,
-            export=export, training=training, validation=validation,
-            fileMenuActions=(open_, opendir, save, saveAs, export, training, validation, close, quit),
+            export=export, merge=merge, training=training, validation=validation,
+            fileMenuActions=(open_, opendir, save, saveAs, export, merge, training, validation, close, quit),
             tool=(),
             editMenu=(edit, copy, delete, None, undo, undoLastPoint,
                       None, color1, color2, None, toggle_keep_prev_mode),
@@ -503,6 +506,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 saveAs,
                 saveAuto,
                 export,
+                merge,
                 training,
                 validation,
                 changeOutputDir,
@@ -561,6 +565,7 @@ class MainWindow(QtWidgets.QMainWindow):
             save,
             None,
             export,
+            merge,
             training,
             validation,
             None,
@@ -1634,6 +1639,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def exportDialog(self):
         self.exportWindow = ExportWindow(self)
         self.exportWindow.show()
+
+    def mergeDialog(self):
+        self.mergeWindow = MergeWindow(self)
+        self.mergeWindow.show()
 
     def trainingDialog(self):
         self.trainingWindow = TrainingWindow(self)
