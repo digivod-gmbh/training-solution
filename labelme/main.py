@@ -110,6 +110,13 @@ def main():
         help='epsilon to find nearest vertex on canvas',
         default=argparse.SUPPRESS,
     )
+    parser.add_argument(
+        '--debug-mode',
+        dest='debug_mode',
+        action='store_true',
+        help='start in debug mode',
+        default=argparse.SUPPRESS,
+    )
     args = parser.parse_args()
 
     if args.version:
@@ -118,6 +125,11 @@ def main():
 
     global LOG_LEVEL
     LOG_LEVEL = args.logger_level.upper()
+
+    if args.debug_mode:
+        LOG_LEVEL = 'DEBUG'
+        logger.addStreamHandler()
+        
     logger.setLevel(getattr(logging, args.logger_level.upper()))
 
     if hasattr(args, 'flags'):

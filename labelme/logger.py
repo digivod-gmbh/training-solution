@@ -54,12 +54,13 @@ class ColoredLogger(logging.Logger):
         file_log.setFormatter(file_formatter)
         self.addHandler(file_log)
 
-        color_formatter = ColoredFormatter(self.FORMAT)
+        return
+
+    def addStreamHandler(self):
+        color_formatter = ColoredFormatter(ColoredLogger.FORMAT)
         console = logging.StreamHandler()
         console.setFormatter(color_formatter)
         self.addHandler(console)
-
-        return
 
 
 logging.setLoggerClass(ColoredLogger)
