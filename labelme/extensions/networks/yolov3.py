@@ -17,23 +17,28 @@ from gluoncv.data.transforms.presets.yolo import YOLO3DefaultValTransform
 from gluoncv.data.dataloader import RandomTransformDataLoader
 from gluoncv.utils.metrics.voc_detection import VOC07MApMetric
 from gluoncv.utils.metrics.coco_detection import COCODetectionMetric
-from gluoncv.utils import LRScheduler, export_block
-from gluoncv.model_zoo.yolo.yolo3 import YOLOOutputV3
+from gluoncv.utils import LRScheduler, LRSequential
  
 from gluoncv.utils import download, viz
 from matplotlib import pyplot as plt
 
 from labelme.utils.map import Map
 from labelme.logger import logger
-from labelme.networks import Network
+from labelme.extensions.networks import Network
 
    
 class NetworkYoloV3(Network):
 
-    def __init__(self):
+    def __init__(self, architecture='darknet53'):
         super().__init__()
-        self.net_name = 'yolo3_darknet53_coco' # yolo3_mobilenet1.0_coco
-        self.model_file_name = 'yolo3_darknet53_coco-09767802.params' # yolo3_mobilenet1.0_coco-66dbbae6.params
+        if architecture == 'darknet53':
+            self.net_name = 'yolo3_darknet53_coco'
+            self.model_file_name = 'yolo3_darknet53_coco-09767802.params'
+        elif architecture == 'mobilenet1.0':
+            self.net_name = 'yolo3_mobilenet1.0_coco'
+            self.model_file_name = 'yolo3_mobilenet1.0_coco-66dbbae6.params'
+        else:
+            raise Exception('Unknown architecture {}'.format(architecture))
         self.architecture_filename = self.net_name
         self.weights_filename = self.net_name
 
@@ -131,19 +136,6 @@ class NetworkYoloV3(Network):
             ax = viz.plot_bbox(image, bbox[0], score[0], cid[0], class_names=classes, thresh=0.5)
             plt.show()
 
-    def get_context(self, gpus=None):
-        if gpus is None:
-            return [mx.cpu()]
-        ctx = [mx.gpu(int(i)) for i in gpus.split(',') if i.strip()]
-        try:
-            tmp = mx.nd.array([1, 2, 3], ctx=ctx[0])
-        except mx.MXNetError as e:
-            ctx = [mx.cpu()]
-            logger.error(e)
-            logger.warning('Unable to use GPU. Using CPU instead')
-        logger.debug('Use context: {}'.format(ctx))
-        return ctx
-
     def prepare(self):
         # fix seed for mxnet, numpy and python builtin random generator.
         gutils.random.seed(self.args.seed)
@@ -172,7 +164,7 @@ class NetworkYoloV3(Network):
             self.net.load_parameters(self.args.resume.strip())
             async_net.load_parameters(self.args.resume.strip())
         else:
-            model_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../networks/models'))
+            model_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../../networks/models'))
             weights_file = os.path.join(model_path, self.model_file_name)
             self.net.load_parameters(weights_file, ctx=self.ctx)
             self.net.reset_class(classes)
@@ -186,11 +178,7 @@ class NetworkYoloV3(Network):
 
         # training data
         train_dataset, val_dataset, self.eval_metric = self.get_dataset()
-        self.train_data, self.val_data = self.get_dataloader(async_net, train_dataset, val_dataset, self.args.data_shape, self.args.batch_size, self.args.num_workers)
-
-    def read_classes(self, classes_list):
-        with open(classes_list) as f:
-            return f.read().split('\n')
+        self.train_data, self.val_data = self.get_dataloader(self.net, train_dataset, val_dataset, self.args.data_shape, self.args.batch_size, self.args.num_workers)
     
     def get_dataset(self):
         train_dataset = gcv.data.RecordFileDetection(self.args.train_dataset)
@@ -284,14 +272,18 @@ class NetworkYoloV3(Network):
             lr_decay_epoch = list(range(self.args.lr_decay_period, self.args.epochs, self.args.lr_decay_period))
         else:
             lr_decay_epoch = [int(i) for i in self.args.lr_decay_epoch.split(',')]
-        lr_scheduler = LRScheduler(mode=self.args.lr_mode,
-                                baselr=self.args.lr,
-                                niters=self.args.num_samples // self.args.batch_size,
-                                nepochs=self.args.epochs,
-                                step=lr_decay_epoch,
-                                step_factor=self.args.lr_decay, power=2,
-                                warmup_epochs=self.args.warmup_epochs)
-    
+        lr_decay_epoch = [e - self.args.warmup_epochs for e in lr_decay_epoch]
+        num_batches = self.args.num_samples // self.args.batch_size
+        lr_scheduler = LRSequential([
+            LRScheduler('linear', base_lr=0, target_lr=self.args.lr,
+                        nepochs=self.args.warmup_epochs, iters_per_epoch=num_batches),
+            LRScheduler(self.args.lr_mode, base_lr=self.args.lr,
+                        nepochs=self.args.epochs - self.args.warmup_epochs,
+                        iters_per_epoch=num_batches,
+                        step_epoch=lr_decay_epoch,
+                        step_factor=self.args.lr_decay, power=2),
+        ])
+
         trainer = gluon.Trainer(
             self.net.collect_params(), 'sgd',
             {'wd': self.args.wd, 'momentum': self.args.momentum, 'lr_scheduler': lr_scheduler},
@@ -316,7 +308,7 @@ class NetworkYoloV3(Network):
 
         for epoch in range(self.args.start_epoch, self.args.epochs):
 
-            self.thread.update.emit(_('Training epoch {} ...').format(epoch + 1), progress_start + epoch_count)
+            self.thread.update.emit(_('Start training on epoch {} ...').format(epoch + 1), progress_start + epoch_count)
             self.checkAborted()
             epoch_count += 1
 
@@ -355,7 +347,7 @@ class NetworkYoloV3(Network):
                         scale_losses.append(scale_loss)
                         cls_losses.append(cls_loss)
                     autograd.backward(sum_losses)
-                lr_scheduler.update(i, epoch)
+                #lr_scheduler.update(i, epoch)
                 trainer.step(batch_size)
                 obj_metrics.update(0, obj_losses)
                 center_metrics.update(0, center_losses)
@@ -369,7 +361,7 @@ class NetworkYoloV3(Network):
                     logger.info('[Epoch {}][Batch {}], LR: {:.2E}, Speed: {:.3f} samples/sec, {}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}'.format(
                         epoch, i, trainer.learning_rate, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4))
 
-                    self.thread.update.emit(_('Training epoch {}\nBatch {}, Speed: {:.3f} samples/sec\n{}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}')
+                    self.thread.update.emit(_('Training ...\nEpoch {}, Batch {}, Speed: {:.3f} samples/sec\n{}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}')
                         .format(epoch + 1, i + 1, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4), None)
                     self.checkAborted()
 
@@ -388,13 +380,9 @@ class NetworkYoloV3(Network):
                 val_msg = '\n'.join(['{}={}'.format(k, v) for k, v in zip(map_name, mean_ap)])
                 logger.info('[Epoch {}] Validation: \n{}'.format(epoch, val_msg))
                 current_map = float(mean_ap[-1])
-                #current_map = 0.
             else:
                 current_map = 0.
             self.save_params(best_map, current_map, epoch, self.args.save_interval, os.path.join(self.args.output_dir, self.args.save_prefix))
-            #param_file = '{}_{:.4g}_{:.4g}_{}.params'.format(self.args.training_name, best_map[0], current_map, epoch)
-            #self.net.save_parameters(os.path.join(self.args.output_dir, param_file))
-
             if current_map > best_map[0]:
                 best_map[0] = current_map
 

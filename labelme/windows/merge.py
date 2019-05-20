@@ -2,9 +2,9 @@ import os
 
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
-from labelme.windows import Export
 from labelme.utils.map import Map
 from labelme.logger import logger
+from labelme.config import Export
 
 
 class MergeWindow(QtWidgets.QDialog):
@@ -130,7 +130,7 @@ class MergeWindow(QtWidgets.QDialog):
                 mb.warning(self, _('Merge datasets'), _('All dataset files must have the same format'))
                 return
             dataset_files.append(self.dataset_file_table.item(row, 3).text())
-            
+
         if len(dataset_files) < 2:
             mb.warning(self, _('Merge datasets'), _('Please select at least 2 datasets to merge'))
             return

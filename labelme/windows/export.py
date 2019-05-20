@@ -11,101 +11,10 @@ import subprocess
 
 from labelme.logger import logger
 from labelme.label_file import LabelFile
-from labelme.utils import export
+from labelme.utils import Worker, ProgressObject, Application
 from labelme.utils.map import Map
-
-
-class Export():
-
-    _filters = None
-    _filter2format = None
-    _extension2format = None
-
-    @staticmethod
-    def config(key = None):
-        config = {
-            'config_file_extension': '.dataset',
-            'formats': {
-                'imagerecord': _('ImageRecord'),
-            },
-            'extensions': {
-                'imagerecord': '.rec',
-            }
-        }
-        if key is not None:
-            if key in config:
-                return config[key]
-            return None
-        return config
-
-    @staticmethod
-    def create_dataset_config(config_file, dataset_format, label_list, args):
-        data = {
-            'format': dataset_format,
-            'label_list': label_list,
-            'args': args
-        }
-        logger.debug('Create dataset config: {}'.format(data))
-        with open(config_file, 'w+') as f:
-            json.dump(data, f, indent=2)
-            logger.debug('Saved dataset config in file: {}'.format(config_file))
-
-    @staticmethod
-    def update_dataset_config(config_file, new_data):
-        old_data = {}
-        with open(config_file, 'r') as f:
-            old_data = json.loads(f.read())
-            logger.debug('Loaded dataset config: {}'.format(old_data))
-        data = old_data.copy()
-        data.update(new_data)
-        logger.debug('Update dataset config: {}'.format(new_data))
-        with open(config_file, 'w+') as f:
-            json.dump(data, f, indent=2)
-            logger.debug('Saved dataset config in file: {}'.format(config_file))
-
-    @staticmethod
-    def read_dataset_config(config_file):
-        data = {}
-        with open(config_file, 'r') as f:
-            data = json.loads(f.read())
-            logger.debug('Read dataset config: {}'.format(data))
-        return Map(data)
-
-
-    @staticmethod
-    def filters():
-        Export.init_filters()
-        return Export._filters
-
-    @staticmethod
-    def filter2format(key):
-        Export.init_filters()
-        if key in Export._filter2format:
-            return Export._filter2format[key]
-        return None
-
-    @staticmethod
-    def extension2format(key):
-        Export.init_filters()
-        if key in Export._extension2format:
-            return Export._extension2format[key]
-        return None
-
-    @staticmethod
-    def init_filters():
-        if Export._filters is None or Export._filter2format is None:
-            formats = Export.config('formats')
-            extensions = Export.config('extensions')
-            filters = []
-            Export._filter2format = {}
-            Export._extension2format = {}
-            for key in formats:
-                f = '{} (*{})'.format(formats[key], extensions[key])
-                filters.append(f)
-                Export._filter2format[f] = formats[key]
-                ext = extensions[key]
-                Export._extension2format[ext] = formats[key]
-            Export._filters = ';;'.join(filters)
+import labelme.extensions.formats as formats
+from labelme.config import Export
 
 
 class ExportState():
@@ -224,6 +133,7 @@ class ExportWindow(QtWidgets.QDialog):
         self.progress = QtWidgets.QProgressDialog(_('Exporting dataset ...'), _('Cancel'), 0, 100, self)
         self.set_default_window_flags(self.progress)
         self.progress.setWindowModality(Qt.ApplicationModal)
+        self.progress.setMaximum(4 * len(label_files) + 3)
         self.progress.setValue(0)
         self.progress.show()
 
@@ -241,7 +151,9 @@ class ExportWindow(QtWidgets.QDialog):
         label_list_file = os.path.normpath(os.path.join(export_dir, '{}.labels'.format(export_file_name)))
         label_list_file_relative = os.path.relpath(label_list_file, export_dir)
 
-        export.make_label_list(label_list_file, label_files)
+        dataset_format = Export.config('objects')[func_name]()
+        
+        dataset_format.make_label_list(label_list_file, label_files)
         format_idx = func_name
         args = Map({
             'validation_ratio': validation_ratio,
@@ -249,20 +161,38 @@ class ExportWindow(QtWidgets.QDialog):
         })
         Export.create_dataset_config(export_file, format_idx, label_list_file_relative, args)
 
-        export_func = getattr(self, func_name)
-        export_func(data_folder, export_file, label_files, label_list_file, validation_ratio)
+        worker_idx, worker = Application.createWorker()
+        self.worker_idx = worker_idx
+        self.worker_object = ProgressObject(worker, dataset_format.export, self.error_export_progress, dataset_format.abort, 
+            self.update_export_progress, self.finish_export_progress)
+        dataset_format.init_export(self.worker_object, data_folder, export_file, label_files, label_list_file, validation_ratio)
 
-        if self.progress.wasCanceled():
-            self.progress.close()
-            return
+        dataset_file_train = dataset_format.getTrainingFilename(export_dir, export_file_name)
+        dataset_file_val = dataset_format.getValidateFilename(export_dir, export_file_name)
 
-        self.progress.close()
+        export_dir = os.path.dirname(export_file)
+        data = Map({
+            'samples': {
+                'training': dataset_file_train,
+                'validation': dataset_file_val,
+            },
+            'datasets': {
+                'training': os.path.relpath(dataset_file_train, export_dir),
+                'validation': os.path.relpath(dataset_file_val, export_dir),
+            }
+        })
+        Export.update_dataset_config(export_file, data)
 
+        extension = '.' + str(dataset_file_train.split('.')[-1:][0])
+        self.parent.exportState.lastFileTrain = dataset_file_train
+        self.parent.exportState.lastFileVal = dataset_file_val
+        self.parent.exportState.lastExtension = extension
         self.parent.exportState.lastFile = export_file
 
-        mb = QtWidgets.QMessageBox
-        mb.information(self, _('Export'), _('Dataset has been exported successfully to: {}').format(export_file))
-        self.close()
+        self.progress.canceled.disconnect()
+        self.progress.canceled.connect(self.abort_export_progress)
+        worker.addObject(self.worker_object)
+        worker.start()
 
     def cancel_btn_clicked(self):
         self.close()
@@ -289,45 +219,32 @@ class ExportWindow(QtWidgets.QDialog):
     def set_default_window_flags(self, obj):
         obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
 
-    # Export functions
-    def imagerecord(self, data_folder, export_file, label_files, label_list_file, validation_ratio=0.0):
-        num_label_files = len(label_files)
-        self.progress.setMaximum(num_label_files * 2)
-        num_label_files_train = int(num_label_files * (1.0 - validation_ratio))
-        num_label_files_val = int(num_label_files * validation_ratio)
-
-        # First, create lst file
-        lst_train, lst_val = export.make_lst_file(export_file, label_files, label_list_file, self.progress, validation_ratio)
-
+    def update_export_progress(self, msg=None, value=None):
         if self.progress.wasCanceled():
             return
+        if msg is not None:
+            self.progress.setLabelText(msg)
+        if value is not None:
+            self.progress.setValue(value)
 
-        # Then, create rec file from lst file
-        rec_file_train = export.lst2rec(lst_train[0], data_folder, progress=self.progress, 
-            num_label_files=lst_train[1], pass_through=True, pack_label=True)
+    def abort_export_progress(self):
+        self.progress.setLabelText(_('Cancelling ...'))
+        self.progress.setMaximum(0)
+        self.worker_object.abort()
+        worker = Application.getWorker(self.worker_idx)
+        worker.wait()
+        self.progress.cancel()
+        Application.destroyWorker(self.worker_idx)
 
-        if self.progress.wasCanceled():
-            return
+    def finish_export_progress(self):
+        mb = QtWidgets.QMessageBox()
+        mb.information(self, _('Export'), _('Dataset has been exported successfully'))
+        self.progress.close()
+        self.close()
 
-        rec_file_val = export.lst2rec(lst_val[0], data_folder, progress=self.progress, 
-            num_label_files=lst_val[1], pass_through=True, pack_label=True)
-
-        export_dir = os.path.dirname(export_file)
-        data = Map({
-            'samples': {
-                'training': lst_train[1],
-                'validation': lst_val[1]
-            },
-            'datasets': {
-                'training': os.path.relpath(rec_file_train, export_dir),
-                'validation': os.path.relpath(rec_file_val, export_dir),
-            }
-        })
-        Export.update_dataset_config(export_file, data)
-
-        extension = '.' + str(rec_file_train.split('.')[-1:][0])
-        self.parent.exportState.lastFileTrain = rec_file_train
-        self.parent.exportState.lastFileVal = rec_file_val
-        self.parent.exportState.lastExtension = extension
+    def error_export_progress(self, e):
+        self.progress.cancel()
+        mb = QtWidgets.QMessageBox()
+        mb.warning(self, _('Export'), _('An error occured during export of dataset'))
 
     

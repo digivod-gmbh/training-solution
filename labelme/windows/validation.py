@@ -2,8 +2,9 @@ import os
 
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
-from labelme.windows import Training
 from labelme.utils.map import Map
+from labelme.logger import logger
+from labelme.config import Export, Training
 
 
 class ValidationWindow(QtWidgets.QDialog):
@@ -54,17 +55,23 @@ class ValidationWindow(QtWidgets.QDialog):
         obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
 
     def input_image_file_browse_btn_clicked(self):
+        last_dir = self.parent.settings.value('validation/last_input_image_dir', '')
+        logger.debug('Restored value "{}" for setting validation/last_input_image_dir'.format(last_dir))
         filters = _('Image files') + ' (*.jpg *.jpeg *.png *.bmp)'
-        image_file, selected_filter = QtWidgets.QFileDialog.getOpenFileName(self, _('Select input image'), '', filters)
+        image_file, selected_filter = QtWidgets.QFileDialog.getOpenFileName(self, _('Select input image'), last_dir, filters)
         if image_file:
             image_file = os.path.normpath(image_file)
+            self.parent.settings.setValue('validation/last_input_image_dir', os.path.dirname(image_file))
             self.input_image_file.setText(image_file)
 
     def training_file_browse_btn_clicked(self):
+        last_dir = self.parent.settings.value('validation/last_training_dir', '')
+        logger.debug('Restored value "{}" for setting validation/last_training_dir'.format(last_dir))
         filters = _('Training file') + ' (*{})'.format(Training.config('config_file_extension'))
         training_file, selected_filter = QtWidgets.QFileDialog.getOpenFileName(self, _('Select training file'), '', filters)
         if training_file:
             training_file = os.path.normpath(training_file)
+            self.parent.settings.setValue('validation/last_training_dir', os.path.dirname(training_file))
             self.training_file.setText(training_file)
 
     def validate_btn_clicked(self):

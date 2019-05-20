@@ -45,7 +45,7 @@ class WorkerObject(QtCore.QObject):
         self.error.connect(worker.error)
 
 
-class TrainingObject(WorkerObject):
+class ProgressObject(WorkerObject):
 
     handleError = QtCore.Signal(str)
     finished = QtCore.Signal()
