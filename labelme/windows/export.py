@@ -123,7 +123,7 @@ class ExportWindow(QtWidgets.QDialog):
         self.parent = parent
 
         super().__init__(parent)
-        self.setWindowTitle(_('Export'))
+        self.setWindowTitle(_('Export dataset'))
         self.set_default_window_flags(self)
         self.setWindowModality(Qt.ApplicationModal)
 
@@ -277,13 +277,13 @@ class ExportWindow(QtWidgets.QDialog):
             self.data_folder.setText(data_folder)
 
     def export_browse_btn_clicked(self):
-        last_file = self.parent.settings.value('export/last_export_file', '')
-        logger.debug('Restored value "{}" for setting export/last_export_file'.format(last_file))
+        last_dir = self.parent.settings.value('export/last_export_dir', '')
+        logger.debug('Restored value "{}" for setting export/last_export_dir'.format(last_dir))
         filters = _('Dataset file') + ' (*{})'.format(Export.config('config_file_extension'))
-        export_file, selected_filter = QtWidgets.QFileDialog.getSaveFileName(self, _('Save output file as'), last_file, filters)
+        export_file, selected_filter = QtWidgets.QFileDialog.getSaveFileName(self, _('Save output file as'), last_dir, filters)
         if export_file:
             export_file = os.path.normpath(export_file)
-            self.parent.settings.setValue('export/last_export_file', export_file)
+            self.parent.settings.setValue('export/last_export_dir', os.path.dirname(export_file))
             self.export_file.setText(export_file)
 
     def set_default_window_flags(self, obj):
@@ -314,6 +314,10 @@ class ExportWindow(QtWidgets.QDialog):
 
         export_dir = os.path.dirname(export_file)
         data = Map({
+            'samples': {
+                'training': lst_train[1],
+                'validation': lst_val[1]
+            },
             'datasets': {
                 'training': os.path.relpath(rec_file_train, export_dir),
                 'validation': os.path.relpath(rec_file_val, export_dir),
