@@ -17,8 +17,8 @@ from gluoncv.data.transforms.presets.yolo import YOLO3DefaultValTransform
 from gluoncv.data.dataloader import RandomTransformDataLoader
 from gluoncv.utils.metrics.voc_detection import VOC07MApMetric
 from gluoncv.utils.metrics.coco_detection import COCODetectionMetric
-from gluoncv.utils import LRScheduler, LRSequential
- 
+from gluoncv.utils import LRScheduler, LRSequential, export_block
+from gluoncv.data.transforms import image as timage
 from gluoncv.utils import download, viz
 from matplotlib import pyplot as plt
 
@@ -44,7 +44,7 @@ class NetworkYoloV3(Network):
 
     def init_training(self, thread, training_name, output_dir, classes_list, train_dataset, 
         validate_dataset='', 
-        data_shape=416,
+        data_shape=608, # 320, 416, 608
         batch_size=8, 
         gpus='0', 
         epochs=10, 
@@ -120,7 +120,10 @@ class NetworkYoloV3(Network):
         self.thread.update.emit(_('Start training ...'), 4)
         self.train()
         training_name = '{}_{}'.format(self.args.training_name, self.net_name)
-        self.net.export(os.path.join(self.args.output_dir, self.architecture_filename))
+
+        #self.net.export(os.path.join(self.args.output_dir, self.architecture_filename))
+        export_block(os.path.join(self.args.output_dir, self.architecture_filename), self.net, preprocess=True, layout='HWC', ctx=self.ctx)
+
         self.thread.update.emit(_('Finished training'), self.args.epochs + 4)
 
     def inference(self, input_image_file, classes_list, architecture_file, weights_file, args):
@@ -131,7 +134,18 @@ class NetworkYoloV3(Network):
             net = gluon.nn.SymbolBlock.imports(architecture_file, ['data'], weights_file, ctx=ctx)
             classes = self.read_classes(classes_list)
             net.collect_params().reset_ctx(ctx)
-            x, image = gcv.data.transforms.presets.yolo.load_test(input_image_file, args.data_shape)
+            #x, image = gcv.data.transforms.presets.yolo.load_test(input_image_file, args.data_shape)
+
+            img = mx.image.imread(input_image_file)
+            img = timage.resize_short_within(img, 608, max_size=1024, mult_base=1)
+
+            def make_tensor(img):
+                np_array = np.expand_dims(np.transpose(img, (0,1,2)),axis=0).astype(np.float32)
+                return mx.nd.array(np_array)
+
+            image = img.asnumpy().astype('uint8')
+            x = make_tensor(image)
+
             cid, score, bbox = net(x)
             ax = viz.plot_bbox(image, bbox[0], score[0], cid[0], class_names=classes, thresh=0.5)
             plt.show()
