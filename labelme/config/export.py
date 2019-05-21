@@ -22,6 +22,9 @@ class Export():
             },
             'objects': {
                 'imagerecord': lambda: formats.FormatImageRecord(),
+            },
+            'limits': {
+                'max_num_labels': 20
             }
         }
         if key is not None:

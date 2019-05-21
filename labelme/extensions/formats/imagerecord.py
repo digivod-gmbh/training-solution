@@ -54,7 +54,7 @@ class FormatImageRecord(DatasetFormat):
 
         self.thread.update.emit(_('Finish export ...'), 4 * (self.args.num_label_files) + 2)
 
-    def init_export(self, thread, data_folder, export_file, label_files, label_list_file,
+    def init_export(self, thread, data_folder, export_file, label_files, label_list_file, selected_labels, 
         validation_ratio = 0.0
     ):
         self.thread = thread
@@ -63,6 +63,7 @@ class FormatImageRecord(DatasetFormat):
             'export_file': export_file,
             'label_files': label_files,
             'label_list_file': label_list_file,
+            'selected_labels': selected_labels,
             'validation_ratio': validation_ratio,
         })
         self.args.num_label_files = len(label_files)
@@ -163,31 +164,34 @@ class FormatImageRecord(DatasetFormat):
                 boxes = []
                 labels = []
                 for shape in shapes:
-                    box = []
-                    points = shape['points']
-                    if shape['type'] is not 'rectangle':
-                        # Convert polygons to rectangle
-                        points = self.shape_points_to_rectangle(shape['type'], shape['points'])
-                    for point in points:
-                        box = box + point
-                    boxes.append(box)
-                    labels.append(shape['label'])
+                    if shape['label'] in self.args.selected_labels:
+                        box = []
+                        points = shape['points']
+                        if shape['type'] is not 'rectangle':
+                            # Convert polygons to rectangle
+                            points = self.shape_points_to_rectangle(shape['type'], shape['points'])
+                        for point in points:
+                            box = box + point
+                        boxes.append(box)
+                        labels.append(shape['label'])
                 ids = np.array([label_to_idx[l] for l in labels], dtype=np.int32)
                 boxes = np.array(boxes)
-                line = self.write_line(label_file.imagePath, im_shape, boxes, ids, idx)
-                f.write(line)
+                if len(labels) > 0:
+                    line = self.write_line(label_file.imagePath, im_shape, boxes, ids, idx)
+                    f.write(line)
                 # Update progress bar
                 self.thread.update.emit(_('Writing lst files ...'), start_value + idx + 1)
 
-    def make_label_list(self, label_list_file, label_files):
+    def make_label_list(self, label_list_file, label_files, selected_labels):
         num_label_files = len(label_files)
-        label_list = []
+        label_list = set()
         for idx in range(num_label_files):
             label_file = LabelFile(label_files[idx])
             shapes = [s[0] for s in label_file.shapes]
             for s in shapes:
-                label_list.append(s)
-        label_list = list(set(label_list))
+                if s in selected_labels:
+                    label_list.add(s)
+        label_list = list(label_list)
         label_list.sort()
         logger.debug('Found {} labels in dataset: {}'.format(len(label_list), label_list))
         with open(label_list_file, 'w+') as f:

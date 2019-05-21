@@ -64,6 +64,21 @@ class ExportWindow(QtWidgets.QDialog):
         data_folder_group_layout.addWidget(dataset_browse_btn)
         layout.addWidget(data_folder_group)
 
+        self.label_checkboxes = []
+        self.label_selection_label = QtWidgets.QLabel(_('Label selection'))
+        self.label_selection_label.setVisible(False)
+        layout.addWidget(self.label_selection_label)
+
+        self.label_parent_widget = QtWidgets.QWidget()
+        self.label_parent_widget.setLayout(QtWidgets.QVBoxLayout())
+
+        self.label_selection_scroll = QtWidgets.QScrollArea()
+        self.label_selection_scroll.setVisible(False)
+        self.label_selection_scroll.setWidgetResizable(True)
+        self.label_selection_scroll.setFixedHeight(100)
+        self.label_selection_scroll.setWidget(self.label_parent_widget)
+        layout.addWidget(self.label_selection_scroll)
+
         self.export_file = QtWidgets.QLineEdit()
         export_browse_btn = QtWidgets.QPushButton(_('Browse'))
         export_browse_btn.clicked.connect(self.export_browse_btn_clicked)
@@ -113,6 +128,17 @@ class ExportWindow(QtWidgets.QDialog):
             mb.warning(self, _('Export'), _('Please enter a valid export folder'))
             return
 
+        selected_labels = []
+        for i, checkbox in enumerate(self.label_checkboxes):
+            if checkbox.isChecked():
+                selected_labels.append(checkbox.text())
+        num_selected_labels = len(selected_labels)
+        limit = Export.config('limits')['max_num_labels']
+        if num_selected_labels > limit:
+            mb = QtWidgets.QMessageBox
+            mb.warning(self, _('Export'), _('The maximum number of labels in a dataset is {}.\nPlease select less labels.').format(limit))
+            return
+
         if len(os.listdir(export_dir)) > 0:
             mb = QtWidgets.QMessageBox
             msg = _('The selected output directory "{}" is not empty. Containing files could be overwritten. Are you sure to continue?').format(export_dir)
@@ -120,13 +146,7 @@ class ExportWindow(QtWidgets.QDialog):
             if clicked_btn == QtWidgets.QMessageBox.No:
                 return
 
-        label_files = []
-        for root, dirs, files in os.walk(data_folder):
-            for f in files:
-                if LabelFile.is_label_file(f):
-                    label_files.append(os.path.normpath(os.path.join(data_folder, f)))
-        num_label_files = len(label_files)
-        logger.debug('Found {} label files in dataset folder "{}"'.format(num_label_files, data_folder))
+        label_files, num_label_files = self.get_label_files_from_data_folder(data_folder, selected_labels)
 
         validation_ratio = int(self.validation.value()) / 100.0
 
@@ -153,7 +173,7 @@ class ExportWindow(QtWidgets.QDialog):
 
         dataset_format = Export.config('objects')[func_name]()
         
-        dataset_format.make_label_list(label_list_file, label_files)
+        dataset_format.make_label_list(label_list_file, label_files, selected_labels)
         format_idx = func_name
         args = Map({
             'validation_ratio': validation_ratio,
@@ -165,7 +185,9 @@ class ExportWindow(QtWidgets.QDialog):
         self.worker_idx = worker_idx
         self.worker_object = ProgressObject(worker, dataset_format.export, self.error_export_progress, dataset_format.abort, 
             self.update_export_progress, self.finish_export_progress)
-        dataset_format.init_export(self.worker_object, data_folder, export_file, label_files, label_list_file, validation_ratio)
+        dataset_format.init_export(self.worker_object, data_folder, export_file, label_files, label_list_file, selected_labels, 
+            validation_ratio=validation_ratio
+        )
 
         dataset_file_train = dataset_format.getTrainingFilename(export_dir, export_file_name)
         dataset_file_val = dataset_format.getValidateFilename(export_dir, export_file_name)
@@ -199,6 +221,24 @@ class ExportWindow(QtWidgets.QDialog):
         worker.addObject(self.worker_object)
         worker.start()
 
+    def get_label_files_from_data_folder(self, data_folder, selected_labels = [], get_all_labels = False):
+        label_files = []
+        for root, dirs, files in os.walk(data_folder):
+            for f in files:
+                if LabelFile.is_label_file(f):
+                    full_path = os.path.normpath(os.path.join(data_folder, f))
+                    if get_all_labels:
+                        label_files.append(full_path)
+                        continue
+                    lf = LabelFile(full_path)
+                    labels = [s[0] for s in lf.shapes]
+                    intersect_labels = set(labels) & set(selected_labels)
+                    if len(intersect_labels) > 0:
+                        label_files.append(full_path)
+        num_label_files = len(label_files)
+        logger.debug('Found {} label files in dataset folder "{}"'.format(num_label_files, data_folder))
+        return label_files, num_label_files
+
     def cancel_btn_clicked(self):
         self.close()
 
@@ -210,6 +250,33 @@ class ExportWindow(QtWidgets.QDialog):
             data_folder = os.path.normpath(data_folder)
             self.parent.settings.setValue('export/last_dataset_dir', data_folder)
             self.data_folder.setText(data_folder)
+            self.load_labels_from_data_folder(data_folder)
+
+    def load_labels_from_data_folder(self, data_folder):
+        label_files, num_label_files = self.get_label_files_from_data_folder(data_folder, get_all_labels=True)
+        self.label_selection_label.setVisible(True)
+        self.label_selection_scroll.setVisible(True)
+        self.label_checkboxes = []
+        label_set = set()
+        for label_file in label_files:
+            lf = LabelFile(label_file)
+            labels = [s[0] for s in lf.shapes]
+            label_set.update(labels)
+        logger.debug('Found labels {} in folder {}'.format(label_set, data_folder))
+        for label in label_set:
+            checkbox = QtWidgets.QCheckBox(label)
+            self.label_checkboxes.append(checkbox)
+        self.update_label_checkboxes()
+
+    def update_label_checkboxes(self):
+        while self.label_parent_widget.layout().count():
+            child = self.label_parent_widget.layout().takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+        max_num_labels = Export.config('limits')['max_num_labels']
+        for i, checkbox in enumerate(self.label_checkboxes):
+            checkbox.setChecked(i < max_num_labels)
+            self.label_parent_widget.layout().addWidget(checkbox)
 
     def export_browse_btn_clicked(self):
         last_dir = self.parent.settings.value('export/last_export_dir', '')
