@@ -86,8 +86,9 @@ class FormatImageRecord(DatasetFormat):
 
         self.checkAborted()
 
-        rec_file_val = self.lst2rec(lst_val[0], data_folder, 
-            num_label_files=lst_val[1], start_value=(3 * self.args.num_label_files + 2), pass_through=True, pack_label=True)
+        if lst_val[1] > 0:
+            rec_file_val = self.lst2rec(lst_val[0], data_folder, 
+                num_label_files=lst_val[1], start_value=(3 * self.args.num_label_files + 2), pass_through=True, pack_label=True)
 
     def write_line(self, img_path, im_shape, boxes, ids, idx):
         # https://gluon-cv.mxnet.io/build/examples_datasets/detection_custom.html#recordfiledetection-for-entire-dataset-packed-in-single-mxnet-recordfile
@@ -115,6 +116,7 @@ class FormatImageRecord(DatasetFormat):
     def make_lst_file(self, export_file, label_files, label_list_file, validation_ratio=0.0):
         # Update progress bar
         self.thread.update.emit(_('Creating lst files ...'), 2)
+        self.checkAborted()
 
         export_folder = os.path.dirname(export_file)
         export_file_name = os.path.splitext(os.path.basename(export_file))[0]
@@ -140,7 +142,8 @@ class FormatImageRecord(DatasetFormat):
         label_files_train = label_files[:size_train]
         label_files_val = label_files[size_train:]
         self.write_lst_file(lst_file_train, label_files_train, label_to_idx)
-        self.write_lst_file(lst_file_val, label_files_val, label_to_idx, self.args.num_label_files + 2)
+        if len(label_files_val) > 0:
+            self.write_lst_file(lst_file_val, label_files_val, label_to_idx, self.args.num_label_files + 2)
 
         return (lst_file_train, len(label_files_train)), (lst_file_val, len(label_files_val))
 
@@ -174,7 +177,7 @@ class FormatImageRecord(DatasetFormat):
                 line = self.write_line(label_file.imagePath, im_shape, boxes, ids, idx)
                 f.write(line)
                 # Update progress bar
-                self.thread.update.emit(None, start_value + idx + 1)
+                self.thread.update.emit(_('Writing lst files ...'), start_value + idx + 1)
 
     def make_label_list(self, label_list_file, label_files):
         num_label_files = len(label_files)
@@ -216,7 +219,7 @@ class FormatImageRecord(DatasetFormat):
         count = 0
         for fname in files:
             if fname.startswith(args.prefix) and fname.endswith('.lst'):
-                print('Creating', Export.config('extensions')['imagerecord'], 'file from', fname, 'in', working_dir)
+                logger.debug('Creating', Export.config('extensions')['imagerecord'], 'file from', fname, 'in', working_dir)
                 count += 1
                 image_list = self.read_list(fname)
 
@@ -271,12 +274,12 @@ class FormatImageRecord(DatasetFormat):
                 line_len = len(line)
                 # check the data format of .lst file
                 if line_len < 3:
-                    print('lst should have at least has three parts, but only has {} parts for {}}'.format(line_len, line))
+                    logger.warning('lst should have at least has three parts, but only has {} parts for {}}'.format(line_len, line))
                     continue
                 try:
                     item = [int(line[0])] + [line[-1]] + [float(i) for i in line[1:-1]]
                 except Exception as e:
-                    print('Parsing lst met error for {}, detail: {}'.format(line, e))
+                    logger.error('Parsing lst met error for {}, detail: {}'.format(line, e))
                     continue
                 yield item
 
@@ -304,7 +307,7 @@ class FormatImageRecord(DatasetFormat):
                 q_out.put((i, s, item))
             except Exception as e:
                 traceback.print_exc()
-                print('pack_img error:', item[1], e)
+                logger.error('pack_img error:', item[1], e)
                 q_out.put((i, None, item))
             return
 
@@ -312,11 +315,11 @@ class FormatImageRecord(DatasetFormat):
             img = Image.open(fullpath)
         except:
             traceback.print_exc()
-            print('imread error trying to load file: {}'.format(fullpath))
+            logger.error('imread error trying to load file: {}'.format(fullpath))
             q_out.put((i, None, item))
             return
         if img is None:
-            print('imread read blank (None) image for file: {}'.format(fullpath))
+            logger.error('imread read blank (None) image for file: {}'.format(fullpath))
             q_out.put((i, None, item))
             return
         if args.center_crop:
@@ -338,7 +341,7 @@ class FormatImageRecord(DatasetFormat):
             q_out.put((i, s, item))
         except Exception as e:
             traceback.print_exc()
-            print('pack_img error on file: {} {}'.format(fullpath, e))
+            logger.error('pack_img error on file: {} {}'.format(fullpath, e))
             q_out.put((i, None, item))
             return
 

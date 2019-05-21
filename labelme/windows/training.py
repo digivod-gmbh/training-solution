@@ -162,11 +162,13 @@ class TrainingWindow(QtWidgets.QDialog):
         label_list_file = os.path.normpath(os.path.join(dataset_dir, dataset_data.label_list))
         label_list = os.path.relpath(label_list_file, output_dir)
         dataset_train = os.path.normpath(os.path.join(dataset_dir, dataset_data.datasets['training']))
-        dataset_val = os.path.normpath(os.path.join(dataset_dir, dataset_data.datasets['validation']))
         datasets = Map({
             'training': os.path.relpath(dataset_train, output_dir),
-            'validation': os.path.relpath(dataset_val, output_dir),
         })
+        if 'validation' in dataset_data.datasets:
+            dataset_val = os.path.normpath(os.path.join(dataset_dir, dataset_data.datasets['validation']))
+            datasets['validation'] = os.path.relpath(dataset_val, output_dir)
+        
         args = Map({
             'training_name': output_file_name,
             'output_dir': output_dir,
@@ -179,7 +181,8 @@ class TrainingWindow(QtWidgets.QDialog):
 
         # Pass full paths to training function
         datasets.training = os.path.normpath(os.path.join(output_dir, datasets.training))
-        datasets.validation = os.path.normpath(os.path.join(output_dir, datasets.validation))
+        if 'validation' in datasets:
+            datasets.validation = os.path.normpath(os.path.join(output_dir, datasets.validation))
         args.classes_list = label_list_file
 
         # Start training

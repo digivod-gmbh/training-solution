@@ -133,9 +133,9 @@ class ExportWindow(QtWidgets.QDialog):
         self.progress = QtWidgets.QProgressDialog(_('Exporting dataset ...'), _('Cancel'), 0, 100, self)
         self.set_default_window_flags(self.progress)
         self.progress.setWindowModality(Qt.ApplicationModal)
-        self.progress.setMaximum(4 * len(label_files) + 3)
         self.progress.setValue(0)
         self.progress.show()
+        self.progress.setMaximum(4 * len(label_files) + 3)
 
         val = self.formats.currentText()
         formats = Export.config('formats')
@@ -178,13 +178,14 @@ class ExportWindow(QtWidgets.QDialog):
         data = Map({
             'samples': {
                 'training': num_files_train,
-                'validation': num_files_val,
             },
             'datasets': {
                 'training': os.path.relpath(dataset_file_train, export_dir),
-                'validation': os.path.relpath(dataset_file_val, export_dir),
             }
         })
+        if num_files_val > 0:
+            data.samples['validation'] = num_files_val
+            data.datasets['validation'] = os.path.relpath(dataset_file_val, export_dir)
         Export.update_dataset_config(export_file, data)
 
         extension = '.' + str(dataset_file_train.split('.')[-1:][0])
