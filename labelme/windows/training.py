@@ -78,6 +78,14 @@ class TrainingWindow(QtWidgets.QDialog):
         self.args_batch_size.setMinimum(1)
         self.args_batch_size.setMaximum(100)
 
+        args_learning_rate_label = QtWidgets.QLabel(_('Learning rate'))
+        self.args_learning_rate = QtWidgets.QDoubleSpinBox()
+        self.args_learning_rate.setMinimum(1e-7)
+        self.args_learning_rate.setMaximum(1.0)
+        self.args_learning_rate.setSingleStep(1e-7)
+        self.args_learning_rate.setDecimals(7)
+        self.args_learning_rate.setValue(0.0001)
+
         args_gpus_label = QtWidgets.QLabel(_('GPUs'))
         self.gpus = mx.test_utils.list_gpus() # ['0']
         self.gpu_checkboxes = []
@@ -94,8 +102,11 @@ class TrainingWindow(QtWidgets.QDialog):
         settings_group_layout.addWidget(self.args_epochs, 0, 1)
         settings_group_layout.addWidget(args_batch_size_label, 1, 0)
         settings_group_layout.addWidget(self.args_batch_size, 1, 1)
-        settings_group_layout.addWidget(args_gpus_label, 2, 0)
-        row = 2
+        settings_group_layout.addWidget(args_learning_rate_label, 2, 0)
+        settings_group_layout.addWidget(self.args_learning_rate, 2, 1)
+
+        settings_group_layout.addWidget(args_gpus_label, 3, 0)
+        row = 3
         for i, checkbox in enumerate(self.gpu_checkboxes):
             settings_group_layout.addWidget(checkbox, row, 1)
             row += 1
@@ -173,6 +184,7 @@ class TrainingWindow(QtWidgets.QDialog):
             'training_name': output_file_name,
             'output_dir': output_dir,
             'batch_size': int(self.args_batch_size.value()),
+            'learning_rate': float(self.args_learning_rate.value()),
             'gpus': gpus,
             'epochs': int(self.args_epochs.value()),
         })
@@ -196,7 +208,7 @@ class TrainingWindow(QtWidgets.QDialog):
         self.worker_object = ProgressObject(worker, network.training, self.error_training_progress, network.abort, 
             self.update_training_progress, self.finish_training_progress)
         network.init_training(self.worker_object, args.training_name, args.output_dir, args.classes_list, datasets.training, 
-            validate_dataset=datasets.validation, batch_size=args.batch_size, gpus=args.gpus, epochs=args.epochs)
+            validate_dataset=datasets.validation, batch_size=args.batch_size, lr=args.learning_rate, gpus=args.gpus, epochs=args.epochs)
 
         output_file = self.output_file.text()
         data = {
