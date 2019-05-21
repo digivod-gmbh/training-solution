@@ -130,7 +130,7 @@ def main():
         LOG_LEVEL = 'DEBUG'
         logger.addStreamHandler()
         
-    logger.setLevel(getattr(logging, args.logger_level.upper()))
+    logger.setLevel(getattr(logging, LOG_LEVEL))
 
     if hasattr(args, 'flags'):
         if os.path.isfile(args.flags):
