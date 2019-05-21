@@ -38,6 +38,14 @@ class FormatImageRecord(DatasetFormat):
         val_filename = filename + FormatImageRecord._val_suffix + FormatImageRecord._extension
         return os.path.join(export_path, val_filename)
 
+    @staticmethod
+    def getTrainingFilesNumber(num_label_files, validation_ratio):
+        return int(num_label_files * (1.0 - validation_ratio))
+
+    @staticmethod
+    def getValidateFilesNumber(num_label_files, validation_ratio):
+        return int(num_label_files * validation_ratio)
+
     def export(self):
         self.thread.update.emit(_('Start export ...'), 1)
 
@@ -62,8 +70,8 @@ class FormatImageRecord(DatasetFormat):
 
     def _export(self, data_folder, export_file, label_files, label_list_file, validation_ratio=0.0):
         num_label_files = len(label_files)
-        num_label_files_train = int(num_label_files * (1.0 - validation_ratio))
-        num_label_files_val = int(num_label_files * validation_ratio)
+        num_label_files_train = FormatImageRecord.getTrainingFilesNumber(num_label_files, validation_ratio)
+        num_label_files_val = FormatImageRecord.getValidateFilesNumber(num_label_files, validation_ratio)
 
         self.checkAborted()
 

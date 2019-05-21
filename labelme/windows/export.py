@@ -170,11 +170,15 @@ class ExportWindow(QtWidgets.QDialog):
         dataset_file_train = dataset_format.getTrainingFilename(export_dir, export_file_name)
         dataset_file_val = dataset_format.getValidateFilename(export_dir, export_file_name)
 
+        num_label_files = len(label_files)
+        num_files_train = dataset_format.getTrainingFilesNumber(num_label_files, validation_ratio)
+        num_files_val = dataset_format.getValidateFilesNumber(num_label_files, validation_ratio)
+
         export_dir = os.path.dirname(export_file)
         data = Map({
             'samples': {
-                'training': dataset_file_train,
-                'validation': dataset_file_val,
+                'training': num_files_train,
+                'validation': num_files_val,
             },
             'datasets': {
                 'training': os.path.relpath(dataset_file_train, export_dir),
