@@ -157,12 +157,19 @@ class ExportWindow(QtWidgets.QDialog):
             return
             
         export_dataset_folder = os.path.join(export_folder, dataset_name)
-        if os.path.isdir(export_dataset_folder) and len(os.listdir(export_dataset_folder)) > 0:
+        if not os.path.isdir(export_dataset_folder):
+            os.makedirs(export_dataset_folder)
+        elif len(os.listdir(export_dataset_folder)) > 0:
             mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Export'), _('The selected output directory "{}" is not empty. Please choose an empty directory for dataset export').format(export_dataset_folder))
-            return
+            msg = _('The selected output directory "{}" is not empty. All containing files will be deleted. Are you sure to continue?').format(export_dataset_folder)
+            clicked_btn = mb.warning(self, _('Export'), msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+            if clicked_btn != QtWidgets.QMessageBox.Yes:
+                return
+            else:
+                import shutil
+                shutil.rmtree(export_dataset_folder)
+                os.makedirs(export_dataset_folder)
 
-        os.makedirs(export_dataset_folder)
         if not os.path.isdir(export_dataset_folder):
             mb = QtWidgets.QMessageBox
             mb.warning(self, _('Export'), _('The selected output directory "{}" could not be created').format(export_dataset_folder))

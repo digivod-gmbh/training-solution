@@ -14,6 +14,7 @@ class Export():
     def config(key = None):
         config = {
             'config_file': 'config.json',
+            'labels_file': 'labels.txt',
             'formats': {
                 'imagerecord': _('ImageRecord'),
             },

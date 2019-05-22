@@ -5,6 +5,7 @@ from qtpy.QtCore import Qt
 from labelme.utils.map import Map
 from labelme.logger import logger
 from labelme.config import Export, Training
+from labelme.extensions.networks import Network
 
 
 class ValidationWindow(QtWidgets.QDialog):
@@ -32,16 +33,16 @@ class ValidationWindow(QtWidgets.QDialog):
         input_image_group_layout.addWidget(input_image_file_browse_btn, 0, 1)
         layout.addWidget(input_image_group)
 
-        self.training_file = QtWidgets.QLineEdit()
-        training_file_browse_btn = QtWidgets.QPushButton(_('Browse'))
-        training_file_browse_btn.clicked.connect(self.training_file_browse_btn_clicked)
+        self.training_folder = QtWidgets.QLineEdit()
+        training_folder_browse_btn = QtWidgets.QPushButton(_('Browse'))
+        training_folder_browse_btn.clicked.connect(self.training_folder_browse_btn_clicked)
 
         network_files_group = QtWidgets.QGroupBox()
         network_files_group.setTitle(_('Training'))
         network_files_group_layout = QtWidgets.QGridLayout()
         network_files_group.setLayout(network_files_group_layout)
-        network_files_group_layout.addWidget(self.training_file, 0, 0)
-        network_files_group_layout.addWidget(training_file_browse_btn, 0, 1)
+        network_files_group_layout.addWidget(self.training_folder, 0, 0)
+        network_files_group_layout.addWidget(training_folder_browse_btn, 0, 1)
         layout.addWidget(network_files_group)
 
         button_box = QtWidgets.QDialogButtonBox()
@@ -64,16 +65,14 @@ class ValidationWindow(QtWidgets.QDialog):
             self.parent.settings.setValue('validation/last_input_image_dir', os.path.dirname(image_file))
             self.input_image_file.setText(image_file)
 
-    def training_file_browse_btn_clicked(self):
+    def training_folder_browse_btn_clicked(self):
         last_dir = self.parent.settings.value('validation/last_training_dir', '')
         logger.debug('Restored value "{}" for setting validation/last_training_dir'.format(last_dir))
-        # TODO: Replace config_file_extension
-        filters = _('Training file') + ' (*{})'.format(Training.config('config_file_extension'))
-        training_file, selected_filter = QtWidgets.QFileDialog.getOpenFileName(self, _('Select training file'), '', filters)
-        if training_file:
-            training_file = os.path.normpath(training_file)
-            self.parent.settings.setValue('validation/last_training_dir', os.path.dirname(training_file))
-            self.training_file.setText(training_file)
+        training_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select training file'), last_dir)
+        if training_folder:
+            training_folder = os.path.normpath(training_folder)
+            self.parent.settings.setValue('validation/last_training_dir', training_folder)
+            self.training_folder.setText(training_folder)
 
     def validate_btn_clicked(self):
         input_image_file = self.input_image_file.text()
@@ -84,25 +83,42 @@ class ValidationWindow(QtWidgets.QDialog):
             mb.warning(self, _('Validation'), _('Please select a valid input image'))
             return
 
-        training_file = self.training_file.text()
-        training_file_name = os.path.splitext(os.path.basename(training_file))[0]
-        training_dir = os.path.dirname(training_file)
-        if not training_file or not os.path.isfile(training_file):
+        training_folder = self.training_folder.text()
+        if not training_folder or not os.path.isdir(training_folder):
             mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Validation'), _('Please select a valid training file'))
+            mb.warning(self, _('Validation'), _('Please select a valid training folder'))
             return
 
-        # Load training data
-        training = Training.read_training_config(training_file)
-        architecture_file = os.path.join(training_dir, training.architecture)
-        weights_file = os.path.join(training_dir, training.weights)
-        label_list_file = os.path.normpath(os.path.join(training_dir, training.label_list))
-        args = Map(training.args)
+        config_file = os.path.join(training_folder, Training.config('config_file'))
 
-        # Load network
-        net_objects = Training.config('objects')
-        network = net_objects[training.network]()
-        network.inference(input_image_file, label_list_file, architecture_file, weights_file, args)
+        network = Network()
+        network_config = network.loadConfig(config_file)
+
+        architecture_file = ''
+        weights_file = ''
+        files = network_config.files
+        for f in files:
+            if '.json' in f:
+                architecture_file = os.path.join(training_folder, f)
+            elif '.params' in f:
+                weights_file = os.path.join(training_folder, f)
+
+        dataset_folder = network_config.dataset
+        label_file = os.path.join(dataset_folder, Export.config('labels_file'))
+
+        network.inference(input_image_file, label_file, architecture_file, weights_file, args = None)
+
+        # # Load training data
+        # training = Training.read_training_config(training_folder)
+        # architecture_file = os.path.join(training_folder, training.architecture)
+        # weights_file = os.path.join(training_folder, training.weights)
+        # label_list_file = os.path.normpath(os.path.join(training_folder, training.label_list))
+        # args = Map(training.args)
+
+        # # Load network
+        # net_objects = Training.config('objects')
+        # network = net_objects[training.network]()
+        # network.inference(input_image_file, label_list_file, architecture_file, weights_file, args)
 
     def cancel_btn_clicked(self):
         self.close()

@@ -29,11 +29,11 @@ from labelme.extensions.networks import Network
 
 class NetworkYoloV3(Network):
 
-    _files = {
-        'architecture': 'architecture-symbol.json',
-        'weights': 'weights-0000.params', 
-    }
     _network = 'yolo3'
+    _files = {
+        'architecture': '{}-symbol.json'.format(_network),
+        'weights': '{}-0000.params'.format(_network), 
+    }
 
     def __init__(self, architecture='darknet53'):
         super().__init__()
@@ -50,36 +50,18 @@ class NetworkYoloV3(Network):
         self.prepare()
         self.thread.update.emit(_('Start training ...'), -1)
         self.train()
-        training_name = '{}_{}'.format(self.args.training_name, self.net_name)
 
-        #self.net.export(os.path.join(self.output_folder, self.architecture_filename))
-        export_block(os.path.join(self.output_folder, self.architecture_filename), self.net, preprocess=True, layout='HWC', ctx=self.ctx)
+        # export
+        training_name = '{}_{}'.format(self.args.training_name, self.net_name)
+        export_block(os.path.join(self.output_folder, NetworkYoloV3._network), self.net, preprocess=True, layout='HWC')
+
+        # save
+        from labelme.config import Training
+        config_file = os.path.join(self.output_folder, Training.config('config_file'))
+        files = list(NetworkYoloV3._files.values())
+        self.saveConfig(config_file, NetworkYoloV3._network, files, self.args.dataset_folder, self.args)
 
         self.thread.update.emit(_('Finished training'), -1)
-
-    def inference(self, input_image_file, classes_list, architecture_file, weights_file, args):
-        logger.debug('Try loading network from files "{}" and "{}"'.format(architecture_file, weights_file))
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            ctx = self.getContext()
-            net = gluon.nn.SymbolBlock.imports(architecture_file, ['data'], weights_file, ctx=ctx)
-            classes = self.readLabelFile(classes_list)
-            net.collect_params().reset_ctx(ctx)
-            #x, image = gcv.data.transforms.presets.yolo.load_test(input_image_file, args.data_shape)
-
-            img = mx.image.imread(input_image_file)
-            img = timage.resize_short_within(img, 608, max_size=1024, mult_base=1)
-
-            def make_tensor(img):
-                np_array = np.expand_dims(np.transpose(img, (0,1,2)),axis=0).astype(np.float32)
-                return mx.nd.array(np_array)
-
-            image = img.asnumpy().astype('uint8')
-            x = make_tensor(image)
-
-            cid, score, bbox = net(x)
-            ax = viz.plot_bbox(image, bbox[0], score[0], cid[0], class_names=classes, thresh=0.5)
-            plt.show()
 
     def setArgs(self, args):
         default_args = {
@@ -134,6 +116,7 @@ class NetworkYoloV3(Network):
 
         # network
         self.args.save_prefix += self.net_name
+
         # use sync bn if specified
         num_sync_bn_devices = len(self.ctx) if self.args.syncbn else -1
         

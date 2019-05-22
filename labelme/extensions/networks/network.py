@@ -1,16 +1,24 @@
+import json
+import warnings
+import numpy as np
 import mxnet as mx
+from mxnet import gluon
+from gluoncv.data.transforms import image as timage
+from gluoncv.utils import viz
+from matplotlib import pyplot as plt
 
 from labelme.logger import logger
 from labelme.extensions import ThreadExtension
+from labelme.utils.map import Map
 
 
 class Network(ThreadExtension):
 
+    def __init__(self):
+        super().__init__()
+
     def training(self):
         raise NotImplementedError('Method training() needs to be implemented in subclasses')
-
-    def inference(self):
-        raise NotImplementedError('Method inference() needs to be implemented in subclasses')
 
     def saveConfig(self, config_file, network, files, dataset, args):
         data = {
@@ -23,6 +31,14 @@ class Network(ThreadExtension):
         with open(config_file, 'w+') as f:
             json.dump(data, f, indent=2)
             logger.debug('Saved training config in file: {}'.format(config_file))
+
+    def loadConfig(self, config_file):
+        logger.debug('Load training config from file: {}'.format(config_file))
+        with open(config_file, 'r') as f:
+            data = json.load(f)
+            logger.debug('Loaded training config: {}'.format(data))
+            return Map(data)
+        raise Exception('Could not load training config from file {}'.format(config_file))
 
     def setArgs(self, args):
         self.args = args
@@ -50,38 +66,34 @@ class Network(ThreadExtension):
         logger.debug('Use context: {}'.format(ctx))
         return ctx
 
-
-# class Network(ThreadExtension):
-
-#     def training(self):
-#         raise NotImplementedError('Method training() needs to be implemented in subclasses')
-
-#     def inference(self):
-#         raise NotImplementedError('Method inference() needs to be implemented in subclasses')
-
-#     def getArgs(self):
-#         return self.args
-
-#     def getArchitectureFilename(self):
-#         return self.architecture_filename + '-symbol.json'
-
-#     def getWeightsFilename(self):
-#         return self.weights_filename + '-0000.params'
-
-#     def get_context(self, gpus=None):
-#         if gpus is None:
-#             return [mx.cpu()]
-#         ctx = [mx.gpu(int(i)) for i in gpus.split(',') if i.strip()]
-#         try:
-#             tmp = mx.nd.array([1, 2, 3], ctx=ctx[0])
-#         except mx.MXNetError as e:
-#             ctx = [mx.cpu()]
-#             logger.error(e)
-#             logger.warning('Unable to use GPU. Using CPU instead')
-#         logger.debug('Use context: {}'.format(ctx))
-#         return ctx
-
-#     def read_classes(self, classes_list):
-#         with open(classes_list) as f:
-#             return f.read().split('\n')
-    
+    def inference(self, input_image_file, label_file, architecture_file, weights_file, args = None):
+        default_args = {
+            'threshold': 0.5,
+            'print_top_n': 10,
+        }
+        tmp_args = default_args.copy()
+        if args:
+            tmp_args.update(args)
+        args = Map(tmp_args)
+        logger.debug('Try loading network from files "{}" and "{}"'.format(architecture_file, weights_file))
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            ctx = self.getContext()
+            net = gluon.nn.SymbolBlock.imports(architecture_file, ['data'], weights_file, ctx=ctx)
+            class_names = self.readLabelFile(label_file)
+            net.collect_params().reset_ctx(ctx)
+            img = mx.image.imread(input_image_file)
+            img = timage.resize_short_within(img, 608, max_size=1024, mult_base=1)
+            def make_tensor(img):
+                np_array = np.expand_dims(np.transpose(img, (0,1,2)),axis=0).astype(np.float32)
+                return mx.nd.array(np_array)
+            image = img.asnumpy().astype('uint8')
+            x = make_tensor(image)
+            cid, score, bbox = net(x)
+            n_top = args.print_top_n
+            classes = cid[0][:n_top].asnumpy().astype('int32').flatten().tolist()
+            scores = score[0][:n_top].asnumpy().astype('float32').flatten().tolist()
+            result_str = '\n'.join(['class: {}, score: {}'.format(classes[i], scores[i]) for i in range(n_top)])
+            logger.debug('Top {} inference results:\n {}'.format(n_top, result_str))
+            ax = viz.plot_bbox(image, bbox[0], score[0], cid[0], class_names=class_names, thresh=args.threshold)
+            plt.show()

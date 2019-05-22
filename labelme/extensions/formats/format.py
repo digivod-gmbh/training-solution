@@ -43,9 +43,6 @@ class DatasetFormat(ThreadExtension):
             return Map(data)
         raise Exception('Could not load dataset config from file {}'.format(config_file))
 
-    def getLabelFile(self):
-        raise NotImplementedError('Method getLabelFile() must be implemented in subclass')
-
     def getTrainFile(self):
         raise NotImplementedError('Method getTrainFile() must be implemented in subclass')
 
@@ -60,37 +57,3 @@ class DatasetFormat(ThreadExtension):
 
     def setIntermediateFormat(self, intermediate):
         self.intermediate = intermediate
-
-    # def fromIntermediateFormat(self):
-    #     raise NotImplementedError('Method fromIntermediateFormat() must be implemented in subclass')
-
-    # def toIntermediateFormat(self):
-    #     raise NotImplementedError('Method toIntermediateFormat() must be implemented in subclass')
-
-
-# class DatasetFormat(ThreadExtension):
-
-#     @staticmethod
-#     def getExtension():
-#         raise NotImplementedError('Method getExtension() needs to be implemented in subclasses')
-
-#     @staticmethod
-#     def getTrainingFilename():
-#         raise NotImplementedError('Method getTrainingFilename() needs to be implemented in subclasses')
-
-#     @staticmethod
-#     def getValidateFilename():
-#         raise NotImplementedError('Method getValidateFilename() needs to be implemented in subclasses')
-
-#     @staticmethod
-#     def getTrainingFilesNumber():
-#         raise NotImplementedError('Method getTrainingFilesNumber() needs to be implemented in subclasses')
-
-#     @staticmethod
-#     def getValidateFilesNumber():
-#         raise NotImplementedError('Method getValidateFilesNumber() needs to be implemented in subclasses')
-
-#     def export(self):
-#         raise NotImplementedError('Method export() needs to be implemented in subclasses')
-
-    

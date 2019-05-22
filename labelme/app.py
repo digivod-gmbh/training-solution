@@ -1641,6 +1641,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.exportWindow.show()
 
     def mergeDialog(self):
+
+        # TODO: Remove warning
+        mb = QtWidgets.QMessageBox
+        mb.warning(self, _('Merge'), _('Merging is not implemented yet'))
+        return
+
         self.mergeWindow = MergeWindow(self)
         self.mergeWindow.show()
 

@@ -149,14 +149,9 @@ class TrainingWindow(QtWidgets.QDialog):
             return
         
         output_folder = os.path.join(output_folder, training_name)
-        if os.path.isdir(output_folder) and len(os.listdir(output_folder)) > 0:
-            mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Training'), _('The selected output directory "{}" is not empty. Please choose an empty directory for training').format(output_folder))
-            return
-
         if not os.path.isdir(output_folder):
             os.makedirs(output_folder)
-        else:
+        elif len(os.listdir(output_folder)) > 0:
             mb = QtWidgets.QMessageBox
             msg = _('The selected output directory "{}" is not empty. All containing files will be deleted. Are you sure to continue?').format(output_folder)
             clicked_btn = mb.warning(self, _('Training'), msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
@@ -200,17 +195,21 @@ class TrainingWindow(QtWidgets.QDialog):
 
         # Dataset
         dataset = Export.config('objects')[dataset_format]()
-        label_file = dataset.getLabelFile(dataset_folder)
-        train_dataset = dataset.getTrainFile(dataset_folder)
-        val_dataset = dataset.getValFile(dataset_folder)
+        label_file = os.path.join(dataset_folder, Export.config('labels_file'))
 
         config_file = os.path.join(dataset_folder, Export.config('config_file'))
         dataset_config = dataset.loadConfig(config_file)
-        logger.debug(dataset_config)
+        logger.debug('Loaded dataset config: {}'.format(dataset_config))
+        train_dataset = dataset.getTrainFile(dataset_folder)
+        if dataset_config.args['validation_ratio'] > 0.0:
+            val_dataset = dataset.getValFile(dataset_folder)
+        else:
+            val_dataset = ''
         num_train_samples = dataset_config.samples['train']
         num_batches = int(math.ceil(num_train_samples / batch_size))
         
         args = Map({
+            'dataset_folder': dataset_folder,
             'train_dataset': train_dataset,
             'validate_dataset': val_dataset,
             'training_name': training_name,
@@ -264,7 +263,7 @@ class TrainingWindow(QtWidgets.QDialog):
         output_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select output folder'), last_dir)
         if output_folder:
             output_folder = os.path.normpath(output_folder)
-            self.parent.settings.setValue('training/last_output_dir', os.path.dirname(output_folder))
+            self.parent.settings.setValue('training/last_output_dir', output_folder)
             self.output_folder.setText(output_folder)
 
     def set_default_window_flags(self, obj):
@@ -293,6 +292,7 @@ class TrainingWindow(QtWidgets.QDialog):
     def finish_training_progress(self):
         mb = QtWidgets.QMessageBox()
         mb.information(self, _('Training'), _('Network has been trained successfully'))
+        self.progress.close()
         self.close()
 
     def error_training_progress(self, e):
