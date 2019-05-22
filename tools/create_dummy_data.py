@@ -128,12 +128,17 @@ def createDummyImage(imageFileName):
 
 def createDummyData(n = 10, start = 0):
 
+    preFileName = None
     for i in range(start, n):
         decimals = int(math.log10(n))
         fileName = '{}.jpg'.format(format(i, '0' + str(decimals)))
         createDummyImage(fileName)
+        if i % 10 == 0:
+            preFileName = fileName
+        if (i+1) % 10 == 0:
+            print('Created dummy images {} to {}'.format(preFileName, fileName))
 
 
-random.seed(42)
-createDummyData(100, 0)
+random.seed(4242)
+createDummyData(10000, 0)
 
