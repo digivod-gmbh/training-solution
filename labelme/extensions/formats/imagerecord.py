@@ -21,7 +21,6 @@ from .format import DatasetFormat
 class FormatImageRecord(DatasetFormat):
 
     _files = {
-        'labels': 'labels.txt',
         'lst_train': 'train.lst', 
         'lst_val': 'val.lst', 
         'rec_train': 'train.rec', 
@@ -37,13 +36,9 @@ class FormatImageRecord(DatasetFormat):
         self.needed_files = [
             FormatImageRecord._files['rec_train'],
             FormatImageRecord._files['idx_train'],
-            #FormatImageRecord._files['lst_train'],
-            FormatImageRecord._files['labels'],
+            FormatImageRecord._files['lst_train'],
         ]
-
-    def getLabelFile(self, dataset_path):
-        label_file = os.path.join(dataset_path, FormatImageRecord._files['labels'])
-        return label_file
+        FormatImageRecord._files['labels'] = Export.config('labels_file')
 
     def getTrainFile(self, dataset_path):
         train_file = os.path.join(dataset_path, FormatImageRecord._files['rec_train'])
@@ -95,7 +90,8 @@ class FormatImageRecord(DatasetFormat):
             self.makeRecFile(data_folder, output_folder, 'rec_val', 'idx_val', 'lst_val')
         else:
             # remove val files from file list for config
-            files = [x for x in files if x not in ['lst_val', 'idx_val', 'rec_val']]
+            val_files = [FormatImageRecord._files['rec_val'], FormatImageRecord._files['idx_val'], FormatImageRecord._files['lst_val']]
+            files = [x for x in files if x not in val_files]
 
         # save
         num_samples = {
@@ -107,15 +103,28 @@ class FormatImageRecord(DatasetFormat):
     def makeLstFile(self, output_folder, file_key, samples):
         file_name = FormatImageRecord._files[file_key]
         lst_file = os.path.join(output_folder, file_name)
+
+        # group samples by image
+        samples_per_image = {}
+        for sample in samples:
+            if sample.image not in samples_per_image:
+                samples_per_image[sample.image] = []
+            samples_per_image[sample.image].append(sample)
+
         with open(lst_file, 'w+') as f:
             idx = 0
-            for sample in samples:
-                points = self.convertPointsToBoundingBox(sample.points, sample.shape_type)
-                box = []
-                for point in points:
-                    box += point
-                ids = np.array([self.label_dict[sample.label]], dtype=np.int32)
-                line = self.createLstLine(sample.image, sample.image_size, [box], ids, idx)
+            for image in samples_per_image:
+                ids = []
+                boxes = []
+                for sample in samples_per_image[image]:
+                    points = self.convertPointsToBoundingBox(sample.points, sample.shape_type)
+                    box = []
+                    for point in points:
+                        box += point
+                    boxes.append(box)
+                    ids.append(self.label_dict[sample.label])
+                ids = np.array(ids, dtype=np.int32)
+                line = self.createLstLine(sample.image, sample.image_size, boxes, ids, idx)
                 f.write(line)
                 idx += 1
 
@@ -253,10 +262,11 @@ class FormatImageRecord(DatasetFormat):
         labels = np.hstack((ids.reshape(-1, 1), boxes)).astype('float')
         labels[:, (1, 3)] /= float(w)
         labels[:, (2, 4)] /= float(h)
-        labels = labels.flatten().tolist()
         str_idx = [str(idx)]
         str_header = [str(x) for x in [A, B, C, D]]
-        str_labels = [str(int(labels[0]))] + [str(x) for x in labels[1:]]
+        str_labels = []
+        for l in labels:
+            str_labels += [str(int(l[0]))] + [str(x) for x in l[1:]]
         str_path = [img_path]
         line = '\t'.join(str_idx + str_header + str_labels + str_path) + '\n'
         return line
