@@ -13,12 +13,9 @@ class Export():
     @staticmethod
     def config(key = None):
         config = {
-            'config_file_extension': '.dataset',
+            'config_file': 'config.json',
             'formats': {
                 'imagerecord': _('ImageRecord'),
-            },
-            'extensions': {
-                'imagerecord': formats.FormatImageRecord.getExtension(),
             },
             'objects': {
                 'imagerecord': lambda: formats.FormatImageRecord(),
@@ -34,38 +31,13 @@ class Export():
         return config
 
     @staticmethod
-    def create_dataset_config(config_file, dataset_format, label_list, args):
-        data = {
-            'format': dataset_format,
-            'label_list': label_list,
-            'args': args
-        }
-        logger.debug('Create dataset config: {}'.format(data))
-        with open(config_file, 'w+') as f:
-            json.dump(data, f, indent=2)
-            logger.debug('Saved dataset config in file: {}'.format(config_file))
-
-    @staticmethod
-    def update_dataset_config(config_file, new_data):
-        old_data = {}
-        with open(config_file, 'r') as f:
-            old_data = json.loads(f.read())
-            logger.debug('Loaded dataset config: {}'.format(old_data))
-        data = old_data.copy()
-        data.update(new_data)
-        logger.debug('Update dataset config: {}'.format(new_data))
-        with open(config_file, 'w+') as f:
-            json.dump(data, f, indent=2)
-            logger.debug('Saved dataset config in file: {}'.format(config_file))
-
-    @staticmethod
-    def read_dataset_config(config_file):
-        data = {}
-        with open(config_file, 'r') as f:
-            data = json.loads(f.read())
-            logger.debug('Read dataset config: {}'.format(data))
-        return Map(data)
-
+    def detectDatasetFormat(dataset_folder):
+        objects = Export.config('objects')
+        for key in objects:
+            candidate = objects[key]()
+            if candidate.isValidFormat(dataset_folder):
+                return key
+        return None
 
     @staticmethod
     def filters():

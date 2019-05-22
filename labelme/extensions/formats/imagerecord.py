@@ -20,247 +20,143 @@ from .format import DatasetFormat
 
 class FormatImageRecord(DatasetFormat):
 
-    _extension = '.rec'
-    _train_suffix = '_train'
-    _val_suffix = '_val'
+    _files = {
+        'labels': 'labels.txt',
+        'lst_train': 'train.lst', 
+        'lst_val': 'val.lst', 
+        'rec_train': 'train.rec', 
+        'rec_val': 'val.rec',
+        'idx_train': 'train.idx', 
+        'idx_val': 'val.idx',
+    }
+    _format = 'imagerecord'
 
-    @staticmethod
-    def getExtension():
-        return FormatImageRecord._extension
+    def __init__(self):
+        super().__init__()
+        self.intermediate = None
+        self.needed_files = [
+            FormatImageRecord._files['rec_train'],
+            FormatImageRecord._files['idx_train'],
+            #FormatImageRecord._files['lst_train'],
+            FormatImageRecord._files['labels'],
+        ]
 
-    @staticmethod
-    def getTrainingFilename(export_path, filename):
-        train_filename = filename + FormatImageRecord._train_suffix + FormatImageRecord._extension
-        return os.path.join(export_path, train_filename)
+    def getLabelFile(self, dataset_path):
+        label_file = os.path.join(dataset_path, FormatImageRecord._files['labels'])
+        return label_file
 
-    @staticmethod
-    def getValidateFilename(export_path, filename):
-        val_filename = filename + FormatImageRecord._val_suffix + FormatImageRecord._extension
-        return os.path.join(export_path, val_filename)
+    def getTrainFile(self, dataset_path):
+        train_file = os.path.join(dataset_path, FormatImageRecord._files['rec_train'])
+        return train_file
 
-    @staticmethod
-    def getTrainingFilesNumber(num_label_files, validation_ratio):
-        return int(num_label_files * (1.0 - validation_ratio))
-
-    @staticmethod
-    def getValidateFilesNumber(num_label_files, validation_ratio):
-        return int(num_label_files * validation_ratio)
+    def getValFile(self, dataset_path):
+        val_file = os.path.join(dataset_path, FormatImageRecord._files['rec_val'])
+        return val_file
 
     def export(self):
-        self.thread.update.emit(_('Start export ...'), 1)
-
-        self._export(self.args.data_folder, self.args.export_file, self.args.label_files, 
-            self.args.label_list_file, self.args.validation_ratio)
-
-        self.thread.update.emit(_('Finish export ...'), 4 * (self.args.num_label_files) + 2)
-
-    def init_export(self, thread, data_folder, export_file, label_files, label_list_file, selected_labels, 
-        validation_ratio = 0.0
-    ):
-        self.thread = thread
-        self.args = Map({
-            'data_folder': data_folder,
-            'export_file': export_file,
-            'label_files': label_files,
-            'label_list_file': label_list_file,
-            'selected_labels': selected_labels,
-            'validation_ratio': validation_ratio,
-        })
-        self.args.num_label_files = len(label_files)
-        logger.debug(self.args)
-
-    def _export(self, data_folder, export_file, label_files, label_list_file, validation_ratio=0.0):
-        num_label_files = len(label_files)
-        num_label_files_train = FormatImageRecord.getTrainingFilesNumber(num_label_files, validation_ratio)
-        num_label_files_val = FormatImageRecord.getValidateFilesNumber(num_label_files, validation_ratio)
-
+        if self.intermediate is None:
+            raise Exception('Intermediate format must be initialized for export')
+        
+        self.thread.update.emit(_('Gathering samples ...'), -1)
         self.checkAborted()
 
-        # First, create lst file
-        lst_train, lst_val = self.make_lst_file(export_file, label_files, label_list_file, validation_ratio)
+        labels = self.intermediate.getLabels()
+        self.label_dict = {}
+        for idx, label in enumerate(labels):
+            self.label_dict[label] = idx
+        train_samples, val_samples = self.intermediate.getTrainValidateSamples(shuffle=True)
+        num_train_samples = len(train_samples)
+        num_val_samples = len(val_samples)
 
+        output_folder = self.output_folder
+        data_folder = self.intermediate.getRoot()
+
+        # labels
+        label_file = os.path.join(output_folder, FormatImageRecord._files['labels'])
+        with open(label_file, 'w+') as f:
+            label_txt = '\n'.join(labels)
+            f.write(label_txt)
+
+        # train
+        self.thread.update.emit(_('Creating training dataset ...'), -1)
         self.checkAborted()
+        self.makeLstFile(output_folder, 'lst_train', train_samples)
+        self.makeRecFile(data_folder, output_folder, 'rec_train', 'idx_train', 'lst_train')
 
-        # Then, create rec file from lst file
-        rec_file_train = self.lst2rec(lst_train[0], data_folder, 
-            num_label_files=lst_train[1], start_value=(2 * self.args.num_label_files + 2), pass_through=True, pack_label=True)
+        config_file = os.path.join(output_folder, Export.config('config_file'))
+        files = list(FormatImageRecord._files.values())
 
-        self.checkAborted()
+        # validate
+        validation_ratio = self.intermediate.getValidationRatio()
+        if validation_ratio > 0.0:
+            self.thread.update.emit(_('Creating validation dataset ...'), -1)
+            self.checkAborted()
+            self.makeLstFile(output_folder, 'lst_val', val_samples)
+            self.makeRecFile(data_folder, output_folder, 'rec_val', 'idx_val', 'lst_val')
+        else:
+            # remove val files from file list for config
+            files = [x for x in files if x not in ['lst_val', 'idx_val', 'rec_val']]
 
-        if lst_val[1] > 0:
-            rec_file_val = self.lst2rec(lst_val[0], data_folder, 
-                num_label_files=lst_val[1], start_value=(3 * self.args.num_label_files + 2), pass_through=True, pack_label=True)
+        # save
+        num_samples = {
+            'train': num_train_samples,
+            'val': num_val_samples,
+        }
+        self.saveConfig(config_file, FormatImageRecord._format, files, num_samples, self.args)
 
-    def write_line(self, img_path, im_shape, boxes, ids, idx):
-        # https://gluon-cv.mxnet.io/build/examples_datasets/detection_custom.html#recordfiledetection-for-entire-dataset-packed-in-single-mxnet-recordfile
-        h, w, c = im_shape
-        # for header, we use minimal length 2, plus width and height
-        # with A: 4, B: 5, C: width, D: height
-        A = 4
-        B = 5
-        C = w
-        D = h
-        # concat id and bboxes
-        labels = np.hstack((ids.reshape(-1, 1), boxes)).astype('float')
-        # normalized bboxes (recommanded)
-        labels[:, (1, 3)] /= float(w)
-        labels[:, (2, 4)] /= float(h)
-        # flatten
-        labels = labels.flatten().tolist()
-        str_idx = [str(idx)]
-        str_header = [str(x) for x in [A, B, C, D]]
-        str_labels = [str(int(labels[0]))] + [str(x) for x in labels[1:]]
-        str_path = [img_path]
-        line = '\t'.join(str_idx + str_header + str_labels + str_path) + '\n'
-        return line
-
-    def make_lst_file(self, export_file, label_files, label_list_file, validation_ratio=0.0):
-        # Update progress bar
-        self.thread.update.emit(_('Creating lst files ...'), 2)
-        self.checkAborted()
-
-        export_folder = os.path.dirname(export_file)
-        export_file_name = os.path.splitext(os.path.basename(export_file))[0]
-        num_label_files = len(label_files)
-        lst_file_train = os.path.normpath(os.path.join(export_folder, '{}{}.lst'.format(export_file_name, FormatImageRecord._train_suffix)))
-        lst_file_val = os.path.normpath(os.path.join(export_folder, '{}{}.lst'.format(export_file_name, FormatImageRecord._val_suffix)))
-
-        # Get all labels with index
-        label_list = None
-        with open(label_list_file) as f:
-            label_list = f.read().split('\n')
-        if label_list is None:
-            logger.error('No labels found in label list file: {}'.format(label_list_files))
-            return
-        label_to_idx = self.get_label_to_idx_dict(label_list)
-
-        # Shuffle
-        random.seed(42)
-        random.shuffle(label_files)
-
-        # Create lst files for training/validation
-        size_train = int(num_label_files * (1.0 - validation_ratio))
-        label_files_train = label_files[:size_train]
-        label_files_val = label_files[size_train:]
-        self.write_lst_file(lst_file_train, label_files_train, label_to_idx)
-        if len(label_files_val) > 0:
-            self.write_lst_file(lst_file_val, label_files_val, label_to_idx, self.args.num_label_files + 2)
-
-        return (lst_file_train, len(label_files_train)), (lst_file_val, len(label_files_val))
-
-    def write_lst_file(self, lst_file, label_files, label_to_idx, start_value=2):
-        num_label_files = len(label_files)
-        # Open (new) lst file
+    def makeLstFile(self, output_folder, file_key, samples):
+        file_name = FormatImageRecord._files[file_key]
+        lst_file = os.path.join(output_folder, file_name)
         with open(lst_file, 'w+') as f:
-            for idx in range(num_label_files):
-                self.checkAborted()
-                label_file = LabelFile(label_files[idx])
-                shapes = [{'label': s[0], 'points': s[1], 'type': s[4]} for s in label_file.shapes]
-                # Skip files without shapes
-                if len(shapes) == 0:
-                    continue
-                channels = 3 # Assume 3 channels
-                im_shape = (label_file.imageHeight, label_file.imageWidth, channels)
-                boxes = []
-                labels = []
-                for shape in shapes:
-                    if shape['label'] in self.args.selected_labels:
-                        box = []
-                        points = shape['points']
-                        if shape['type'] is not 'rectangle':
-                            # Convert polygons to rectangle
-                            points = self.shape_points_to_rectangle(shape['type'], shape['points'])
-                        for point in points:
-                            box = box + point
-                        boxes.append(box)
-                        labels.append(shape['label'])
-                ids = np.array([label_to_idx[l] for l in labels], dtype=np.int32)
-                boxes = np.array(boxes)
-                if len(labels) > 0:
-                    line = self.write_line(label_file.imagePath, im_shape, boxes, ids, idx)
-                    f.write(line)
-                # Update progress bar
-                self.thread.update.emit(_('Writing lst files ...'), start_value + idx + 1)
+            idx = 0
+            for sample in samples:
+                points = self.convertPointsToBoundingBox(sample.points, sample.shape_type)
+                box = []
+                for point in points:
+                    box += point
+                ids = np.array([self.label_dict[sample.label]], dtype=np.int32)
+                line = self.createLstLine(sample.image, sample.image_size, [box], ids, idx)
+                f.write(line)
+                idx += 1
 
-    def make_label_list(self, label_list_file, label_files, selected_labels):
-        num_label_files = len(label_files)
-        label_list = set()
-        for idx in range(num_label_files):
-            label_file = LabelFile(label_files[idx])
-            shapes = [s[0] for s in label_file.shapes]
-            for s in shapes:
-                if s in selected_labels:
-                    label_list.add(s)
-        label_list = list(label_list)
-        label_list.sort()
-        logger.debug('Found {} labels in dataset: {}'.format(len(label_list), label_list))
-        with open(label_list_file, 'w+') as f:
-            f.write('\n'.join(label_list))
+    def makeRecFile(self, data_folder, output_folder, rec_file_key, idx_file_key, lst_file_key):
+        file_name_rec = FormatImageRecord._files[rec_file_key]
+        file_name_idx = FormatImageRecord._files[idx_file_key]
+        file_name_lst = FormatImageRecord._files[lst_file_key]
 
-    def lst2rec(self, prefix, root, num_label_files, start_value, pass_through=False, resize=0, 
-        center_crop=False, quality=95, encoding='.jpg', pack_label=False):
-
-        # Restore translation function '_' as it gets overwritten somehow
-        _ = builtins._
+        image_list = self.readLstFile(os.path.join(output_folder, file_name_lst))
+        record = mx.recordio.MXIndexedRecordIO(os.path.join(output_folder, file_name_idx), os.path.join(output_folder, file_name_rec), 'w')
 
         args = Map({
-            'prefix': prefix,
-            'root': root,
-            'pass_through': pass_through,
-            'resize': resize,
-            'center_crop': center_crop,
-            'quality': quality,
-            'encoding': encoding,
-            'pack_label': pack_label,
+            'root': data_folder,
+            'pass_through': True,
+            'resize': 0,
+            'center_crop': False,
+            'quality': 95,
+            'encoding': '.jpg',
+            'pack_label': True,
         })
+        try:
+            import Queue as queue
+        except ImportError:
+            import queue
+        q_out = queue.Queue()
+        cnt = 0
+        pre_time = time.time()
+        for i, item in enumerate(image_list):
+            self.imageEncode(args, i, item, q_out)
+            if q_out.empty():
+                continue
+            _a, s, _b = q_out.get()
+            record.write_idx(item[0], s)
+            if cnt % 1000 == 0:
+                cur_time = time.time()
+                logger.debug('time: {} count: {}'.format(cur_time - pre_time, cnt))
+                pre_time = cur_time
+            cnt += 1
+            self.thread.update.emit(_('Writing dataset ...'), -1)
 
-        if os.path.isdir(args.prefix):
-            working_dir = args.prefix
-        else:
-            working_dir = os.path.dirname(args.prefix)
-        files = [os.path.join(working_dir, fname) for fname in os.listdir(working_dir)
-                    if os.path.isfile(os.path.join(working_dir, fname))]
-        count = 0
-        for fname in files:
-            if fname.startswith(args.prefix) and fname.endswith('.lst'):
-                logger.debug('Creating', Export.config('extensions')['imagerecord'], 'file from', fname, 'in', working_dir)
-                count += 1
-                image_list = self.read_list(fname)
-
-                # Update progress bar
-                self.thread.update.emit(_('Creating rec file ...'), start_value)
-
-                try:
-                    import Queue as queue
-                except ImportError:
-                    import queue
-                q_out = queue.Queue()
-                fname = os.path.basename(fname)
-                fname_rec = os.path.splitext(fname)[0] + Export.config('extensions')['imagerecord']
-                fname_idx = os.path.splitext(fname)[0] + '.idx'
-                record = mx.recordio.MXIndexedRecordIO(os.path.join(working_dir, fname_idx), os.path.join(working_dir, fname_rec), 'w')
-                cnt = 0
-                pre_time = time.time()
-                for i, item in enumerate(image_list):
-                    self.image_encode(args, i, item, q_out)
-                    if q_out.empty():
-                        continue
-                    _a, s, _b = q_out.get()
-                    record.write_idx(item[0], s)
-                    if cnt % 1000 == 0:
-                        cur_time = time.time()
-                        logger.debug('time: {} count: {}'.format(cur_time - pre_time, cnt))
-                        pre_time = cur_time
-                    cnt += 1
-                    self.thread.update.emit(_('Creating rec file ...'), start_value + i + 1)
-                    self.checkAborted()
-                return os.path.join(working_dir, fname_rec)
-        if not count:
-            logger.debug('Did not find and list file with prefix {}'.format(args.prefix))
-
-        return None
-
-    def read_list(self, path_in):
+    def readLstFile(self, path_in):
         """Reads the .lst file and generates corresponding iterator.
         Parameters
         ----------
@@ -287,7 +183,7 @@ class FormatImageRecord(DatasetFormat):
                     continue
                 yield item
 
-    def image_encode(self, args, i, item, q_out):
+    def imageEncode(self, args, i, item, q_out):
         """Reads, preprocesses, packs the image and puts it back in output queue.
         Parameters
         ----------
@@ -349,24 +245,40 @@ class FormatImageRecord(DatasetFormat):
             q_out.put((i, None, item))
             return
 
-    def get_label_to_idx_dict(self, label_list):
-        label_dict = {}
-        for idx, label in enumerate(label_list):
-            label_dict[label] = idx
-        return label_dict
+    # https://gluon-cv.mxnet.io/build/examples_datasets/detection_custom.html#recordfiledetection-for-entire-dataset-packed-in-single-mxnet-recordfile
+    def createLstLine(self, img_path, im_shape, boxes, ids, idx):
+        h, w = im_shape
+        # for header, we use minimal length 2, plus width and height with A: 4, B: 5, C: width, D: height
+        A, B, C, D = 4, 5, w, h
+        labels = np.hstack((ids.reshape(-1, 1), boxes)).astype('float')
+        labels[:, (1, 3)] /= float(w)
+        labels[:, (2, 4)] /= float(h)
+        labels = labels.flatten().tolist()
+        str_idx = [str(idx)]
+        str_header = [str(x) for x in [A, B, C, D]]
+        str_labels = [str(int(labels[0]))] + [str(x) for x in labels[1:]]
+        str_path = [img_path]
+        line = '\t'.join(str_idx + str_header + str_labels + str_path) + '\n'
+        return line
 
-    def shape_points_to_rectangle(self, shape_type, points):
-        min_x = sys.maxsize
-        min_y = sys.maxsize
-        max_x = 0
-        max_y = 0
-        for p in points:
-            if p[0] < min_x:
-                min_x = p[0]
-            if p[0] > max_x:
-                max_x = p[0]
-            if p[1] < min_y:
-                min_y = p[1]
-            if p[1] > max_y:
-                max_y = p[1]
-        return [[min_x, min_y], [max_x, max_y]]
+    def convertPointsToBoundingBox(self, points, shape_type):
+        if shape_type == 'rectangle':
+            return points
+        elif shape_type == 'polygon':
+            min_x = sys.maxsize
+            min_y = sys.maxsize
+            max_x = 0
+            max_y = 0
+            for p in points:
+                if p[0] < min_x:
+                    min_x = p[0]
+                if p[0] > max_x:
+                    max_x = p[0]
+                if p[1] < min_y:
+                    min_y = p[1]
+                if p[1] > max_y:
+                    max_y = p[1]
+            return [[min_x, min_y], [max_x, max_y]]
+        else:
+            raise Exception('Unknown shape type {}'.format(shape_type))
+

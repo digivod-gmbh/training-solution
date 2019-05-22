@@ -26,8 +26,14 @@ from labelme.utils.map import Map
 from labelme.logger import logger
 from labelme.extensions.networks import Network
 
-   
+
 class NetworkYoloV3(Network):
+
+    _files = {
+        'architecture': 'architecture-symbol.json',
+        'weights': 'weights-0000.params', 
+    }
+    _network = 'yolo3'
 
     def __init__(self, architecture='darknet53'):
         super().__init__()
@@ -39,100 +45,25 @@ class NetworkYoloV3(Network):
             self.model_file_name = 'yolo3_mobilenet1.0_coco-66dbbae6.params'
         else:
             raise Exception('Unknown architecture {}'.format(architecture))
-        self.architecture_filename = self.net_name
-        self.weights_filename = self.net_name
-
-    def init_training(self, thread, training_name, output_dir, classes_list, train_dataset, 
-        validate_dataset='', 
-        data_shape=608, # 320, 416, 608
-        batch_size=8, 
-        gpus='0', 
-        epochs=10, 
-        resume='',
-        start_epoch=0,
-        num_workers=0,  
-        lr=0.0001, 
-        lr_mode='step', 
-        lr_decay=0.1, 
-        lr_decay_period=0,
-        lr_decay_epoch='160,180', 
-        warmup_lr=0.0, 
-        warmup_epochs=0, 
-        momentum=0.9, 
-        wd=0.0005,
-        log_interval=1, 
-        save_prefix='', 
-        save_interval=1, 
-        val_interval=1, 
-        seed=42,
-        num_samples=-1, 
-        syncbn=False, 
-        no_random_shape=True, 
-        no_wd=False, 
-        mixup=False, 
-        no_mixup_epochs=20, 
-        pretrained=0, 
-        label_smooth=False,
-    ):
-        self.thread = thread
-        self.args = Map({
-            'training_name': training_name,
-            'output_dir': output_dir,
-            'classes_list': classes_list,
-            'train_dataset': train_dataset,
-            'validate_dataset': validate_dataset,
-            'data_shape': data_shape,
-            'batch_size': batch_size,
-            'num_workers': num_workers,
-            'gpus': gpus,
-            'epochs': epochs,
-            'resume': resume,
-            'start_epoch': start_epoch,
-            'lr': lr,
-            'lr_mode': lr_mode,
-            'lr_decay': lr_decay,
-            'lr_decay_period': lr_decay_period,
-            'lr_decay_epoch': lr_decay_epoch,
-            'warmup_lr': warmup_lr,
-            'warmup_epochs': warmup_epochs,
-            'momentum': momentum,
-            'wd': wd,
-            'log_interval': log_interval,
-            'save_prefix': save_prefix,
-            'save_interval': save_interval,
-            'val_interval': val_interval,
-            'seed': seed,
-            'num_samples': num_samples,
-            'syncbn': syncbn,
-            'no_random_shape': no_random_shape,
-            'no_wd': no_wd,
-            'mixup': mixup,
-            'no_mixup_epochs': no_mixup_epochs,
-            'pretrained': pretrained,
-            'label_smooth': label_smooth,
-        })
-        logger.debug(self.args)
-        self.architecture_filename = '{}_{}'.format(self.args.training_name, self.architecture_filename)
-        self.weights_filename = '{}_{}'.format(self.args.training_name, self.weights_filename)
 
     def training(self):
         self.prepare()
-        self.thread.update.emit(_('Start training ...'), 4)
+        self.thread.update.emit(_('Start training ...'), -1)
         self.train()
         training_name = '{}_{}'.format(self.args.training_name, self.net_name)
 
-        #self.net.export(os.path.join(self.args.output_dir, self.architecture_filename))
-        export_block(os.path.join(self.args.output_dir, self.architecture_filename), self.net, preprocess=True, layout='HWC', ctx=self.ctx)
+        #self.net.export(os.path.join(self.output_folder, self.architecture_filename))
+        export_block(os.path.join(self.output_folder, self.architecture_filename), self.net, preprocess=True, layout='HWC', ctx=self.ctx)
 
-        self.thread.update.emit(_('Finished training'), self.args.epochs + 4)
+        self.thread.update.emit(_('Finished training'), -1)
 
     def inference(self, input_image_file, classes_list, architecture_file, weights_file, args):
         logger.debug('Try loading network from files "{}" and "{}"'.format(architecture_file, weights_file))
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            ctx = self.get_context()
+            ctx = self.getContext()
             net = gluon.nn.SymbolBlock.imports(architecture_file, ['data'], weights_file, ctx=ctx)
-            classes = self.read_classes(classes_list)
+            classes = self.readLabelFile(classes_list)
             net.collect_params().reset_ctx(ctx)
             #x, image = gcv.data.transforms.presets.yolo.load_test(input_image_file, args.data_shape)
 
@@ -150,6 +81,46 @@ class NetworkYoloV3(Network):
             ax = viz.plot_bbox(image, bbox[0], score[0], cid[0], class_names=classes, thresh=0.5)
             plt.show()
 
+    def setArgs(self, args):
+        default_args = {
+            'training_name': 'unknown',
+            'train_dataset': '',
+            'validate_dataset': '',
+            'data_shape': 608, # 320, 416, 608
+            'batch_size': 8,
+            'gpus': '0',
+            'epochs': 10,
+            'resume': '',
+            'start_epoch': 0,
+            'num_workers': 0,
+            'lr': 0.0001,
+            'lr_mode': 'step',
+            'lr_decay': 0.1,
+            'lr_decay_period': 0,
+            'lr_decay_epoch': '160,180',
+            'warmup_lr': 0.0,
+            'warmup_epochs': 0,
+            'momentum': 0.9,
+            'wd': 0.0005,
+            'log_interval': 1,
+            'save_prefix': '',
+            'save_interval': 1,
+            'val_interval': 1,
+            'seed': 42,
+            'num_samples': -1,
+            'syncbn': False,
+            'no_random_shape': True,
+            'no_wd': False,
+            'mixup': False,
+            'no_mixup_epochs': 20,
+            'pretrained': 0,
+            'label_smooth': False,
+        }
+        self.args = default_args.copy()
+        self.args.update(args)
+        self.args = Map(self.args)
+        logger.debug(self.args)
+
     def prepare(self):
         # fix seed for mxnet, numpy and python builtin random generator.
         gutils.random.seed(self.args.seed)
@@ -157,22 +128,20 @@ class NetworkYoloV3(Network):
         if not self.args.validate_dataset:
             self.args.val_interval = sys.maxsize
 
-        self.thread.update.emit(_('Loading model ...'), 1)
+        self.thread.update.emit(_('Loading model ...'), -1)
 
-        self.ctx = self.get_context(self.args.gpus)
+        self.ctx = self.getContext(self.args.gpus)
 
         # network
         self.args.save_prefix += self.net_name
         # use sync bn if specified
         num_sync_bn_devices = len(self.ctx) if self.args.syncbn else -1
         
-        classes = self.read_classes(self.args.classes_list)
-            
-        self.thread.update.emit(_('Loading model ...'), 1)
+        classes = self.readLabelFile(self.label_file)
 
         self.net = get_model(self.net_name, pretrained=False, ctx=self.ctx)
 
-        self.thread.update.emit(_('Loading weights ...'), 2)
+        self.thread.update.emit(_('Loading weights ...'), -1)
 
         if self.args.resume.strip():
             self.net.load_parameters(self.args.resume.strip())
@@ -188,7 +157,7 @@ class NetworkYoloV3(Network):
                 self.net.initialize()
                 async_net.initialize()
     
-        self.thread.update.emit(_('Loading dataset ...'), 3)
+        self.thread.update.emit(_('Loading dataset ...'), -1)
 
         # training data
         train_dataset, val_dataset, self.eval_metric = self.get_dataset()
@@ -199,7 +168,7 @@ class NetworkYoloV3(Network):
         val_dataset = None
         if self.args.validate_dataset:
             val_dataset = gcv.data.RecordFileDetection(self.args.validate_dataset)
-        classes = self.read_classes(self.args.classes_list)
+        classes = self.readLabelFile(self.label_file)
         logger.debug('Read classes: {}'.format(classes))
         val_metric = VOC07MApMetric(iou_thresh=0.5, class_names=classes)
         if self.args.num_samples < 0:
@@ -322,7 +291,7 @@ class NetworkYoloV3(Network):
 
         for epoch in range(self.args.start_epoch, self.args.epochs):
 
-            self.thread.update.emit(_('Start training on epoch {} ...').format(epoch + 1), progress_start + epoch_count)
+            self.thread.update.emit(_('Start training on epoch {} ...').format(epoch + 1), None)
             self.checkAborted()
             epoch_count += 1
 
@@ -361,7 +330,6 @@ class NetworkYoloV3(Network):
                         scale_losses.append(scale_loss)
                         cls_losses.append(cls_loss)
                     autograd.backward(sum_losses)
-                #lr_scheduler.update(i, epoch)
                 trainer.step(batch_size)
                 obj_metrics.update(0, obj_losses)
                 center_metrics.update(0, center_losses)
@@ -377,7 +345,9 @@ class NetworkYoloV3(Network):
 
                     self.thread.update.emit(_('Training ...\nEpoch {}, Batch {}, Speed: {:.3f} samples/sec\n{}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}')
                         .format(epoch + 1, i + 1, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4), None)
-                    self.checkAborted()
+                
+                self.thread.update.emit(None, -1)
+                self.checkAborted()
 
                 btic = time.time()
     
@@ -396,11 +366,9 @@ class NetworkYoloV3(Network):
                 current_map = float(mean_ap[-1])
             else:
                 current_map = 0.
-            self.save_params(best_map, current_map, epoch, self.args.save_interval, os.path.join(self.args.output_dir, self.args.save_prefix))
+            self.save_params(best_map, current_map, epoch, self.args.save_interval, os.path.join(self.output_folder, self.args.save_prefix))
             if current_map > best_map[0]:
                 best_map[0] = current_map
 
         param_file = '{}.params'.format(self.args.training_name)
-        self.net.save_parameters(os.path.join(self.args.output_dir, param_file))
-        
-    
+        self.net.save_parameters(os.path.join(self.output_folder, param_file))

@@ -11,3 +11,6 @@ class ThreadExtension():
 
     def abort(self):
         self.isAborted = True
+
+    def setThread(self, thread):
+        self.thread = thread

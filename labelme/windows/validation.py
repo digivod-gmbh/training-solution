@@ -67,6 +67,7 @@ class ValidationWindow(QtWidgets.QDialog):
     def training_file_browse_btn_clicked(self):
         last_dir = self.parent.settings.value('validation/last_training_dir', '')
         logger.debug('Restored value "{}" for setting validation/last_training_dir'.format(last_dir))
+        # TODO: Replace config_file_extension
         filters = _('Training file') + ' (*{})'.format(Training.config('config_file_extension'))
         training_file, selected_filter = QtWidgets.QFileDialog.getOpenFileName(self, _('Select training file'), '', filters)
         if training_file:

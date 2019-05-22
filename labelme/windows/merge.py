@@ -66,6 +66,7 @@ class MergeWindow(QtWidgets.QDialog):
         obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
 
     def dataset_files_browse_btn_clicked(self):
+        # TODO: Replace config_file_extension
         filters = _('Dataset files') + ' (*{})'.format(Export.config('config_file_extension'))
         dataset_files, selected_filter = QtWidgets.QFileDialog.getOpenFileNames(self, _('Select dataset files'), '', filters)
         if len(dataset_files) > 0:
@@ -76,6 +77,7 @@ class MergeWindow(QtWidgets.QDialog):
     def export_browse_btn_clicked(self):
         last_dir = self.parent.settings.value('merge/last_export_dir', '')
         logger.debug('Restored value "{}" for setting merge/last_export_dir'.format(last_dir))
+        # TODO: Replace config_file_extension
         filters = _('Dataset file') + ' (*{})'.format(Export.config('config_file_extension'))
         export_file, selected_filter = QtWidgets.QFileDialog.getSaveFileName(self, _('Save output file as'), last_dir, filters)
         if export_file:
@@ -135,8 +137,13 @@ class MergeWindow(QtWidgets.QDialog):
             mb.warning(self, _('Merge datasets'), _('Please select at least 2 datasets to merge'))
             return
 
-        pass
+        merge_datasets(dataset_files)
 
     def cancel_btn_clicked(self):
         self.close()
+
+    def merge_datasets(datasets):
+        
+        #dataset_format = Export.config('objects')[func_name]()
+        pass
 
