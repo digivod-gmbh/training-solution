@@ -33,6 +33,8 @@ from labelme.windows import ExportWindow, ExportState
 from labelme.windows import TrainingWindow
 from labelme.windows import ValidationWindow
 from labelme.windows import MergeWindow
+from labelme.windows import ImportWindow
+from labelme.windows import SettingsWindow
 
 
 # FIXME
@@ -196,6 +198,10 @@ class MainWindow(QtWidgets.QMainWindow):
                        _('Open image or label file'))
         opendir = action(_('&Open Dir'), self.openDirDialog,
                          shortcuts['open_dir'], 'dir', _(u'Open Dir'))
+        settings = action(_('&Settings'), self.settingsDialog,
+                         shortcuts['settings'], 'settings', _(u'Settings'), enabled=True)
+        import_ = action(_('&Import'), self.importDialog,
+                         shortcuts['import'], 'import', _(u'Import'), enabled=True)
         export = action(_('&Export'), self.exportDialog,
                          shortcuts['export'], 'export', _(u'Export'), enabled=True)
         merge = action(_('&Merge'), self.mergeDialog,
@@ -431,7 +437,7 @@ class MainWindow(QtWidgets.QMainWindow):
             changeOutputDir=changeOutputDir,
             save=save, saveAs=saveAs, open=open_, close=close,
             deleteFile=deleteFile,
-            lineColor=color1, fillColor=color2,
+            #lineColor=color1, fillColor=color2,
             toggleKeepPrevMode=toggle_keep_prev_mode,
             delete=delete, edit=edit, copy=copy,
             undoLastPoint=undoLastPoint, undo=undo,
@@ -447,11 +453,13 @@ class MainWindow(QtWidgets.QMainWindow):
             fitWindow=fitWindow, fitWidth=fitWidth,
             zoomActions=zoomActions,
             openNextImg=openNextImg, openPrevImg=openPrevImg,
-            export=export, merge=merge, training=training, validation=validation,
-            fileMenuActions=(open_, opendir, save, saveAs, export, merge, training, validation, close, quit),
+            settings=settings,
+            import_=import_, export=export, merge=merge, 
+            training=training, validation=validation,
+            fileMenuActions=(open_, opendir, save, saveAs, close, quit),
             tool=(),
             editMenu=(edit, copy, delete, None, undo, undoLastPoint,
-                      None, color1, color2, None, toggle_keep_prev_mode),
+                      None, toggle_keep_prev_mode, None, settings), # None, color1, color2,
             # menu shown at right click
             menu=(
                 createMode,
@@ -489,6 +497,7 @@ class MainWindow(QtWidgets.QMainWindow):
             file=self.menu(_('&File')),
             edit=self.menu(_('&Edit')),
             view=self.menu(_('&View')),
+            project=self.menu(_('&Project')),
             help=self.menu(_('&Help')),
             recentFiles=QtWidgets.QMenu(_('Open &Recent')),
             labelList=labelMenu,
@@ -505,10 +514,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 save,
                 saveAs,
                 saveAuto,
-                export,
-                merge,
-                training,
-                validation,
                 changeOutputDir,
                 close,
                 deleteFile,
@@ -516,6 +521,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 quit,
             ),
         )
+        utils.addActions(self.menus.project, (
+            settings,
+            None,
+            import_,
+            export,
+            merge,
+            training,
+            validation,
+            ))
         utils.addActions(self.menus.help, (
             help,
             about,
@@ -564,6 +578,7 @@ class MainWindow(QtWidgets.QMainWindow):
             openNextImg,
             save,
             None,
+            import_,
             export,
             merge,
             training,
@@ -1635,6 +1650,16 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QFileDialog.ShowDirsOnly |
             QtWidgets.QFileDialog.DontResolveSymlinks))
         self.importDirImages(targetDirPath)
+
+    def settingsDialog(self):
+        self.settingsWindow = SettingsWindow(self)
+        self.settingsWindow.show()
+        pass
+
+    def importDialog(self):
+        self.importWindow = ImportWindow(self)
+        self.importWindow.show()
+        pass
 
     def exportDialog(self):
         self.exportWindow = ExportWindow(self)

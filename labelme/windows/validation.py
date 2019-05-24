@@ -66,12 +66,12 @@ class ValidationWindow(QtWidgets.QDialog):
             self.input_image_file.setText(image_file)
 
     def training_folder_browse_btn_clicked(self):
-        last_dir = self.parent.settings.value('validation/last_training_dir', '')
-        logger.debug('Restored value "{}" for setting validation/last_training_dir'.format(last_dir))
-        training_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select training file'), last_dir)
+        project_folder = self.parent.settings.value('settings/project/folder', '')
+        logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
+        training_folder = os.path.join(project_folder, self.parent._config['project_training_folder'])
+        training_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select training file'), training_folder)
         if training_folder:
             training_folder = os.path.normpath(training_folder)
-            self.parent.settings.setValue('validation/last_training_dir', training_folder)
             self.training_folder.setText(training_folder)
 
     def validate_btn_clicked(self):

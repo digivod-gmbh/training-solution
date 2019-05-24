@@ -56,6 +56,10 @@ class TrainingWindow(QtWidgets.QDialog):
         layout.addWidget(dataset_folder_group)
 
         self.output_folder = QtWidgets.QLineEdit()
+        project_folder = self.parent.settings.value('settings/project/folder', '')
+        logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
+        self.output_folder.setText(os.path.join(project_folder, self.parent._config['project_training_folder']))
+        self.output_folder.setReadOnly(True)
         output_browse_btn = QtWidgets.QPushButton(_('Browse'))
         output_browse_btn.clicked.connect(self.output_browse_btn_clicked)
 
@@ -243,9 +247,10 @@ class TrainingWindow(QtWidgets.QDialog):
         self.close()
 
     def dataset_folder_browse_btn_clicked(self):
-        last_dir = self.parent.settings.value('training/last_dataset_dir', '')
-        logger.debug('Restored value "{}" for setting training/last_dataset_dir'.format(last_dir))
-        dataset_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select dataset folder'), last_dir)
+        project_folder = self.parent.settings.value('settings/project/folder', '')
+        logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
+        dataset_folder = os.path.join(project_folder, self.parent._config['project_dataset_folder'])
+        dataset_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select dataset folder'), dataset_folder)
         if dataset_folder:
             dataset_folder = os.path.normpath(dataset_folder)
             key = Export.detectDatasetFormat(dataset_folder)
@@ -254,16 +259,15 @@ class TrainingWindow(QtWidgets.QDialog):
                 mb = QtWidgets.QMessageBox()
                 mb.warning(self, _('Training'), _('Could not detect format of selected dataset'))
                 return
-            self.parent.settings.setValue('training/last_dataset_dir', dataset_folder)
             self.dataset_folder.setText(dataset_folder)
 
     def output_browse_btn_clicked(self):
-        last_dir = self.parent.settings.value('training/last_output_dir', '')
-        logger.debug('Restored value "{}" for setting training/last_output_dir'.format(last_dir))
-        output_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select output folder'), last_dir)
+        project_folder = self.parent.settings.value('settings/project/folder', '')
+        logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
+        training_folder = os.path.join(project_folder, self.parent._config['project_training_folder'])
+        output_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select output folder'), training_folder)
         if output_folder:
             output_folder = os.path.normpath(output_folder)
-            self.parent.settings.setValue('training/last_output_dir', output_folder)
             self.output_folder.setText(output_folder)
 
     def set_default_window_flags(self, obj):

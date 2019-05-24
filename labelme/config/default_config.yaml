@@ -8,6 +8,8 @@ debug_mode: False
 language: de_DE
 window_width: 1350
 window_height: 850
+project_dataset_folder: datasets
+project_training_folder: trainings
 
 flags: null
 label_flags: null
@@ -57,6 +59,8 @@ shortcuts:
   save_to: null
   delete_file: Ctrl+Delete
 
+  settings: Ctrl+Shift+W
+  import: Ctrl+Shift+I
   export: Ctrl+Shift+E
   merge: Ctrl+Shift+M
   training: Ctrl+Shift+T

@@ -54,15 +54,16 @@ class ExportWindow(QtWidgets.QDialog):
         self.data_folder = QtWidgets.QLineEdit()
         if self.parent.lastOpenDir is not None:
             self.data_folder.setText(self.parent.lastOpenDir)
-        dataset_browse_btn = QtWidgets.QPushButton(_('Browse'))
-        dataset_browse_btn.clicked.connect(self.dataset_browse_btn_clicked)
+        self.data_folder.setReadOnly(True)
+        data_browse_btn = QtWidgets.QPushButton(_('Browse'))
+        data_browse_btn.clicked.connect(self.data_browse_btn_clicked)
 
         data_folder_group = QtWidgets.QGroupBox()
         data_folder_group.setTitle(_('Data folder'))
         data_folder_group_layout = QtWidgets.QHBoxLayout()
         data_folder_group.setLayout(data_folder_group_layout)
         data_folder_group_layout.addWidget(self.data_folder)
-        data_folder_group_layout.addWidget(dataset_browse_btn)
+        data_folder_group_layout.addWidget(data_browse_btn)
         layout.addWidget(data_folder_group)
 
         self.label_checkboxes = []
@@ -81,6 +82,10 @@ class ExportWindow(QtWidgets.QDialog):
         layout.addWidget(self.label_selection_scroll)
 
         self.export_folder = QtWidgets.QLineEdit()
+        project_folder = self.parent.settings.value('settings/project/folder', '')
+        logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
+        self.export_folder.setText(os.path.join(project_folder, self.parent._config['project_dataset_folder']))
+        self.export_folder.setReadOnly(True)
         export_browse_btn = QtWidgets.QPushButton(_('Browse'))
         export_browse_btn.clicked.connect(self.export_browse_btn_clicked)
 
@@ -227,83 +232,6 @@ class ExportWindow(QtWidgets.QDialog):
         worker.addObject(self.worker_object)
         worker.start()
 
-        return
-
-        # label_files, num_label_files = self.get_label_files_from_data_folder(data_folder, selected_labels)
-
-        # validation_ratio = int(self.validation.value()) / 100.0
-
-        # self.progress = QtWidgets.QProgressDialog(_('Exporting dataset ...'), _('Cancel'), 0, 100, self)
-        # self.set_default_window_flags(self.progress)
-        # self.progress.setWindowModality(Qt.ApplicationModal)
-        # self.progress.setValue(0)
-        # self.progress.show()
-        # self.progress.setMaximum(4 * len(label_files) + 3)
-
-        # val = self.formats.currentText()
-        # formats = Export.config('formats')
-        # func_name = None
-        # for key in formats:
-        #     if val in formats[key]:
-        #         func_name = key
-        
-        # if func_name is None:
-        #     logger.error('Export format {} could not be found'.format(val))
-        #     return
-
-        # label_list_file = os.path.normpath(os.path.join(export_dir, '{}.labels'.format(export_file_name)))
-        # label_list_file_relative = os.path.relpath(label_list_file, export_dir)
-
-        # dataset_format = Export.config('objects')[func_name]()
-        
-        # dataset_format.make_label_list(label_list_file, label_files, selected_labels)
-        # format_idx = func_name
-        # args = Map({
-        #     'validation_ratio': validation_ratio,
-        #     'test_ratio': 0.0
-        # })
-        # Export.create_dataset_config(export_file, format_idx, label_list_file_relative, args)
-
-        # worker_idx, worker = Application.createWorker()
-        # self.worker_idx = worker_idx
-        # self.worker_object = ProgressObject(worker, dataset_format.export, self.error_export_progress, dataset_format.abort, 
-        #     self.update_export_progress, self.finish_export_progress)
-        # dataset_format.init_export(self.worker_object, data_folder, export_file, label_files, label_list_file, selected_labels, 
-        #     validation_ratio=validation_ratio
-        # )
-
-        # dataset_file_train = dataset_format.getTrainingFilename(export_dir, export_file_name)
-        # dataset_file_val = dataset_format.getValidateFilename(export_dir, export_file_name)
-
-        # num_label_files = len(label_files)
-        # num_files_train = dataset_format.getTrainingFilesNumber(num_label_files, validation_ratio)
-        # num_files_val = dataset_format.getValidateFilesNumber(num_label_files, validation_ratio)
-
-        # export_dir = os.path.dirname(export_file)
-        # data = Map({
-        #     'samples': {
-        #         'training': num_files_train,
-        #     },
-        #     'datasets': {
-        #         'training': os.path.relpath(dataset_file_train, export_dir),
-        #     }
-        # })
-        # if num_files_val > 0:
-        #     data.samples['validation'] = num_files_val
-        #     data.datasets['validation'] = os.path.relpath(dataset_file_val, export_dir)
-        # Export.update_dataset_config(export_file, data)
-
-        # extension = '.' + str(dataset_file_train.split('.')[-1:][0])
-        # self.parent.exportState.lastFileTrain = dataset_file_train
-        # self.parent.exportState.lastFileVal = dataset_file_val
-        # self.parent.exportState.lastExtension = extension
-        # self.parent.exportState.lastFile = export_file
-
-        # self.progress.canceled.disconnect()
-        # self.progress.canceled.connect(self.abort_export_progress)
-        # worker.addObject(self.worker_object)
-        # worker.start()
-
     def get_label_files_from_data_folder(self, data_folder, selected_labels = [], get_all_labels = False):
         label_files = []
         for root, dirs, files in os.walk(data_folder):
@@ -325,7 +253,7 @@ class ExportWindow(QtWidgets.QDialog):
     def cancel_btn_clicked(self):
         self.close()
 
-    def dataset_browse_btn_clicked(self):
+    def data_browse_btn_clicked(self):
         last_dir = self.parent.settings.value('export/last_dataset_dir', '')
         logger.debug('Restored value "{}" for setting export/last_dataset_dir'.format(last_dir))
         data_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select data folder'), last_dir)
@@ -336,17 +264,13 @@ class ExportWindow(QtWidgets.QDialog):
             self.load_labels_from_data_folder(data_folder)
 
     def load_labels_from_data_folder(self, data_folder):
-
         self.progress = QtWidgets.QProgressDialog(_('Loading dataset ...'), _('Cancel'), 0, 100, self)
         self.set_default_window_flags(self.progress)
         self.progress.setWindowModality(Qt.ApplicationModal)
         self.progress.show()
-
         label_files, num_label_files = self.get_label_files_from_data_folder(data_folder, get_all_labels=True)
         self.progress.setMaximum(num_label_files + 1)
         self.progress.setValue(1)
-        self.label_selection_label.setVisible(True)
-        self.label_selection_scroll.setVisible(True)
         self.label_checkboxes = []
         label_set = set()
         for i, label_file in enumerate(label_files):
@@ -354,6 +278,13 @@ class ExportWindow(QtWidgets.QDialog):
             labels = [s[0] for s in lf.shapes]
             label_set.update(labels)
             self.progress.setValue(i + 2)
+            if self.progress.wasCanceled():
+                break
+        if self.progress.wasCanceled():
+            self.data_folder.setText('')
+            return
+        self.label_selection_label.setVisible(True)
+        self.label_selection_scroll.setVisible(True)
         label_list = list(label_set)
         label_list.sort()
         logger.debug('Found labels {} in folder {}'.format(label_list, data_folder))
@@ -361,7 +292,6 @@ class ExportWindow(QtWidgets.QDialog):
             checkbox = QtWidgets.QCheckBox(label)
             self.label_checkboxes.append(checkbox)
         self.update_label_checkboxes()
-
         self.progress.close()
 
     def update_label_checkboxes(self):
@@ -375,12 +305,12 @@ class ExportWindow(QtWidgets.QDialog):
             self.label_parent_widget.layout().addWidget(checkbox)
 
     def export_browse_btn_clicked(self):
-        last_dir = self.parent.settings.value('export/last_export_dir', '')
-        logger.debug('Restored value "{}" for setting export/last_export_dir'.format(last_dir))
-        export_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select output folder'), last_dir)
+        project_folder = self.parent.settings.value('settings/project/folder', '')
+        logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
+        export_folder = os.path.join(project_folder, self.parent._config['project_dataset_folder'])
+        export_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select output folder'), export_folder)
         if export_folder:
             export_folder = os.path.normpath(export_folder)
-            self.parent.settings.setValue('export/last_export_dir', export_folder)
             self.export_folder.setText(export_folder)
 
     def set_default_window_flags(self, obj):
