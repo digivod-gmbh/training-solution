@@ -36,7 +36,7 @@ class FormatImageRecord(DatasetFormat):
         self.needed_files = [
             FormatImageRecord._files['rec_train'],
             FormatImageRecord._files['idx_train'],
-            FormatImageRecord._files['lst_train'],
+            #FormatImageRecord._files['lst_train'],
         ]
         FormatImageRecord._files['labels'] = Export.config('labels_file')
 

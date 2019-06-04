@@ -3,6 +3,7 @@ import traceback
 from qtpy import QtCore
 from labelme.logger import logger
 
+
 class AbortWorkerException(Exception):
     pass
 
@@ -51,8 +52,9 @@ class ProgressObject(WorkerObject):
     finished = QtCore.Signal()
     update = QtCore.Signal(str, int)
     aborted = QtCore.Signal()
+    data = QtCore.Signal(dict)
 
-    def __init__(self, worker, start_func, error_func, abort_func=None, update_func=None, finish_func=None):
+    def __init__(self, worker, start_func, error_func, abort_func=None, update_func=None, finish_func=None, data_func=None):
         super().__init__(worker)
 
         self.start_func = start_func
@@ -60,9 +62,14 @@ class ProgressObject(WorkerObject):
         self.abort_func = abort_func
         self.update_func = update_func
         self.finish_func = finish_func
+        self.data_func = data_func
 
-        self.update.connect(self.update_func)
-        self.finished.connect(self.finish_func)
+        if self.update_func is not None:
+            self.update.connect(self.update_func)
+        if self.finish_func is not None:
+            self.finished.connect(self.finish_func)
+        if self.data_func is not None:
+            self.data.connect(self.data_func)
         self.handleError.connect(self.error_func)
         self.aborted.connect(worker.abort)
 
@@ -79,7 +86,8 @@ class ProgressObject(WorkerObject):
 
     def abort(self):
         try:
-            self.abort_func()
+            if self.abort_func is not None:
+                self.abort_func()
             self.aborted.emit()
         except Exception as e:
             self.error.emit(traceback.format_exc())

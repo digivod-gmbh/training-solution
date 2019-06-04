@@ -11,7 +11,6 @@ import gluoncv as gcv
 from gluoncv.model_zoo import get_model
 
 from gluoncv.utils import download, viz
-from matplotlib import pyplot as plt
 
 from labelme.utils.map import Map
 from labelme.logger import logger

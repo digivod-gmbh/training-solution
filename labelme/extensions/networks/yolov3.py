@@ -20,7 +20,6 @@ from gluoncv.utils.metrics.coco_detection import COCODetectionMetric
 from gluoncv.utils import LRScheduler, LRSequential, export_block
 from gluoncv.data.transforms import image as timage
 from gluoncv.utils import download, viz
-from matplotlib import pyplot as plt
 
 from labelme.utils.map import Map
 from labelme.logger import logger
@@ -59,7 +58,7 @@ class NetworkYoloV3(Network):
         from labelme.config import Training
         config_file = os.path.join(self.output_folder, Training.config('config_file'))
         files = list(NetworkYoloV3._files.values())
-        self.saveConfig(config_file, NetworkYoloV3._network, files, self.args.dataset_folder, self.args)
+        self.saveConfig(config_file, NetworkYoloV3._network, files, self.args.dataset_folder, self.labels, self.args)
 
         self.thread.update.emit(_('Finished training'), -1)
 
@@ -121,6 +120,7 @@ class NetworkYoloV3(Network):
         num_sync_bn_devices = len(self.ctx) if self.args.syncbn else -1
         
         classes = self.readLabelFile(self.label_file)
+        self.labels = classes
 
         self.net = get_model(self.net_name, pretrained=False, ctx=self.ctx)
 

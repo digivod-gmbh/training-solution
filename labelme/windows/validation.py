@@ -6,6 +6,7 @@ from labelme.utils.map import Map
 from labelme.logger import logger
 from labelme.config import Export, Training
 from labelme.extensions.networks import Network
+from .inference import InferenceWindow
 
 
 class ValidationWindow(QtWidgets.QDialog):
@@ -89,24 +90,30 @@ class ValidationWindow(QtWidgets.QDialog):
             mb.warning(self, _('Validation'), _('Please select a valid training folder'))
             return
 
-        config_file = os.path.join(training_folder, Training.config('config_file'))
 
-        network = Network()
-        network_config = network.loadConfig(config_file)
+        inferenceWin = InferenceWindow(self)
+        inferenceWin.show()
+        inferenceWin.start_inference(input_image_file, training_folder)
+        self.close()
 
-        architecture_file = ''
-        weights_file = ''
-        files = network_config.files
-        for f in files:
-            if '.json' in f:
-                architecture_file = os.path.join(training_folder, f)
-            elif '.params' in f:
-                weights_file = os.path.join(training_folder, f)
+        # config_file = os.path.join(training_folder, Training.config('config_file'))
 
-        dataset_folder = network_config.dataset
-        label_file = os.path.join(dataset_folder, Export.config('labels_file'))
+        # network = Network()
+        # network_config = network.loadConfig(config_file)
 
-        network.inference(input_image_file, label_file, architecture_file, weights_file, args = None)
+        # architecture_file = ''
+        # weights_file = ''
+        # files = network_config.files
+        # for f in files:
+        #     if '.json' in f:
+        #         architecture_file = os.path.join(training_folder, f)
+        #     elif '.params' in f:
+        #         weights_file = os.path.join(training_folder, f)
+
+        # dataset_folder = network_config.dataset
+        # label_file = os.path.join(dataset_folder, Export.config('labels_file'))
+
+        # network.inference(input_image_file, label_file, architecture_file, weights_file, args = None)
 
         # # Load training data
         # training = Training.read_training_config(training_folder)

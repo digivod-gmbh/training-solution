@@ -5,7 +5,6 @@ import mxnet as mx
 from mxnet import gluon
 from gluoncv.data.transforms import image as timage
 from gluoncv.utils import viz
-from matplotlib import pyplot as plt
 
 from labelme.logger import logger
 from labelme.extensions import ThreadExtension
@@ -20,11 +19,12 @@ class Network(ThreadExtension):
     def training(self):
         raise NotImplementedError('Method training() needs to be implemented in subclasses')
 
-    def saveConfig(self, config_file, network, files, dataset, args):
+    def saveConfig(self, config_file, network, files, dataset, labels, args):
         data = {
             'network': network,
             'files': files,
             'dataset': dataset,
+            'labels': labels,
             'args': args,
         }
         logger.debug('Create training config: {}'.format(data))
@@ -76,6 +76,9 @@ class Network(ThreadExtension):
             tmp_args.update(args)
         args = Map(tmp_args)
         logger.debug('Try loading network from files "{}" and "{}"'.format(architecture_file, weights_file))
+
+        self.checkAborted()
+
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             ctx = self.getContext()
@@ -84,16 +87,31 @@ class Network(ThreadExtension):
             net.collect_params().reset_ctx(ctx)
             img = mx.image.imread(input_image_file)
             img = timage.resize_short_within(img, 608, max_size=1024, mult_base=1)
+
+            self.checkAborted()
+            self.thread.update.emit(None, -1)
+
             def make_tensor(img):
                 np_array = np.expand_dims(np.transpose(img, (0,1,2)),axis=0).astype(np.float32)
                 return mx.nd.array(np_array)
+
             image = img.asnumpy().astype('uint8')
             x = make_tensor(image)
             cid, score, bbox = net(x)
+
+            self.thread.data.emit({
+                'imgsize': [image.shape[0], image.shape[1]],
+                'classid': cid.asnumpy().tolist(),
+                'score': score.asnumpy().tolist(),
+                'bbox': bbox.asnumpy().tolist(),
+            })
+            self.thread.update.emit(None, -1)
+
             n_top = args.print_top_n
             classes = cid[0][:n_top].asnumpy().astype('int32').flatten().tolist()
             scores = score[0][:n_top].asnumpy().astype('float32').flatten().tolist()
             result_str = '\n'.join(['class: {}, score: {}'.format(classes[i], scores[i]) for i in range(n_top)])
             logger.debug('Top {} inference results:\n {}'.format(n_top, result_str))
-            ax = viz.plot_bbox(image, bbox[0], score[0], cid[0], class_names=class_names, thresh=args.threshold)
-            plt.show()
+
+            #ax = viz.plot_bbox(image, bbox[0], score[0], cid[0], class_names=class_names, thresh=args.threshold)
+            #plt.show()
