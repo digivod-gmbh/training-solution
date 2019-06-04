@@ -29,7 +29,7 @@ from labelme.widgets import LabelQListWidget
 from labelme.widgets import ToolBar
 from labelme.widgets import ZoomWidget
 
-from labelme.windows import ExportWindow, ExportState
+from labelme.windows import ExportWindow
 from labelme.windows import TrainingWindow
 from labelme.windows import ValidationWindow
 from labelme.windows import MergeWindow
@@ -95,7 +95,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.labelList = LabelQListWidget()
         self.lastOpenDir = None
-        self.exportState = ExportState()
 
         # self.flag_dock = self.flag_widget = None
         # self.flag_dock = QtWidgets.QDockWidget(_('Flags'), self)

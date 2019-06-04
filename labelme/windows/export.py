@@ -18,15 +18,6 @@ from labelme.extensions.formats import *
 from labelme.config import Export
 
 
-class ExportState():
-
-    def __init__(self):
-        self.lastFile = None
-        self.lastFileTrain = None
-        self.lastFileVal = None
-        self.lastExtension = None
-
-
 class ExportWindow(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
@@ -220,12 +211,6 @@ class ExportWindow(QtWidgets.QDialog):
         self.worker_object = ProgressObject(worker, dataset_format.export, self.error_export_progress, dataset_format.abort, 
             self.update_export_progress, self.finish_export_progress)
         dataset_format.setThread(self.worker_object)
-        
-        # extension = '.' + str(dataset_file_train.split('.')[-1:][0])
-        # self.parent.exportState.lastFileTrain = dataset_file_train
-        # self.parent.exportState.lastFileVal = dataset_file_val
-        # self.parent.exportState.lastExtension = extension
-        # self.parent.exportState.lastFile = export_file
 
         self.progress.canceled.disconnect()
         self.progress.canceled.connect(self.abort_export_progress)
