@@ -63,7 +63,7 @@ class MergeWindow(QtWidgets.QDialog):
         self.resize(750, 400)
 
     def set_default_window_flags(self, obj):
-        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
+        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
 
     def dataset_files_browse_btn_clicked(self):
         # TODO: Replace config_file_extension

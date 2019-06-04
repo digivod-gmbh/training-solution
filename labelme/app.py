@@ -665,6 +665,15 @@ class MainWindow(QtWidgets.QMainWindow):
         # if self.firstStart:
         #    QWhatsThis.enterWhatsThisMode()
 
+    def check_startup(self):
+        # Check settings
+        saved_project_folder = self.settings.value('settings/project/folder', '')
+        if not saved_project_folder:
+            logger.debug('Empty/invalid project folder setting: {}'.format(saved_project_folder))
+            msg = _('No project folder is defined in settings. Please configure one.')
+            QtWidgets.QMessageBox.warning(self, _('Settings'), msg)
+            self.settingsDialog(True)
+
     def menu(self, title, actions=None):
         menu = self.menuBar().addMenu(title)
         if actions:
@@ -1650,15 +1659,13 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QFileDialog.DontResolveSymlinks))
         self.importDirImages(targetDirPath)
 
-    def settingsDialog(self):
-        self.settingsWindow = SettingsWindow(self)
+    def settingsDialog(self, prevent_close=False):
+        self.settingsWindow = SettingsWindow(self, prevent_close)
         self.settingsWindow.show()
-        pass
 
     def importDialog(self):
         self.importWindow = ImportWindow(self)
         self.importWindow.show()
-        pass
 
     def exportDialog(self):
         self.exportWindow = ExportWindow(self)

@@ -271,7 +271,7 @@ class TrainingWindow(QtWidgets.QDialog):
             self.output_folder.setText(output_folder)
 
     def set_default_window_flags(self, obj):
-        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
+        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
 
     def update_training_progress(self, msg=None, value=None):
         if self.progress.wasCanceled():

@@ -299,7 +299,7 @@ class ExportWindow(QtWidgets.QDialog):
             self.export_folder.setText(export_folder)
 
     def set_default_window_flags(self, obj):
-        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
+        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
 
     def update_export_progress(self, msg=None, value=None):
         if self.progress.wasCanceled():

@@ -33,7 +33,7 @@ class InferenceWindow(QtWidgets.QDialog):
         layout.addWidget(self.progress_bar)
 
     def set_default_window_flags(self, obj):
-        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
+        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
 
     def get_scaled_size(self, w, h, max_size):
         if w > max_size or h > max_size:

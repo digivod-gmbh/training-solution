@@ -54,7 +54,7 @@ class ValidationWindow(QtWidgets.QDialog):
         layout.addWidget(button_box)
 
     def set_default_window_flags(self, obj):
-        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
+        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
 
     def input_image_file_browse_btn_clicked(self):
         last_dir = self.parent.settings.value('validation/last_input_image_dir', '')

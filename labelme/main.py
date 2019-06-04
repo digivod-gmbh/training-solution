@@ -202,6 +202,7 @@ def main():
     win.show()
     win.raise_()
     sys.excepthook = excepthook
+    win.check_startup()
     sys.exit(app.exec_())
 
 

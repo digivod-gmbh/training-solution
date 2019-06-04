@@ -10,12 +10,12 @@ from labelme.logger import logger
 
 class SettingsWindow(QtWidgets.QDialog):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, prevent_close=False):
         self.parent = parent
 
         super().__init__(parent)
         self.setWindowTitle(_('Settings'))
-        self.set_default_window_flags(self)
+        self.set_default_window_flags(self, prevent_close)
         self.setWindowModality(Qt.ApplicationModal)
 
         layout = QtWidgets.QVBoxLayout()
@@ -53,7 +53,10 @@ class SettingsWindow(QtWidgets.QDialog):
             self.project_folder.setText(project_folder)
 
     def save_btn_clicked(self):
-        project_folder = os.path.normpath(self.project_folder.text())
+        project_folder = self.project_folder.text()
+        if not self.check_folder(project_folder):
+            return
+        project_folder = os.path.normpath(project_folder)
         self.parent.settings.setValue('settings/project/folder', project_folder)
         project_directories = [
             self.parent._config['project_dataset_folder'],
@@ -66,8 +69,21 @@ class SettingsWindow(QtWidgets.QDialog):
         self.close()
 
     def cancel_btn_clicked(self):
+        project_folder = self.project_folder.text()
+        if not self.check_folder(project_folder):
+            return
         self.close()
 
-    def set_default_window_flags(self, obj):
-        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
+    def check_folder(self, project_folder):
+        if not project_folder:
+            msg = _('Project folder must not be empty')
+            QtWidgets.QMessageBox.warning(self, _('Settings'), msg)
+            return False
+        return True
+
+    def set_default_window_flags(self, obj, prevent_close):
+        if prevent_close:
+            obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint)
+        else:
+            obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
 
