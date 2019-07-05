@@ -20,6 +20,10 @@ from gluoncv.utils.metrics.coco_detection import COCODetectionMetric
 from gluoncv.utils import LRScheduler, LRSequential, export_block
 from gluoncv.data.transforms import image as timage
 from gluoncv.utils import download, viz
+from mxnet.contrib import onnx as onnx_mxnet
+
+import io
+from contextlib import redirect_stdout
 
 from labelme.utils.map import Map
 from labelme.logger import logger
@@ -32,6 +36,7 @@ class NetworkYoloV3(Network):
     _files = {
         'architecture': '{}-symbol.json'.format(_network),
         'weights': '{}-0000.params'.format(_network), 
+        'onnx': '{}.onnx'.format(_network), 
     }
 
     def __init__(self, architecture='darknet53'):
@@ -52,13 +57,29 @@ class NetworkYoloV3(Network):
 
         # export
         training_name = '{}_{}'.format(self.args.training_name, self.net_name)
-        export_block(os.path.join(self.output_folder, NetworkYoloV3._network), self.net, preprocess=True, layout='HWC')
+        data_shape = (608, 608, 3)
+        export_block(os.path.join(self.output_folder, NetworkYoloV3._network), self.net, data_shape=data_shape, epoch=0, preprocess=True, layout='HWC') # HWC, CHW
 
         # save
         from labelme.config import Training
         config_file = os.path.join(self.output_folder, Training.config('config_file'))
         files = list(NetworkYoloV3._files.values())
         self.saveConfig(config_file, NetworkYoloV3._network, files, self.args.dataset_folder, self.labels, self.args)
+
+        # onnx export
+        architecture_file = os.path.join(self.output_folder, NetworkYoloV3._files['architecture'])
+        weights_file = os.path.join(self.output_folder, NetworkYoloV3._files['weights'])
+        onnx_file = os.path.join(self.output_folder,  NetworkYoloV3._files['onnx'])
+        input_shape = (1, 608, 608, 3)
+        
+        
+        f = io.StringIO()
+        with redirect_stdout(f):
+            try:
+                onnx_model_path = onnx_mxnet.export_model(architecture_file, weights_file, [input_shape], np.float32, onnx_file, verbose=True)
+            except:
+                pass
+        logger.debug(f.getvalue())
 
         self.thread.update.emit(_('Finished training'), -1)
 
@@ -323,11 +344,11 @@ class NetworkYoloV3(Network):
                     name2, loss2 = center_metrics.get()
                     name3, loss3 = scale_metrics.get()
                     name4, loss4 = cls_metrics.get()
-                    logger.info('[Epoch {}][Batch {}], LR: {:.2E}, Speed: {:.3f} samples/sec, {}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}'.format(
-                        epoch, i, trainer.learning_rate, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4))
+                    logger.info('[Epoch {}][Batch {}/{}], LR: {:.2E}, Speed: {:.3f} samples/sec, {}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}'.format(
+                        epoch, i + 1, num_batches, trainer.learning_rate, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4))
 
-                    self.thread.update.emit(_('Training ...\nEpoch {}, Batch {}, Speed: {:.3f} samples/sec\n{}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}')
-                        .format(epoch + 1, i + 1, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4), None)
+                    self.thread.update.emit(_('Training ...\nEpoch {}, Batch {}/{}, Speed: {:.3f} samples/sec\n{}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}')
+                        .format(epoch + 1, i + 1, num_batches, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4), None)
                 
                 self.thread.update.emit(None, -1)
                 self.checkAborted()

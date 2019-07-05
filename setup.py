@@ -34,9 +34,10 @@ install_requires = [
     'Pillow>=2.8.0',
     'PyYAML',
     'qtpy',
-    'mxnet==1.4.0.post0',
-	'mxnet-cu100mkl==1.4.0.post0',
-	'gluoncv==0.4.0.post0',
+    'mxnet==1.5.0b20190613', # 1.4.0.post0
+	'mxnet-cu100mkl==1.5.0b20190613', # 1.4.0.post0
+	'gluoncv==0.5.0b20190613', # 0.4.0.post0
+    'onnx==1.5.0',
     'termcolor',
 ]
 

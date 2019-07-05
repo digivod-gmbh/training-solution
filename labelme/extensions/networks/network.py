@@ -96,7 +96,13 @@ class Network(ThreadExtension):
                 return mx.nd.array(np_array)
 
             image = img.asnumpy().astype('uint8')
+
+            logger.debug(image.shape)
+
             x = make_tensor(image)
+
+            logger.debug(x.shape)
+
             cid, score, bbox = net(x)
 
             self.thread.data.emit({
