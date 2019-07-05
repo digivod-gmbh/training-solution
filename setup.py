@@ -131,4 +131,5 @@ setup(
             'digivod_training=labelme.main:main',
         ],
     },
+    data_files=[('share/man/man1', ['docs/man/labelme.1'])],
 )
