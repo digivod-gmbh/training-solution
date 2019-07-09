@@ -8,6 +8,9 @@ from labelme.extensions import ThreadExtension
 
 class DatasetFormat(ThreadExtension):
 
+    def import_folder(self):
+        raise NotImplementedError('Method import_folder() must be implemented in subclass')
+
     def export(self):
         raise NotImplementedError('Method export() must be implemented in subclass')
 
@@ -51,6 +54,9 @@ class DatasetFormat(ThreadExtension):
 
     def setArgs(self, args):
         self.args = args
+
+    def setInputFolder(self, input_folder):
+        self.input_folder = input_folder
 
     def setOutputFolder(self, output_folder):
         self.output_folder = output_folder

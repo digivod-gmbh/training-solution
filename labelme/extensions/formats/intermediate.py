@@ -1,5 +1,6 @@
 import os
 import random
+import base64
 
 from labelme.logger import logger
 from labelme.label_file import LabelFile
@@ -63,6 +64,14 @@ class IntermediateFormat():
                 val_samples.append(train_samples.pop(-1))
         return train_samples, val_samples
 
+    def getSamplesPerImage(self):
+        samples_per_image = {}
+        for sample in self.samples:
+            if sample.image not in samples_per_image:
+                samples_per_image[sample.image] = []
+            samples_per_image[sample.image].append(sample)
+        return samples_per_image
+
     def getLabelFilesFromDataFolder(self, data_folder):
         label_files = []
         for root, dirs, files in os.walk(data_folder):
@@ -87,13 +96,39 @@ class IntermediateFormat():
         for s in lf.shapes:
             self.addSample(lf.imagePath, image_size, s[0], s[1], s[4])
 
-    def toLabelFiles(self, output_folder):
-        # TODO: Implement
-        pass
+    def toLabelFiles(self):
+        samples_per_image = self.getSamplesPerImage()
+        for image in samples_per_image:
+            samples = samples_per_image[image]
+            self.toLabelFile(image, samples)
 
-    def toLabelFile(self, output_folder, image):
-        # TODO: Implement
-        pass
+    def toLabelFile(self, image_path, samples):
+        shapes = []
+        for sample in samples:
+            shapes.append({
+                'label': sample.label,
+                'line_color': None,
+                'fill_color': None,
+                'points': sample.points,
+                'shape_type': sample.shape_type,
+            })
+        local_image_path = os.path.basename(image_path)
+        image_data = LabelFile.load_image_file(image_path)
+        #image_data = base64.b64encode(image_data).decode('utf-8')
+        label_file_name = os.path.splitext(image_path)[0] + LabelFile.suffix
+        label_file = LabelFile()
+        label_file.save(
+            label_file_name,
+            shapes,
+            local_image_path,
+            sample.image_size[0],
+            sample.image_size[1],
+            imageData=image_data,
+            lineColor=None,
+            fillColor=None,
+            otherData=None,
+            flags=None,
+        )
         
     def setIncludedLabels(self, labels):
         self.included_labels = set(labels)
@@ -107,8 +142,14 @@ class IntermediateFormat():
     def getImages(self):
         return self.images
 
+    def getNumberOfImages(self):
+        return len(self.images)
+
     def getLabels(self):
         return self.labels
+
+    def getNumberOfLabels(self):
+        return len(self.labels)
     
     def getSamples(self):
         return self.samples

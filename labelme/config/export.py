@@ -17,9 +17,13 @@ class Export():
             'labels_file': 'labels.txt',
             'formats': {
                 'imagerecord': _('ImageRecord'),
+                'coco': _('COCO'),
+                'voc': _('VOC'),
             },
             'objects': {
                 'imagerecord': lambda: formats.FormatImageRecord(),
+                'coco': lambda: formats.FormatCoco(),
+                'voc': lambda: formats.FormatVoc(),
             },
             'limits': {
                 'max_num_labels': 20

@@ -9,6 +9,7 @@ from PIL import Image
 import time
 import traceback
 import builtins
+import cv2
 
 from labelme.label_file import LabelFile
 from labelme.logger import logger
@@ -16,6 +17,7 @@ from labelme.utils.map import Map
 from labelme.config import Export
 
 from .format import DatasetFormat
+from .intermediate import IntermediateFormat
 
 
 class FormatImageRecord(DatasetFormat):
@@ -47,6 +49,129 @@ class FormatImageRecord(DatasetFormat):
     def getValFile(self, dataset_path):
         val_file = os.path.join(dataset_path, FormatImageRecord._files['rec_val'])
         return val_file
+
+    def import_folder(self):
+        if self.input_folder is None:
+            raise Exception('Input folder must be initialized for import')
+            
+        if not self.args.config['format'] == FormatImageRecord._format:
+            raise Exception('Format {} in config file does not match {}'.format(self.args.config.format, FormatImageRecord._format))
+
+        input_folder = self.input_folder
+        output_folder = self.output_folder
+
+        self.intermediate = IntermediateFormat()
+
+        train_rec_file = os.path.join(input_folder, FormatImageRecord._files['rec_train'])
+        self.import_to_intermediate(train_rec_file, output_folder)
+
+        if self.args.config['args']['validation_ratio'] > 0.0:
+            val_rec_file = os.path.join(input_folder, FormatImageRecord._files['rec_val'])
+            self.import_to_intermediate(val_rec_file, output_folder)
+
+        self.intermediate.toLabelFiles()
+
+    def import_to_intermediate(self, rec_file, output_folder):
+        all_labels = []
+        for i, line in enumerate(open(self.args.label_file).readlines()):
+            all_labels.append(line)
+
+        record = mx.recordio.MXRecordIO(rec_file, 'r')
+        record.reset()
+        while True:
+            try:
+                item = record.read()
+                if not item:
+                    break
+                header, image = mx.recordio.unpack_img(item)
+
+                # Image
+                img_file = os.path.join(output_folder, '{:09d}.jpg'.format(header.id))
+                cv2.imwrite(img_file, image)
+                image_height = image.shape[0]
+                image_width = image.shape[1]
+
+                # Shapes
+                shapes = []
+                for i in range(4, len(header.label), 5):
+                    label_idx = int(header.label[i])
+                    bbox = header.label[i+1:i+5] 
+                    label_name = _('unknown')
+                    if label_idx < len(all_labels):
+                        label_name = all_labels[label_idx].strip()
+                    points = [
+                        [int(bbox[0] * image_width), int(bbox[1] * image_height)],
+                        [int(bbox[2] * image_width), int(bbox[3] * image_height)],
+                    ]
+                    # imagerecord has only rectangle shapes
+                    self.intermediate.addSample(img_file, (image_height, image_width), label_name, points, 'rectangle')
+
+            except Exception as e:
+                logger.error(e)
+
+        record.close()
+        
+        """
+        record = mx.recordio.MXRecordIO(train_rec_file, 'r')
+        record.reset()
+        while True:
+            try:
+                item = record.read()
+                if not item:
+                    break
+                header, image = mx.recordio.unpack_img(item)
+
+                # Image
+                img_file = os.path.join(output_folder, '{:09d}.jpg'.format(header.id))
+                cv2.imwrite(img_file, image)
+                image_height = image.shape[0]
+                image_width = image.shape[1]
+
+                # Labels
+                all_labels = []
+                for i, line in enumerate(open(self.args.label_file).readlines()):
+                    all_labels.append(line)
+
+                # Shapes
+                shapes = []
+                for i in range(4, len(header.label), 5):
+                    label_idx = int(header.label[i])
+                    bbox = header.label[i+1:i+5]
+                    label_name = _('unknown')
+                    if label_idx < len(all_labels):
+                        label_name = all_labels[label_idx].strip()
+                    shapes.append({
+                        'label': label_name,
+                        'line_color': None,
+                        'fill_color': None,
+                        'points': [
+                            [int(bbox[0] * image_width), int(bbox[1] * image_height)],
+                            [int(bbox[2] * image_width), int(bbox[3] * image_height)],
+                        ],
+                        'shape_type': 'rectangle',
+                    })
+
+                # Label file
+                label_file_name = os.path.join(output_folder, '{:09d}.json'.format(header.id))
+                label_file = LabelFile()
+                label_file.save(
+                    label_file_name,
+                    shapes,
+                    img_file,
+                    image_height,
+                    image_width,
+                    imageData=None,
+                    lineColor=None,
+                    fillColor=None,
+                    otherData=None,
+                    flags=None,
+                )
+
+            except Exception as e:
+                logger.error(e)
+
+        record.close()
+        """
 
     def export(self):
         if self.intermediate is None:
