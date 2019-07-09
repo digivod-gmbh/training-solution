@@ -223,10 +223,13 @@ class ExportWindow(QtWidgets.QDialog):
             for f in files:
                 if LabelFile.is_label_file(f):
                     full_path = os.path.normpath(os.path.join(data_folder, f))
+                    try:
+                        lf = LabelFile(full_path)
+                    except:
+                        continue
                     if get_all_labels:
                         label_files.append(full_path)
                         continue
-                    lf = LabelFile(full_path)
                     labels = [s[0] for s in lf.shapes]
                     intersect_labels = set(labels) & set(selected_labels)
                     if len(intersect_labels) > 0:
