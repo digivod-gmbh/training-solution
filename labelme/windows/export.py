@@ -165,7 +165,7 @@ class ExportWindow(QtWidgets.QDialog):
                 return
             else:
                 import shutil
-                shutil.rmtree(export_dataset_folder)
+                shutil.rmtree(export_dataset_folder, ignore_errors=True)
                 os.makedirs(export_dataset_folder)
 
         if not os.path.isdir(export_dataset_folder):

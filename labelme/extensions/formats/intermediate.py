@@ -64,9 +64,11 @@ class IntermediateFormat():
                 val_samples.append(train_samples.pop(-1))
         return train_samples, val_samples
 
-    def getSamplesPerImage(self):
+    def getSamplesPerImage(self, samples=[]):
+        if not samples:
+            samples = self.samples
         samples_per_image = {}
-        for sample in self.samples:
+        for sample in samples:
             if sample.image not in samples_per_image:
                 samples_per_image[sample.image] = []
             samples_per_image[sample.image].append(sample)
