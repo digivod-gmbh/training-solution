@@ -84,14 +84,10 @@ class FormatImageRecord(DatasetFormat):
                 if not item:
                     break
                 header, image = mx.recordio.unpack_img(item)
-
-                # Image
                 img_file = os.path.join(output_folder, '{:09d}.jpg'.format(header.id))
                 cv2.imwrite(img_file, image)
                 image_height = image.shape[0]
                 image_width = image.shape[1]
-
-                # Shapes
                 shapes = []
                 for i in range(4, len(header.label), 5):
                     label_idx = int(header.label[i])
@@ -108,7 +104,7 @@ class FormatImageRecord(DatasetFormat):
 
             except Exception as e:
                 logger.error(e)
-
+                
         record.close()
 
     def export(self):
@@ -168,11 +164,7 @@ class FormatImageRecord(DatasetFormat):
         lst_file = os.path.join(output_folder, file_name)
 
         # group samples by image
-        samples_per_image = {}
-        for sample in samples:
-            if sample.image not in samples_per_image:
-                samples_per_image[sample.image] = []
-            samples_per_image[sample.image].append(sample)
+        samples_per_image = self.intermediate.getSamplesPerImage()
 
         with open(lst_file, 'w+') as f:
             idx = 0

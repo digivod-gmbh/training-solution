@@ -43,8 +43,6 @@ class ExportWindow(QtWidgets.QDialog):
         layout.addWidget(format_group)
 
         self.data_folder = QtWidgets.QLineEdit()
-        if self.parent.lastOpenDir is not None:
-            self.data_folder.setText(self.parent.lastOpenDir)
         self.data_folder.setReadOnly(True)
         data_browse_btn = QtWidgets.QPushButton(_('Browse'))
         data_browse_btn.clicked.connect(self.data_browse_btn_clicked)
@@ -71,6 +69,10 @@ class ExportWindow(QtWidgets.QDialog):
         self.label_selection_scroll.setFixedHeight(100)
         self.label_selection_scroll.setWidget(self.label_parent_widget)
         layout.addWidget(self.label_selection_scroll)
+
+        if self.parent.lastOpenDir is not None:
+            self.data_folder.setText(self.parent.lastOpenDir)
+            self.load_labels_from_data_folder(self.parent.lastOpenDir)
 
         self.export_folder = QtWidgets.QLineEdit()
         project_folder = self.parent.settings.value('settings/project/folder', '')
@@ -203,6 +205,7 @@ class ExportWindow(QtWidgets.QDialog):
 
         dataset_format = Export.config('objects')[format_name]()
         dataset_format.setIntermediateFormat(intermediate)
+        dataset_format.setInputFolder(data_folder)
         dataset_format.setOutputFolder(export_dataset_folder)
         dataset_format.setArgs(args)
 

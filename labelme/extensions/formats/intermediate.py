@@ -114,7 +114,6 @@ class IntermediateFormat():
             })
         local_image_path = os.path.basename(image_path)
         image_data = LabelFile.load_image_file(image_path)
-        #image_data = base64.b64encode(image_data).decode('utf-8')
         label_file_name = os.path.splitext(image_path)[0] + LabelFile.suffix
         label_file = LabelFile()
         label_file.save(
