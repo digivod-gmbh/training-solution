@@ -38,6 +38,7 @@ install_requires = [
 	'mxnet-cu100mkl==1.4.0.post0',
 	'gluoncv==0.4.0.post0',
     'opencv-python==4.1.0.25',
+    'lxml==4.3.4',
     'termcolor',
 ]
 

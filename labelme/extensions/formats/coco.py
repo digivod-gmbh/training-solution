@@ -90,6 +90,12 @@ class FormatCoco(DatasetFormat):
                 self.intermediate.addSample(image_path, image_size, label_name, points, 'rectangle')
 
     def export(self):
+        if self.intermediate is None:
+            raise Exception('Intermediate format must be initialized for export')
+        
+        self.thread.update.emit(_('Gathering samples ...'), -1)
+        self.checkAborted()
+        
         samples_per_image = {}
         num_samples_val = 0
         validation_ratio = self.intermediate.getValidationRatio()
