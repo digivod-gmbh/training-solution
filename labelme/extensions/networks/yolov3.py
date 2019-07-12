@@ -333,11 +333,12 @@ class NetworkYoloV3(Network):
                     name2, loss2 = center_metrics.get()
                     name3, loss3 = scale_metrics.get()
                     name4, loss4 = cls_metrics.get()
-                    logger.info('[Epoch {}][Batch {}], LR: {:.2E}, Speed: {:.3f} samples/sec, {}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}'.format(
-                        epoch, i, trainer.learning_rate, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4))
+                    logger.info('[Epoch {}][Batch {}/{}], LR: {:.2E}, Speed: {:.3f} samples/sec, {}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}'.format(
+                        epoch, i + 1, num_batches, trainer.learning_rate, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4))
 
-                    self.thread.update.emit(_('Training ...\nEpoch {}, Batch {}, Speed: {:.3f} samples/sec\n{}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}')
-                        .format(epoch + 1, i + 1, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4), None)
+                    self.thread.update.emit(_('Training ...\nEpoch {}, Batch {}/{}, Speed: {:.3f} samples/sec\n{}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}')
+                        .format(epoch + 1, i + 1, num_batches, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4), None)
+
                 
                 self.thread.update.emit(None, -1)
                 self.checkAborted()
