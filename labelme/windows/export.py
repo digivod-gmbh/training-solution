@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import json
+import shutil
 import importlib
 import subprocess
 
@@ -154,7 +155,7 @@ class ExportWindow(QtWidgets.QDialog):
             mb.warning(self, _('Export'), _('Please enter a valid dataset name'))
             return
             
-        export_dataset_folder = os.path.join(export_folder, dataset_name)
+        export_dataset_folder = os.path.normpath(os.path.join(export_folder, dataset_name))
         if not os.path.isdir(export_dataset_folder):
             os.makedirs(export_dataset_folder)
         elif len(os.listdir(export_dataset_folder)) > 0:
@@ -164,7 +165,6 @@ class ExportWindow(QtWidgets.QDialog):
             if clicked_btn != QtWidgets.QMessageBox.Yes:
                 return
             else:
-                import shutil
                 shutil.rmtree(export_dataset_folder, ignore_errors=True)
                 os.makedirs(export_dataset_folder)
 
@@ -190,14 +190,12 @@ class ExportWindow(QtWidgets.QDialog):
 
         val = self.formats.currentText()
         formats = Export.config('formats')
-        format_name = None
-        for key in formats:
-            if val in formats[key]:
-                format_name = key
-        
-        if format_name is None:
+        inv_formats = Export.invertDict(formats)
+        if val not in inv_formats:
             logger.error('Export format {} could not be found'.format(val))
             return
+        else:
+            format_name = inv_formats[val]
 
         args = Map({
             'validation_ratio': validation_ratio,
@@ -205,7 +203,7 @@ class ExportWindow(QtWidgets.QDialog):
 
         dataset_format = Export.config('objects')[format_name]()
         dataset_format.setIntermediateFormat(intermediate)
-        dataset_format.setInputFolder(data_folder)
+        dataset_format.setInputFolderOrFile(data_folder)
         dataset_format.setOutputFolder(export_dataset_folder)
         dataset_format.setArgs(args)
 

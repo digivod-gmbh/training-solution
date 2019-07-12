@@ -58,7 +58,8 @@ class NetworkYoloV3(Network):
         from labelme.config import Training
         config_file = os.path.join(self.output_folder, Training.config('config_file'))
         files = list(NetworkYoloV3._files.values())
-        self.saveConfig(config_file, NetworkYoloV3._network, files, self.args.dataset_folder, self.labels, self.args)
+        #self.args.dataset_folder
+        self.saveConfig(config_file, NetworkYoloV3._network, files, '', self.labels, self.args)
 
         self.thread.update.emit(_('Finished training'), -1)
 
@@ -119,7 +120,8 @@ class NetworkYoloV3(Network):
         # use sync bn if specified
         num_sync_bn_devices = len(self.ctx) if self.args.syncbn else -1
         
-        classes = self.readLabelFile(self.label_file)
+        classes = self.train_dataset.getLabels()
+        #classes = self.readLabelFile(self.label_file)
         self.labels = classes
 
         self.net = get_model(self.net_name, pretrained=False, ctx=self.ctx)
@@ -147,18 +149,26 @@ class NetworkYoloV3(Network):
         self.train_data, self.val_data = self.get_dataloader(self.net, train_dataset, val_dataset, self.args.data_shape, self.args.batch_size, self.args.num_workers)
     
     def get_dataset(self):
-        train_dataset = gcv.data.RecordFileDetection(self.args.train_dataset)
+        train_dataset = self.train_dataset.getDatasetForTraining()
         val_dataset = None
         if self.args.validate_dataset:
-            val_dataset = gcv.data.RecordFileDetection(self.args.validate_dataset)
-        classes = self.readLabelFile(self.label_file)
-        logger.debug('Read classes: {}'.format(classes))
+            val_dataset = self.val_dataset.getDatasetForTraining()
+        classes = self.train_dataset.getLabels()
+
+        # Metrics:
+        # - VOC07MApMetric
+        # - VOCMApMetric
+        # - COCODetectionMetric
         val_metric = VOC07MApMetric(iou_thresh=0.5, class_names=classes)
+        #val_metric = VOCMApMetric(iou_thresh=0.5, class_names=classes)
+        #val_metric = COCODetectionMetric(iou_thresh=0.5, class_names=classes)
+        
         if self.args.num_samples < 0:
             self.args.num_samples = len(train_dataset)
         if self.args.mixup:
             from gluoncv.data import MixupDetection
             train_dataset = MixupDetection(train_dataset)
+
         return train_dataset, val_dataset, val_metric
     
     def get_dataloader(self, net, train_dataset, val_dataset, data_shape, batch_size, num_workers):

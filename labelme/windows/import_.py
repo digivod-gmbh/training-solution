@@ -29,6 +29,9 @@ class ImportWindow(QtWidgets.QDialog):
         self.formats = QtWidgets.QComboBox()
         for key, val in Export.config('formats').items():
             self.formats.addItem(val)
+        self.formats.setCurrentIndex(0)
+        self.formats.currentTextChanged.connect(self.on_format_change)
+        self.selected_format = list(Export.config('formats').keys())[0]
 
         format_group = QtWidgets.QGroupBox()
         format_group.setTitle(_('Format'))
@@ -70,14 +73,31 @@ class ImportWindow(QtWidgets.QDialog):
         cancel_btn.clicked.connect(self.cancel_btn_clicked)
         layout.addWidget(button_box)
 
+    def on_format_change(self, value):
+        formats = Export.config('formats')
+        inv_formats = Export.invertDict(formats)
+        if value in inv_formats:
+            self.selected_format = inv_formats[value]
+            logger.debug('Selected import format: {}'.format(self.selected_format))
+        else:
+            logger.debug('Import format not found: {}'.format(value))
+
     def data_browse_btn_clicked(self):
+        ext_filter = False
+        extension = Export.config('extensions')[self.selected_format]
+        format_name = Export.config('formats')[self.selected_format]
+        if extension != False:
+            ext_filter = '{} {}({})'.format(format_name, _('files'), extension)
         last_dir = self.parent.settings.value('import/last_data_dir', '')
         logger.debug('Restored value "{}" for setting import/last_data_dir'.format(last_dir))
-        data_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select dataset folder'), last_dir)
-        if data_folder:
-            data_folder = os.path.normpath(data_folder)
-            self.parent.settings.setValue('import/last_data_dir', data_folder)
-            self.data_folder.setText(data_folder)
+        if ext_filter:
+            import_file_or_dir, selected_filter = QtWidgets.QFileDialog.getOpenFileName(self, _('Select dataset file'), last_dir, ext_filter)
+        else:
+            import_file_or_dir = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select dataset folder'), last_dir)
+        if import_file_or_dir:
+            import_file_or_dir = os.path.normpath(import_file_or_dir)
+            self.parent.settings.setValue('import/last_data_dir', os.path.dirname(import_file_or_dir))
+            self.data_folder.setText(import_file_or_dir)
 
     def output_browse_btn_clicked(self):
         last_dir = self.parent.settings.value('import/last_output_dir', '')
@@ -89,10 +109,10 @@ class ImportWindow(QtWidgets.QDialog):
             self.output_folder.setText(output_folder)
 
     def import_btn_clicked(self):
-        data_folder = self.data_folder.text()
-        if not data_folder or not os.path.isdir(data_folder):
+        data_folder_or_file = self.data_folder.text()
+        if not data_folder_or_file or not (os.path.isdir(data_folder_or_file) or os.path.isfile(data_folder_or_file)):
             mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Import'), _('Please enter a valid dataset folder'))
+            mb.warning(self, _('Import'), _('Please enter a valid dataset file or folder'))
             return
 
         output_folder = self.output_folder.text()
@@ -101,40 +121,24 @@ class ImportWindow(QtWidgets.QDialog):
             mb.warning(self, _('Import'), _('Please enter a valid output folder'))
             return
 
-        config_file = os.path.join(data_folder, Export.config('config_file'))
-        if not os.path.isfile(config_file):
-            mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Import'), _('No config file found in dataset folder'))
-            return
-
         val = self.formats.currentText()
         formats = Export.config('formats')
-        format_name = None
-        for key in formats:
-            if val in formats[key]:
-                format_name = key
-        
-        if format_name is None:
+        inv_formats = Export.invertDict(formats)
+        if val not in inv_formats:
             logger.error('Import format {} could not be found'.format(val))
             return
+        else:
+            format_name = inv_formats[val]
 
         # Dataset
         dataset_format = Export.config('objects')[format_name]()
-        if not dataset_format.isValidFormat(data_folder):
+        if not dataset_format.isValidFormat(data_folder_or_file):
             mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Import'), _('Dataset format could not be recognized'))
+            mb.warning(self, _('Import'), _('Invalid dataset format'))
             return
 
-        config = dataset_format.loadConfig(config_file)
-        label_file = os.path.join(data_folder, Export.config('labels_file'))
-        args = Map({
-            'config': config,
-            'label_file': label_file
-        })
-
         dataset_format.setOutputFolder(output_folder)
-        dataset_format.setInputFolder(data_folder)
-        dataset_format.setArgs(args)
+        dataset_format.setInputFolderOrFile(data_folder_or_file)
 
         self.progress = QtWidgets.QProgressDialog(_('Initializing ...'), _('Cancel'), 0, 100, self)
         self.set_default_window_flags(self.progress)
@@ -146,7 +150,7 @@ class ImportWindow(QtWidgets.QDialog):
 
         worker_idx, worker = Application.createWorker()
         self.worker_idx = worker_idx
-        self.worker_object = ProgressObject(worker, dataset_format.import_folder, self.error_import_progress, dataset_format.abort, 
+        self.worker_object = ProgressObject(worker, dataset_format.importFolder, self.error_import_progress, dataset_format.abort, 
             self.update_import_progress, self.finish_import_progress)
         dataset_format.setThread(self.worker_object)
 

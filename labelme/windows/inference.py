@@ -78,11 +78,9 @@ class InferenceWindow(QtWidgets.QDialog):
                 weights_file = os.path.join(training_folder, f)
 
         dataset_folder = network_config.dataset
-        label_file = os.path.join(dataset_folder, Export.config('labels_file'))
 
         self.inference_data = Map({
             'input_image_file': input_image_file,
-            'label_file': label_file,
             'architecture_file': architecture_file,
             'weights_file': weights_file,
             'labels': network_config.labels,
@@ -100,7 +98,7 @@ class InferenceWindow(QtWidgets.QDialog):
         worker.start()
 
     def inference(self):
-        self.network.inference(self.inference_data.input_image_file, self.inference_data.label_file, 
+        self.network.inference(self.inference_data.input_image_file, self.inference_data.labels, 
             self.inference_data.architecture_file, self.inference_data.weights_file, args = None)
 
     def receive_data(self, data):

@@ -96,37 +96,6 @@ class ValidationWindow(QtWidgets.QDialog):
         inferenceWin.start_inference(input_image_file, training_folder)
         self.close()
 
-        # config_file = os.path.join(training_folder, Training.config('config_file'))
-
-        # network = Network()
-        # network_config = network.loadConfig(config_file)
-
-        # architecture_file = ''
-        # weights_file = ''
-        # files = network_config.files
-        # for f in files:
-        #     if '.json' in f:
-        #         architecture_file = os.path.join(training_folder, f)
-        #     elif '.params' in f:
-        #         weights_file = os.path.join(training_folder, f)
-
-        # dataset_folder = network_config.dataset
-        # label_file = os.path.join(dataset_folder, Export.config('labels_file'))
-
-        # network.inference(input_image_file, label_file, architecture_file, weights_file, args = None)
-
-        # # Load training data
-        # training = Training.read_training_config(training_folder)
-        # architecture_file = os.path.join(training_folder, training.architecture)
-        # weights_file = os.path.join(training_folder, training.weights)
-        # label_list_file = os.path.normpath(os.path.join(training_folder, training.label_list))
-        # args = Map(training.args)
-
-        # # Load network
-        # net_objects = Training.config('objects')
-        # network = net_objects[training.network]()
-        # network.inference(input_image_file, label_list_file, architecture_file, weights_file, args)
-
     def cancel_btn_clicked(self):
         self.close()
 

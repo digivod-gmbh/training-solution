@@ -1,4 +1,5 @@
 import os
+import glob
 import shutil
 import lxml.builder
 import lxml.etree
@@ -8,6 +9,7 @@ import PIL.Image
 from .format import DatasetFormat
 from .intermediate import IntermediateFormat
 from labelme.config import Export
+from labelme.logger import logger
 
 
 class FormatVoc(DatasetFormat):
@@ -15,24 +17,68 @@ class FormatVoc(DatasetFormat):
     _files = {
         'class_names': 'class_names.txt',
     }
+    _directories = {
+        'train': 'train',
+        'val': 'val',
+    }
     _format = 'voc'
 
     def __init__(self):
         super().__init__()
         self.intermediate = None
-        self.needed_files = [
-            FormatVoc._files['class_names'],
-        ]
+        # self.needed_files = [
+        #     FormatVoc._files['class_names'],
+        # ]
         FormatVoc._files['labels'] = Export.config('labels_file')
 
-    def getTrainFile(self, dataset_path):
-        pass
+    def isValidFormat(self, dataset_folder_or_file):
+        if not os.path.isdir(dataset_folder_or_file):
+            logger.warning('Dataset folder {} does not exist'.format(dataset_folder_or_file))
+            return False
+        annotations_dir = os.path.join(dataset_folder_or_file, 'Annotations')
+        if not os.path.isdir(annotations_dir):
+            logger.warning('Annotations folder {} does not exist'.format(annotations_dir))
+            return False
+        images_dir = os.path.join(dataset_folder_or_file, 'JPEGImages')
+        if not os.path.isdir(images_dir):
+            logger.warning('Images folder {} does not exist'.format(images_dir))
+            return False
+        return True
 
-    def getValFile(self, dataset_path):
-        pass
+    # def getTrainFile(self, dataset_path):
+    #     train_file = os.path.join(dataset_path, FormatVoc._directories['train'], FormatVoc._files['class_names'])
+    #     return train_file
 
-    def import_folder(self):
-        pass
+    # def getValFile(self, dataset_path):
+    #     val_file = os.path.join(dataset_path, FormatVoc._directories['train'], FormatVoc._files['class_names'])
+    #     return val_file
+
+    def importFolder(self):
+        if self.input_folder is None:
+            raise Exception('Input folder must be initialized for import')
+
+        if not self.args.config['format'] == FormatVoc._format:
+            raise Exception('Format {} in config file does not match {}'.format(self.args.config.format, FormatVoc._format))
+
+        input_folder = self.input_folder
+        output_folder = self.output_folder
+
+        self.intermediate = IntermediateFormat()
+
+        self.importToIntermediate(annotations_val, output_folder, input_folder)
+
+        self.intermediate.toLabelFiles()
+
+    def importToIntermediate(self, annotation_file, output_folder, input_folder):
+        with open(annotation_file, 'r') as f:
+            data = json.load(f)
+
+        class_id_to_name = {}
+        for category in data['categories']:
+            class_id_to_name[category['id']] = category['name']
+        
+        image_id_to_path = {}
+        image_id_to_size = {}
 
     def export(self):
         if self.intermediate is None:

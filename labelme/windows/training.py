@@ -43,16 +43,41 @@ class TrainingWindow(QtWidgets.QDialog):
         network_group_layout.addWidget(self.networks)
         layout.addWidget(network_group)
 
-        self.dataset_folder = QtWidgets.QLineEdit()
-        dataset_folder_browse_btn = QtWidgets.QPushButton(_('Browse'))
-        dataset_folder_browse_btn.clicked.connect(self.dataset_folder_browse_btn_clicked)
+        self.formats = QtWidgets.QComboBox()
+        for key, val in Export.config('formats').items():
+            self.formats.addItem(val)
+        self.formats.setCurrentIndex(0)
+        self.formats.currentTextChanged.connect(self.on_format_change)
+        self.selected_format = list(Export.config('formats').keys())[0]
+
+        format_group = QtWidgets.QGroupBox()
+        format_group.setTitle(_('Format'))
+        format_group_layout = QtWidgets.QVBoxLayout()
+        format_group.setLayout(format_group_layout)
+        format_group_layout.addWidget(self.formats)
+        layout.addWidget(format_group)
+
+        train_dataset_label = QtWidgets.QLabel(_('Training dataset'))
+        self.train_dataset_folder = QtWidgets.QLineEdit()
+        train_dataset_folder_browse_btn = QtWidgets.QPushButton(_('Browse'))
+        train_dataset_folder_browse_btn.clicked.connect(self.train_dataset_folder_browse_btn_clicked)
+
+        val_label_text = '{} ({})'.format(_('Validation dataset'), _('optional'))
+        val_dataset_label = QtWidgets.QLabel(val_label_text)
+        self.val_dataset_folder = QtWidgets.QLineEdit()
+        val_dataset_folder_browse_btn = QtWidgets.QPushButton(_('Browse'))
+        val_dataset_folder_browse_btn.clicked.connect(self.val_dataset_folder_browse_btn_clicked)
 
         dataset_folder_group = QtWidgets.QGroupBox()
-        dataset_folder_group.setTitle(_('Dataset folder'))
+        dataset_folder_group.setTitle(_('Datasets'))
         dataset_folder_group_layout = QtWidgets.QGridLayout()
         dataset_folder_group.setLayout(dataset_folder_group_layout)
-        dataset_folder_group_layout.addWidget(self.dataset_folder, 0, 0)
-        dataset_folder_group_layout.addWidget(dataset_folder_browse_btn, 0, 1)
+        dataset_folder_group_layout.addWidget(train_dataset_label, 0, 0, 1, 2)
+        dataset_folder_group_layout.addWidget(self.train_dataset_folder, 1, 0)
+        dataset_folder_group_layout.addWidget(train_dataset_folder_browse_btn, 1, 1)
+        dataset_folder_group_layout.addWidget(val_dataset_label, 2, 0, 1, 2)
+        dataset_folder_group_layout.addWidget(self.val_dataset_folder, 3, 0)
+        dataset_folder_group_layout.addWidget(val_dataset_folder_browse_btn, 3, 1)
         layout.addWidget(dataset_folder_group)
 
         self.output_folder = QtWidgets.QLineEdit()
@@ -129,19 +154,28 @@ class TrainingWindow(QtWidgets.QDialog):
         cancel_btn.clicked.connect(self.cancel_btn_clicked)
         layout.addWidget(button_box)
 
+    def on_format_change(self, value):
+        formats = Export.config('formats')
+        inv_formats = Export.invertDict(formats)
+        if value in inv_formats:
+            self.selected_format = inv_formats[value]
+            logger.debug('Selected dataset format: {}'.format(self.selected_format))
+        else:
+            logger.debug('Dataset format not found: {}'.format(value))
+
     def training_btn_clicked(self):
-        dataset_folder = self.dataset_folder.text()
-        if not dataset_folder or not os.path.isdir(dataset_folder):
+        train_dataset = self.train_dataset_folder.text()
+        if not train_dataset or not (os.path.isdir(train_dataset) or os.path.isfile(train_dataset)):
             mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Training'), _('Please select a valid dataset file'))
+            mb.warning(self, _('Training'), _('Please select a valid training dataset'))
             return
 
-        dataset_format = Export.detectDatasetFormat(dataset_folder)
-        logger.debug('Detected dataset format {} for directory {}'.format(dataset_format, dataset_folder))
-        if dataset_format is None:
-            mb = QtWidgets.QMessageBox()
-            mb.warning(self, _('Training'), _('Could not detect format of selected dataset'))
-            return
+        val_dataset = self.val_dataset_folder.text()
+        if not val_dataset or not (os.path.isdir(val_dataset) or os.path.isfile(val_dataset)):
+            # Validation dataset is optional
+            val_dataset = False
+
+        dataset_format = self.selected_format
 
         output_folder = os.path.normpath(self.output_folder.text())
         training_name = self.training_name.text()
@@ -185,7 +219,7 @@ class TrainingWindow(QtWidgets.QDialog):
                 func_name = key
         
         if func_name is None:
-            logger.error('Network {} could not be found'.format(val))
+            logger.error('Network {} could not be found'.format(network))
             return
 
         # Training settings
@@ -198,22 +232,17 @@ class TrainingWindow(QtWidgets.QDialog):
         batch_size = int(self.args_batch_size.value())
 
         # Dataset
-        dataset = Export.config('objects')[dataset_format]()
-        label_file = os.path.join(dataset_folder, Export.config('labels_file'))
+        train_dataset_obj = Export.config('objects')[dataset_format]()
+        train_dataset_obj.setInputFolderOrFile(train_dataset)
+        if val_dataset:
+            val_dataset_obj = Export.config('objects')[dataset_format]()
+            val_dataset_obj.setInputFolderOrFile(val_dataset)
 
-        config_file = os.path.join(dataset_folder, Export.config('config_file'))
-        dataset_config = dataset.loadConfig(config_file)
-        logger.debug('Loaded dataset config: {}'.format(dataset_config))
-        train_dataset = dataset.getTrainFile(dataset_folder)
-        if dataset_config.args['validation_ratio'] > 0.0:
-            val_dataset = dataset.getValFile(dataset_folder)
-        else:
-            val_dataset = ''
-        num_train_samples = dataset_config.samples['train']
+        labels = train_dataset_obj.getLabels()
+        num_train_samples = train_dataset_obj.getNumSamples()
         num_batches = int(math.ceil(num_train_samples / batch_size))
         
         args = Map({
-            'dataset_folder': dataset_folder,
             'train_dataset': train_dataset,
             'validate_dataset': val_dataset,
             'training_name': training_name,
@@ -230,7 +259,11 @@ class TrainingWindow(QtWidgets.QDialog):
         network = Training.config('objects')[func_name]()
         network.setArgs(args)
         network.setOutputFolder(output_folder)
-        network.setLabelFile(label_file)
+        network.setTrainDataset(train_dataset_obj)
+        network.setLabels(labels)
+
+        if val_dataset:
+            network.setValDataset(val_dataset_obj)
 
         worker_idx, worker = Application.createWorker()
         self.worker_idx = worker_idx
@@ -246,20 +279,39 @@ class TrainingWindow(QtWidgets.QDialog):
     def cancel_btn_clicked(self):
         self.close()
 
-    def dataset_folder_browse_btn_clicked(self):
+    def train_dataset_folder_browse_btn_clicked(self):
+        dataset_folder_or_file = self.dataset_folder_browse_btn_clicked('train')
+        if dataset_folder_or_file:
+            self.train_dataset_folder.setText(dataset_folder_or_file)
+
+    def val_dataset_folder_browse_btn_clicked(self):
+        dataset_folder_or_file = self.dataset_folder_browse_btn_clicked('val')
+        if dataset_folder_or_file:
+            self.val_dataset_folder.setText(dataset_folder_or_file)
+
+    def dataset_folder_browse_btn_clicked(self, mode='train'):
+        ext_filter = False
+        extension = Export.config('extensions')[self.selected_format]
+        format_name = Export.config('formats')[self.selected_format]
+        if extension != False:
+            ext_filter = '{} {}({})'.format(format_name, _('files'), extension)
         project_folder = self.parent.settings.value('settings/project/folder', '')
         logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
         dataset_folder = os.path.join(project_folder, self.parent._config['project_dataset_folder'])
-        dataset_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select dataset folder'), dataset_folder)
-        if dataset_folder:
-            dataset_folder = os.path.normpath(dataset_folder)
-            key = Export.detectDatasetFormat(dataset_folder)
-            logger.debug('Detected dataset format {} for directory {}'.format(key, dataset_folder))
+        if ext_filter:
+            dataset_folder_or_file, selected_filter = QtWidgets.QFileDialog.getOpenFileName(self, _('Select dataset file'), dataset_folder, ext_filter)
+        else:
+            dataset_folder_or_file = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select dataset folder'), dataset_folder)
+        if dataset_folder_or_file:
+            dataset_folder_or_file = os.path.normpath(dataset_folder_or_file)
+            key = Export.detectDatasetFormat(dataset_folder_or_file)
+            logger.debug('Detected dataset format {} for directory {}'.format(key, dataset_folder_or_file))
             if key is None:
                 mb = QtWidgets.QMessageBox()
                 mb.warning(self, _('Training'), _('Could not detect format of selected dataset'))
-                return
-            self.dataset_folder.setText(dataset_folder)
+                return False
+            return dataset_folder_or_file
+        return False
 
     def output_browse_btn_clicked(self):
         project_folder = self.parent.settings.value('settings/project/folder', '')

@@ -10,6 +10,7 @@ import time
 import traceback
 import builtins
 import cv2
+import gluoncv as gcv
 
 from labelme.label_file import LabelFile
 from labelme.logger import logger
@@ -22,59 +23,91 @@ from .intermediate import IntermediateFormat
 
 class FormatImageRecord(DatasetFormat):
 
-    _files = {
-        'lst_train': 'train.lst', 
-        'lst_val': 'val.lst', 
-        'rec_train': 'train.rec', 
-        'rec_val': 'val.rec',
-        'idx_train': 'train.idx', 
-        'idx_val': 'val.idx',
-    }
+    _files = {}
     _format = 'imagerecord'
 
     def __init__(self):
         super().__init__()
         self.intermediate = None
-        self.needed_files = [
-            FormatImageRecord._files['rec_train'],
-            FormatImageRecord._files['idx_train'],
-            #FormatImageRecord._files['lst_train'],
-        ]
+        self.num_samples = -1
         FormatImageRecord._files['labels'] = Export.config('labels_file')
 
-    def getTrainFile(self, dataset_path):
-        train_file = os.path.join(dataset_path, FormatImageRecord._files['rec_train'])
-        return train_file
+    def isValidFormat(self, dataset_folder_or_file):
+        if not os.path.isfile(dataset_folder_or_file):
+            logger.warning('Dataset file {} does not exist'.format(dataset_folder_or_file))
+            return False
+        file_dir = os.path.dirname(dataset_folder_or_file)
+        file_name = os.path.basename(dataset_folder_or_file)
+        base = os.path.splitext(file_name)[0]
+        idx_file = os.path.join(file_dir, base + '.idx')
+        if not os.path.isfile(idx_file):
+            logger.warning('Idx file {} does not exist'.format(idx_file))
+            return False
+        return True
 
-    def getValFile(self, dataset_path):
-        val_file = os.path.join(dataset_path, FormatImageRecord._files['rec_val'])
-        return val_file
+    def getLabels(self):
+        labels = []
+        input_folder = os.path.dirname(self.input_folder_or_file)
+        label_file = os.path.join(input_folder, FormatImageRecord._files['labels'])
+        if os.path.isfile(label_file):
+            logger.debug('Load labels from file {}'.format(label_file))
+            for i, line in enumerate(open(label_file).readlines()):
+                labels.append(line)
+        else:
+            labels = set([])
+            logger.debug('No label file found. Start reading dataset')
+            record = mx.recordio.MXRecordIO(self.input_folder_or_file, 'r')
+            record.reset()
+            self.num_samples = 0
+            while True:
+                try:
+                    item = record.read()
+                    if not item:
+                        break
+                    header, s = mx.recordio.unpack(item)
+                    for i in range(4, len(header.label), 5):
+                        label_idx = str(header.label[i])
+                        labels.append(label_idx)
+                        self.num_samples = self.num_samples + 1
+                except Exception as e:
+                    logger.error(e)
+            record.close()
 
-    def import_folder(self):
-        if self.input_folder is None:
+        return list(labels)
+
+    def getNumSamples(self):
+        if self.num_samples == -1:
+            logger.debug('Count samples in dataset')
+            samples = gcv.data.RecordFileDetection(self.input_folder_or_file)
+            self.num_samples = len(samples)
+        return self.num_samples
+
+    def getDatasetForTraining(self):
+        samples = gcv.data.RecordFileDetection(self.input_folder_or_file)
+        self.num_samples = len(samples)
+        return samples
+
+    def importFolder(self):
+        if self.input_folder_or_file is None:
             raise Exception('Input folder must be initialized for import')
-
-        if not self.args.config['format'] == FormatImageRecord._format:
-            raise Exception('Format {} in config file does not match {}'.format(self.args.config.format, FormatImageRecord._format))
-
-        input_folder = self.input_folder
+        
         output_folder = self.output_folder
 
         self.intermediate = IntermediateFormat()
-
-        train_rec_file = os.path.join(input_folder, FormatImageRecord._files['rec_train'])
-        self.import_to_intermediate(train_rec_file, output_folder)
-
-        if self.args.config['args']['validation_ratio'] > 0.0:
-            val_rec_file = os.path.join(input_folder, FormatImageRecord._files['rec_val'])
-            self.import_to_intermediate(val_rec_file, output_folder)
-
+        self.importToIntermediate(self.input_folder_or_file, output_folder)
         self.intermediate.toLabelFiles()
 
-    def import_to_intermediate(self, rec_file, output_folder):
+    def importToIntermediate(self, rec_file, output_folder):
+        # Labels
         all_labels = []
-        for i, line in enumerate(open(self.args.label_file).readlines()):
-            all_labels.append(line)
+        input_folder = os.path.dirname(self.input_folder_or_file)
+        label_file = os.path.join(input_folder, FormatImageRecord._files['labels'])
+        if os.path.isfile(label_file):
+            logger.debug('Load labels from file {}'.format(label_file))
+            for i, line in enumerate(open(label_file).readlines()):
+                all_labels.append(line)
+        else:
+            logger.warning('No label file found at {}'.format(label_file))
 
         record = mx.recordio.MXRecordIO(rec_file, 'r')
         record.reset()
@@ -92,7 +125,7 @@ class FormatImageRecord(DatasetFormat):
                 for i in range(4, len(header.label), 5):
                     label_idx = int(header.label[i])
                     bbox = header.label[i+1:i+5] 
-                    label_name = _('unknown')
+                    label_name = str(label_idx)
                     if label_idx < len(all_labels):
                         label_name = all_labels[label_idx].strip()
                     points = [
@@ -101,7 +134,6 @@ class FormatImageRecord(DatasetFormat):
                     ]
                     # imagerecord has only rectangle shapes
                     self.intermediate.addSample(img_file, (image_height, image_width), label_name, points, 'rectangle')
-
             except Exception as e:
                 logger.error(e)
                 
@@ -125,42 +157,33 @@ class FormatImageRecord(DatasetFormat):
         output_folder = self.output_folder
         data_folder = self.intermediate.getRoot()
 
-        # labels
-        label_file = os.path.join(output_folder, FormatImageRecord._files['labels'])
-        with open(label_file, 'w+') as f:
-            label_txt = '\n'.join(labels)
-            f.write(label_txt)
-
         # train
         self.thread.update.emit(_('Creating training dataset ...'), -1)
         self.checkAborted()
-        self.makeLstFile(output_folder, 'lst_train', train_samples)
-        self.makeRecFile(data_folder, output_folder, 'rec_train', 'idx_train', 'lst_train')
-
-        config_file = os.path.join(output_folder, Export.config('config_file'))
-        files = list(FormatImageRecord._files.values())
+        train_output_folder = os.path.join(output_folder, 'train')
+        if not os.path.isdir(train_output_folder):
+            os.makedirs(train_output_folder)
+        self.makeLstFile(train_output_folder, 'train.lst', train_samples)
+        self.makeRecFile(data_folder, train_output_folder, 'train.rec', 'train.idx', 'train.lst')
+        train_label_file = os.path.join(train_output_folder, FormatImageRecord._files['labels'])
+        with open(train_label_file, 'w+') as f:
+            f.write('\n'.join(labels))
 
         # validate
         validation_ratio = self.intermediate.getValidationRatio()
         if validation_ratio > 0.0:
             self.thread.update.emit(_('Creating validation dataset ...'), -1)
             self.checkAborted()
-            self.makeLstFile(output_folder, 'lst_val', val_samples)
-            self.makeRecFile(data_folder, output_folder, 'rec_val', 'idx_val', 'lst_val')
-        else:
-            # remove val files from file list for config
-            val_files = [FormatImageRecord._files['rec_val'], FormatImageRecord._files['idx_val'], FormatImageRecord._files['lst_val']]
-            files = [x for x in files if x not in val_files]
+            val_output_folder = os.path.join(output_folder, 'val')
+            if not os.path.isdir(val_output_folder):
+                os.makedirs(val_output_folder)
+            self.makeLstFile(val_output_folder, 'val.lst', val_samples)
+            self.makeRecFile(data_folder, val_output_folder, 'val.rec', 'val.idx', 'val.lst')
+            val_label_file = os.path.join(val_output_folder, FormatImageRecord._files['labels'])
+            with open(val_label_file, 'w+') as f:
+                f.write('\n'.join(labels))
 
-        # save
-        num_samples = {
-            'train': num_train_samples,
-            'val': num_val_samples,
-        }
-        self.saveConfig(config_file, FormatImageRecord._format, files, num_samples, self.args)
-
-    def makeLstFile(self, output_folder, file_key, samples):
-        file_name = FormatImageRecord._files[file_key]
+    def makeLstFile(self, output_folder, file_name, samples):
         lst_file = os.path.join(output_folder, file_name)
 
         # group samples by image
@@ -183,11 +206,7 @@ class FormatImageRecord(DatasetFormat):
                 f.write(line)
                 idx += 1
 
-    def makeRecFile(self, data_folder, output_folder, rec_file_key, idx_file_key, lst_file_key):
-        file_name_rec = FormatImageRecord._files[rec_file_key]
-        file_name_idx = FormatImageRecord._files[idx_file_key]
-        file_name_lst = FormatImageRecord._files[lst_file_key]
-
+    def makeRecFile(self, data_folder, output_folder, file_name_rec, file_name_idx, file_name_lst):
         image_list = self.readLstFile(os.path.join(output_folder, file_name_lst))
         record = mx.recordio.MXIndexedRecordIO(os.path.join(output_folder, file_name_idx), os.path.join(output_folder, file_name_rec), 'w')
 
@@ -346,4 +365,3 @@ class FormatImageRecord(DatasetFormat):
             return [[min_x, min_y], [max_x, max_y]]
         else:
             raise Exception('Unknown shape type {}'.format(shape_type))
-

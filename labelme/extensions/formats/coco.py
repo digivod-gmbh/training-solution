@@ -25,19 +25,33 @@ class FormatCoco(DatasetFormat):
     def __init__(self):
         super().__init__()
         self.intermediate = None
-        self.needed_files = [
-            FormatCoco._files['annotations_train'],
-            #FormatCoco._files['annotations_val'],
-        ]
+        # self.needed_files = [
+        #     FormatCoco._files['annotations_train'],
+        #     #FormatCoco._files['annotations_val'],
+        # ]
         FormatCoco._files['labels'] = Export.config('labels_file')
 
-    def getTrainFile(self, dataset_path):
-        pass
+    def isValidFormat(self, dataset_folder_or_file):
+        if not os.path.isfile(dataset_folder_or_file):
+            logger.warning('Dataset file {} does not exist'.format(dataset_folder_or_file))
+            return False
+        try:
+            with open(dataset_folder_or_file, 'r') as f:
+                data = json.load(f)
+            return True
+        except Exception as e:
+            logger.warning('Error during parsing of json file {}: {}'.format(dataset_folder_or_file, e))
+            return False
 
-    def getValFile(self, dataset_path):
-        pass
+    # def getTrainFile(self, dataset_path):
+    #     train_file = os.path.join(dataset_path, FormatCoco._files['annotations_train'])
+    #     return train_file
 
-    def import_folder(self):
+    # def getValFile(self, dataset_path):
+    #     val_file = os.path.join(dataset_path, FormatCoco._files['annotations_val'])
+    #     return val_file
+
+    def importFolder(self):
         if self.input_folder is None:
             raise Exception('Input folder must be initialized for import')
 
@@ -50,15 +64,15 @@ class FormatCoco(DatasetFormat):
         self.intermediate = IntermediateFormat()
 
         annotations_train = os.path.join(input_folder, FormatCoco._files['annotations_train'])
-        self.import_to_intermediate(annotations_train, output_folder, input_folder)
+        self.importToIntermediate(annotations_train, output_folder, input_folder)
 
         if self.args.config['args']['validation_ratio'] > 0.0:
             annotations_val = os.path.join(input_folder, FormatCoco._files['annotations_val'])
-            self.import_to_intermediate(annotations_val, output_folder, input_folder)
+            self.importToIntermediate(annotations_val, output_folder, input_folder)
 
         self.intermediate.toLabelFiles()
 
-    def import_to_intermediate(self, annotation_file, output_folder, input_folder):
+    def importToIntermediate(self, annotation_file, output_folder, input_folder):
         with open(annotation_file, 'r') as f:
             data = json.load(f)
 

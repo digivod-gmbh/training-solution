@@ -46,12 +46,21 @@ class Network(ThreadExtension):
     def setOutputFolder(self, output_folder):
         self.output_folder = output_folder
 
-    def setLabelFile(self, label_file):
-        self.label_file = label_file
+    # def setLabelFile(self, label_file):
+    #     self.label_file = label_file
 
-    def readLabelFile(self, label_file):
-        with open(label_file) as f:
-            return f.read().split('\n')
+    # def readLabelFile(self, label_file):
+    #     with open(label_file) as f:
+    #         return f.read().split('\n')
+
+    def setLabels(self, labels):
+        self.labels = labels
+
+    def setTrainDataset(self, dataset):
+        self.train_dataset = dataset
+
+    def setValDataset(self, dataset):
+        self.val_dataset = dataset
 
     def getContext(self, gpus=None):
         if gpus is None:
@@ -66,7 +75,7 @@ class Network(ThreadExtension):
         logger.debug('Use context: {}'.format(ctx))
         return ctx
 
-    def inference(self, input_image_file, label_file, architecture_file, weights_file, args = None):
+    def inference(self, input_image_file, labels, architecture_file, weights_file, args = None):
         default_args = {
             'threshold': 0.5,
             'print_top_n': 10,
@@ -83,7 +92,7 @@ class Network(ThreadExtension):
             warnings.simplefilter('ignore')
             ctx = self.getContext()
             net = gluon.nn.SymbolBlock.imports(architecture_file, ['data'], weights_file, ctx=ctx)
-            class_names = self.readLabelFile(label_file)
+            class_names = labels
             net.collect_params().reset_ctx(ctx)
             img = mx.image.imread(input_image_file)
             img = timage.resize_short_within(img, 608, max_size=1024, mult_base=1)
