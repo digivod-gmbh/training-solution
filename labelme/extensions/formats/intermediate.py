@@ -12,9 +12,10 @@ class IntermediateSample():
         self.image = image
         self.image_size = image_size
         self.label = label
-        self.points = points
         self.shape_type = shape_type
-
+        # Points format: [[p1_x, p1_y], [p2_x, p2_y], ...]
+        # for bounding box: [[xmin, ymin], [xmax, ymax]]
+        self.points = points
 
 class IntermediateFormat():
     

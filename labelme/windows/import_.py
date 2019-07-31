@@ -189,6 +189,11 @@ class ImportWindow(QtWidgets.QDialog):
         mb = QtWidgets.QMessageBox()
         mb.information(self, _('Import'), _('Dataset has been imported successfully'))
         self.progress.close()
+        
+        # open import folder
+        output_folder = os.path.normpath(self.output_folder.text())
+        self.parent.importDirImages(output_folder)
+
         self.close()
 
     def error_import_progress(self, e):

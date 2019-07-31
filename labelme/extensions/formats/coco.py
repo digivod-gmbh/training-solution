@@ -25,10 +25,6 @@ class FormatCoco(DatasetFormat):
     def __init__(self):
         super().__init__()
         self.intermediate = None
-        # self.needed_files = [
-        #     FormatCoco._files['annotations_train'],
-        #     #FormatCoco._files['annotations_val'],
-        # ]
         FormatCoco._files['labels'] = Export.config('labels_file')
 
     def isValidFormat(self, dataset_folder_or_file):
@@ -43,33 +39,15 @@ class FormatCoco(DatasetFormat):
             logger.warning('Error during parsing of json file {}: {}'.format(dataset_folder_or_file, e))
             return False
 
-    # def getTrainFile(self, dataset_path):
-    #     train_file = os.path.join(dataset_path, FormatCoco._files['annotations_train'])
-    #     return train_file
-
-    # def getValFile(self, dataset_path):
-    #     val_file = os.path.join(dataset_path, FormatCoco._files['annotations_val'])
-    #     return val_file
-
     def importFolder(self):
-        if self.input_folder is None:
+        if self.input_folder_or_file is None:
             raise Exception('Input folder must be initialized for import')
 
-        if not self.args.config['format'] == FormatCoco._format:
-            raise Exception('Format {} in config file does not match {}'.format(self.args.config.format, FormatCoco._format))
-
-        input_folder = self.input_folder
+        input_folder = os.path.dirname(self.input_folder_or_file)
         output_folder = self.output_folder
 
         self.intermediate = IntermediateFormat()
-
-        annotations_train = os.path.join(input_folder, FormatCoco._files['annotations_train'])
-        self.importToIntermediate(annotations_train, output_folder, input_folder)
-
-        if self.args.config['args']['validation_ratio'] > 0.0:
-            annotations_val = os.path.join(input_folder, FormatCoco._files['annotations_val'])
-            self.importToIntermediate(annotations_val, output_folder, input_folder)
-
+        self.importToIntermediate(self.input_folder_or_file, output_folder, input_folder)
         self.intermediate.toLabelFiles()
 
     def importToIntermediate(self, annotation_file, output_folder, input_folder):
@@ -130,19 +108,6 @@ class FormatCoco(DatasetFormat):
             label_txt = '\n'.join(labels)
             f.write(label_txt)
 
-        # save
-        config_file = os.path.join(self.output_folder, Export.config('config_file'))
-        files = list(FormatCoco._files.values())
-        if validation_ratio <= 0.0:
-            # remove val files from file list for config
-            val_files = [FormatCoco._files['annotations_val']]
-            files = [x for x in files if x not in val_files]
-        num_samples = {
-            'train': num_samples_train,
-            'val': num_samples_val,
-        }
-        self.saveConfig(config_file, FormatCoco._format, files, num_samples, self.args)
-
     def saveDataset(self, samples_per_image, file_name):
         image_id = 0
         num_samples = 0
@@ -167,12 +132,14 @@ class FormatCoco(DatasetFormat):
         if not os.path.exists(image_folder):
             os.makedirs(image_folder)
 
+        input_folder = self.input_folder_or_file
+
         for image in samples_per_image:
             samples = samples_per_image[image]
             num_samples = num_samples + len(samples)
             base = os.path.splitext(image)[0]
             out_img_file = os.path.join(image_folder, base + '.jpg')
-            img_file = os.path.join(self.input_folder, os.path.basename(image))
+            img_file = os.path.join(input_folder, os.path.basename(image))
             img = np.asarray(PIL.Image.open(img_file))
             if not os.path.exists(out_img_file):
                 PIL.Image.fromarray(img).save(out_img_file)
@@ -261,5 +228,3 @@ class FormatCoco(DatasetFormat):
             ],
         )
         return data
-
-

@@ -20,65 +20,73 @@ class FormatVoc(DatasetFormat):
     _directories = {
         'train': 'train',
         'val': 'val',
+        'annotations': 'Annotations',
+        'images': 'JPEGImages',
     }
     _format = 'voc'
 
     def __init__(self):
         super().__init__()
         self.intermediate = None
-        # self.needed_files = [
-        #     FormatVoc._files['class_names'],
-        # ]
         FormatVoc._files['labels'] = Export.config('labels_file')
 
     def isValidFormat(self, dataset_folder_or_file):
         if not os.path.isdir(dataset_folder_or_file):
             logger.warning('Dataset folder {} does not exist'.format(dataset_folder_or_file))
             return False
-        annotations_dir = os.path.join(dataset_folder_or_file, 'Annotations')
+        annotations_dir = os.path.join(dataset_folder_or_file, self._directories['annotations'])
         if not os.path.isdir(annotations_dir):
             logger.warning('Annotations folder {} does not exist'.format(annotations_dir))
             return False
-        images_dir = os.path.join(dataset_folder_or_file, 'JPEGImages')
+        images_dir = os.path.join(dataset_folder_or_file, self._directories['images'])
         if not os.path.isdir(images_dir):
             logger.warning('Images folder {} does not exist'.format(images_dir))
             return False
         return True
 
-    # def getTrainFile(self, dataset_path):
-    #     train_file = os.path.join(dataset_path, FormatVoc._directories['train'], FormatVoc._files['class_names'])
-    #     return train_file
-
-    # def getValFile(self, dataset_path):
-    #     val_file = os.path.join(dataset_path, FormatVoc._directories['train'], FormatVoc._files['class_names'])
-    #     return val_file
-
     def importFolder(self):
-        if self.input_folder is None:
+        if self.input_folder_or_file is None:
             raise Exception('Input folder must be initialized for import')
 
-        if not self.args.config['format'] == FormatVoc._format:
-            raise Exception('Format {} in config file does not match {}'.format(self.args.config.format, FormatVoc._format))
-
-        input_folder = self.input_folder
-        output_folder = self.output_folder
-
         self.intermediate = IntermediateFormat()
-
-        self.importToIntermediate(annotations_val, output_folder, input_folder)
-
+        self.importToIntermediate(self.output_folder, self.input_folder_or_file)
         self.intermediate.toLabelFiles()
 
-    def importToIntermediate(self, annotation_file, output_folder, input_folder):
-        with open(annotation_file, 'r') as f:
-            data = json.load(f)
+    def importToIntermediate(self, output_folder, input_folder):
+        annotations_dir = os.path.join(input_folder, self._directories['annotations'])
+        for annotation_file in os.listdir(annotations_dir):
+            file_path = os.path.join(annotations_dir, annotation_file)
+            root = lxml.etree.parse(file_path)
+            filename = root.find('filename').text
 
-        class_id_to_name = {}
-        for category in data['categories']:
-            class_id_to_name[category['id']] = category['name']
-        
-        image_id_to_path = {}
-        image_id_to_size = {}
+            # Copy image
+            src_image = os.path.join(input_folder, self._directories['images'], filename)
+            dst_image = os.path.join(output_folder, filename)
+            if not os.path.exists(dst_image):
+                shutil.copyfile(src_image, dst_image)
+
+            # Additional elements
+            #folder = root.find('folder').text
+            #database = root.find('database').text
+            #annotation = root.find('annotation').text
+            #image = root.find('image').text
+            #segmented = root.find('segmented').text
+            
+            size = root.find('size')
+            image_size = (int(size.find('height').text), int(size.find('width').text))
+            #size_width = int(size.find('width').text)
+            #size_height = int(size.find('height').text)
+            #size_depth = int(size.find('depth').text)
+            
+            objects = root.findall('object')
+            for obj in objects:
+                bbox = obj.find('bndbox')
+                points = [
+                    [int(bbox.find('xmin').text), int(bbox.find('ymin').text)],
+                    [int(bbox.find('xmax').text), int(bbox.find('ymax').text)],
+                ]
+                label_name = obj.find('name').text
+                self.intermediate.addSample(dst_image, image_size, label_name, points, 'rectangle')
 
     def export(self):
         if self.intermediate is None:
@@ -89,9 +97,9 @@ class FormatVoc(DatasetFormat):
 
         num_samples = 0
         output_folder = self.output_folder
-
-        os.makedirs(os.path.join(output_folder, 'JPEGImages'))
-        os.makedirs(os.path.join(output_folder, 'Annotations'))
+        
+        os.makedirs(os.path.join(output_folder, self._directories['images']))
+        os.makedirs(os.path.join(output_folder, self._directories['annotations']))
 
         # labels
         labels = self.intermediate.getLabels()
@@ -106,14 +114,16 @@ class FormatVoc(DatasetFormat):
             label_txt = '\n'.join(class_names)
             f.write(label_txt)
 
+        input_folder = self.input_folder_or_file
+
         samples_per_image = self.intermediate.getSamplesPerImage()
         for image in samples_per_image:
             samples = samples_per_image[image]
             num_samples = num_samples + len(samples)
             base = os.path.splitext(image)[0]
-            out_img_file = os.path.join(output_folder, 'JPEGImages', base + '.jpg')
-            out_xml_file = os.path.join(output_folder, 'Annotations', base + '.xml')
-            img_file = os.path.join(self.input_folder, os.path.basename(image))
+            out_img_file = os.path.join(output_folder, self._directories['images'], base + '.jpg')
+            out_xml_file = os.path.join(output_folder, self._directories['annotations'], base + '.xml')
+            img_file = os.path.join(input_folder, os.path.basename(image))
             img = np.asarray(PIL.Image.open(img_file))
             if not os.path.exists(out_img_file):
                 PIL.Image.fromarray(img).save(out_img_file)
@@ -167,8 +177,3 @@ class FormatVoc(DatasetFormat):
 
             with open(out_xml_file, 'wb') as f:
                 f.write(lxml.etree.tostring(xml, pretty_print=True))
-
-        # save
-        config_file = os.path.join(output_folder, Export.config('config_file'))
-        files = list(FormatVoc._files.values())
-        self.saveConfig(config_file, FormatVoc._format, files, num_samples, self.args)
