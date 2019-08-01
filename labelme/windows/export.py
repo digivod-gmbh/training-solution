@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import json
+import time
 import shutil
 import importlib
 import subprocess
@@ -97,7 +98,7 @@ class ExportWindow(QtWidgets.QDialog):
         layout.addWidget(export_folder_group)
 
         self.validation = QtWidgets.QSpinBox()
-        self.validation.setValue(10)
+        self.validation.setValue(0)
         self.validation.setMinimum(0)
         self.validation.setMaximum(90)
         self.validation.setFixedWidth(50)
@@ -166,7 +167,9 @@ class ExportWindow(QtWidgets.QDialog):
                 return
             else:
                 shutil.rmtree(export_dataset_folder, ignore_errors=True)
-                os.makedirs(export_dataset_folder)
+                time.sleep(1)
+                if not os.path.exists(export_dataset_folder):
+                    os.makedirs(export_dataset_folder)
 
         if not os.path.isdir(export_dataset_folder):
             mb = QtWidgets.QMessageBox

@@ -12,7 +12,7 @@ class IntermediateSample():
         self.image = image
         self.image_size = image_size
         self.label = label
-        self.shape_type = shape_type
+        self.shape_type = shape_type # rectangle, polygon
         # Points format: [[p1_x, p1_y], [p2_x, p2_y], ...]
         # for bounding box: [[xmin, ymin], [xmax, ymax]]
         self.points = points
@@ -39,13 +39,28 @@ class IntermediateFormat():
             self.samplesPerLabel[label] = []
         self.samplesPerLabel[label].append(sample)
 
-    def getTrainValidateSamples(self, shuffle=False):
+    def getTrainValidateSamples(self, shuffle=False, group_by_images=False):
         train_samples = []
         val_samples = []
-        for label in self.labels:
-            train_for_label, val_for_label = self.getTrainValidateSamplesPerLabel(label, shuffle)
-            train_samples += train_for_label
-            val_samples += val_for_label
+        if group_by_images:
+            train_samples = []
+            val_samples = []
+            num_train_samples = int(len(self.samples) * (1.0 - self.validation_ratio))
+            samples_per_image = self.getSamplesPerImage()
+            i = 0
+            for image in samples_per_image:
+                samples = samples_per_image[image]
+                for sample in samples:
+                    if i < num_train_samples:
+                        train_samples.append(sample)
+                    else:
+                        val_samples.append(sample)
+                i += len(samples)
+        else:
+            for label in self.labels:
+                train_for_label, val_for_label = self.getTrainValidateSamplesPerLabel(label, shuffle)
+                train_samples += train_for_label
+                val_samples += val_for_label
         if shuffle:
             random.shuffle(train_samples)
             random.shuffle(val_samples)

@@ -22,7 +22,8 @@ class Export():
             'extensions': {
                 'imagerecord': '*.rec',
                 'coco': '*.json',
-                'voc': False,
+                'voc': '*.txt',
+                # False for directory
             },
             'objects': {
                 'imagerecord': lambda: formats.FormatImageRecord(),

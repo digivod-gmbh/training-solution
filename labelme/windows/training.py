@@ -198,7 +198,9 @@ class TrainingWindow(QtWidgets.QDialog):
             else:
                 import shutil
                 shutil.rmtree(output_folder)
-                os.makedirs(output_folder)
+                time.sleep(1)
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
 
         if not os.path.isdir(output_folder):
             mb = QtWidgets.QMessageBox
