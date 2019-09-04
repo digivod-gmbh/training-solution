@@ -336,9 +336,14 @@ class MainWindow(QtWidgets.QMainWindow):
         undoLastPoint = action(_('Undo last point'), self.canvas.undoLastPoint,
                                shortcuts['undo_last_point'], 'undo',
                                _('Undo last drawn point'), enabled=False)
-        addPoint = action(_('Add Point to Edge'), self.canvas.addPointToEdge,
-                          None, 'edit', _('Add point to the nearest edge'),
-                          enabled=False)
+        addPointToEdge = action(
+            _('Add Point to Edge'),
+            self.canvas.addPointToEdge,
+            shortcuts['add_point_to_edge'],
+            'edit',
+            _('Add point to the nearest edge'),
+            enabled=False,
+        )
 
         undo = action(_('Undo'), self.undoShapeEdit, shortcuts['undo'], 'undo',
                       _('Undo last add and edit of shape'), enabled=False)
@@ -440,7 +445,7 @@ class MainWindow(QtWidgets.QMainWindow):
             toggleKeepPrevMode=toggle_keep_prev_mode,
             delete=delete, edit=edit, copy=copy,
             undoLastPoint=undoLastPoint, undo=undo,
-            addPoint=addPoint,
+            addPointToEdge=addPointToEdge,
             createMode=createMode, editMode=editMode,
             createRectangleMode=createRectangleMode,
             #createCircleMode=createCircleMode,
@@ -458,6 +463,7 @@ class MainWindow(QtWidgets.QMainWindow):
             fileMenuActions=(open_, opendir, save, saveAs, close, quit),
             tool=(),
             editMenu=(edit, copy, delete, None, undo, undoLastPoint,
+                      None, addPointToEdge,
                       None, toggle_keep_prev_mode, None, settings), # None, color1, color2,
             # menu shown at right click
             menu=(
@@ -475,7 +481,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 #shapeFillColor,
                 undo,
                 undoLastPoint,
-                addPoint,
+                addPointToEdge,
             ),
             onLoadActive=(
                 close,
@@ -490,7 +496,9 @@ class MainWindow(QtWidgets.QMainWindow):
             onShapesPresent=(saveAs, hideAll, showAll),
         )
 
-        self.canvas.edgeSelected.connect(self.actions.addPoint.setEnabled)
+        self.canvas.edgeSelected.connect(
+            self.actions.addPointToEdge.setEnabled
+        )
 
         self.menus = utils.struct(
             file=self.menu(_('&File')),
@@ -800,9 +808,6 @@ class MainWindow(QtWidgets.QMainWindow):
         mb = QtWidgets.QMessageBox
         msg = '<h1>{}</h1>An easy-to-use tool for training of object detection networks<br><br><i>This software uses icons from <a href="https://icons8.com/">icons8</a></i>'.format(__appname__)
         mb.about(self, 'About', msg)
-
-    def toggleAddPointEnabled(self, enabled):
-        self.actions.addPoint.setEnabled(enabled)
 
     def toggleDrawingSensitive(self, drawing=True):
         """Toggle drawing sensitive.

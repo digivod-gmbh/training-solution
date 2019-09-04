@@ -88,7 +88,7 @@ if sys.argv[1] == 'release':
         sys.exit(1)
 
     commands = [
-        'python tests/docs_tests/man_tests/test_labelme.1.py',
+        'python tests/docs_tests/man_tests/test_labelme_1.py',
         'git tag v{:s}'.format(version),
         'git push origin master --tag',
         'python setup.py sdist',
@@ -123,8 +123,10 @@ setup(
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
     ],
