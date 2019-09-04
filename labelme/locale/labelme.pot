@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2019-05-24 14:56+0200\n"
+"POT-Creation-Date: 2019-09-04 08:41+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,244 +15,248 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 
 
-#: ../labelme\app.py:117
+#: ../labelme\app.py:116
 msgid "Polygon Labels"
 msgstr ""
 
-#: ../labelme\app.py:123
+#: ../labelme\app.py:122
 msgid "Select label to start annotating for it. Press 'Esc' to deselect."
 msgstr ""
 
-#: ../labelme\app.py:129
+#: ../labelme\app.py:128
 msgid "Label List"
 msgstr ""
 
-#: ../labelme\app.py:134
+#: ../labelme\app.py:133
 msgid "Search Filename"
 msgstr ""
 
-#: ../labelme\app.py:145
+#: ../labelme\app.py:144
 msgid "File List"
 msgstr ""
 
-#: ../labelme\app.py:195
+#: ../labelme\app.py:194
 msgid "&Quit"
 msgstr ""
 
-#: ../labelme\app.py:196
+#: ../labelme\app.py:195
 msgid "Quit application"
 msgstr ""
 
-#: ../labelme\app.py:197
+#: ../labelme\app.py:196
 msgid "&Open"
 msgstr ""
 
-#: ../labelme\app.py:198
+#: ../labelme\app.py:197
 msgid "Open image or label file"
 msgstr ""
 
-#: ../labelme\app.py:199
+#: ../labelme\app.py:198
 msgid "&Open Dir"
 msgstr ""
 
-#: ../labelme\app.py:200
+#: ../labelme\app.py:199
 msgid "Open Dir"
 msgstr ""
 
-#: ../labelme\app.py:201
+#: ../labelme\app.py:200
 msgid "&Settings"
 msgstr ""
 
-#: ../labelme\app.py:202 ../labelme\windows\settings.py:17
-#: ../labelme\windows\training.py:108
+#: ../labelme\app.py:201 ../labelme\app.py:682
+#: ../labelme\windows\settings.py:17 ../labelme\windows\settings.py:80
+#: ../labelme\windows\training.py:133
 msgid "Settings"
 msgstr ""
 
-#: ../labelme\app.py:203
+#: ../labelme\app.py:202
 msgid "&Import"
 msgstr ""
 
-#: ../labelme\app.py:204
+#: ../labelme\app.py:203 ../labelme\windows\import_.py:70
+#: ../labelme\windows\import_.py:115 ../labelme\windows\import_.py:121
+#: ../labelme\windows\import_.py:137 ../labelme\windows\import_.py:190
+#: ../labelme\windows\import_.py:202
 msgid "Import"
 msgstr ""
 
-#: ../labelme\app.py:205
+#: ../labelme\app.py:204
 msgid "&Export"
 msgstr ""
 
-#: ../labelme\app.py:206 ../labelme\windows\export.py:121
-#: ../labelme\windows\export.py:131 ../labelme\windows\export.py:137
-#: ../labelme\windows\export.py:148 ../labelme\windows\export.py:152
-#: ../labelme\windows\export.py:161 ../labelme\windows\export.py:170
-#: ../labelme\windows\export.py:180 ../labelme\windows\export.py:341
-#: ../labelme\windows\export.py:348
+#: ../labelme\app.py:205 ../labelme\windows\export.py:116
+#: ../labelme\windows\export.py:126 ../labelme\windows\export.py:132
+#: ../labelme\windows\export.py:143 ../labelme\windows\export.py:147
+#: ../labelme\windows\export.py:156 ../labelme\windows\export.py:165
+#: ../labelme\windows\export.py:176 ../labelme\windows\export.py:333
+#: ../labelme\windows\export.py:340
 msgid "Export"
 msgstr ""
 
-#: ../labelme\app.py:207
+#: ../labelme\app.py:206
 msgid "&Merge"
 msgstr ""
 
-#: ../labelme\app.py:208 ../labelme\app.py:1672 ../labelme\windows\merge.py:57
+#: ../labelme\app.py:207 ../labelme\app.py:1689 ../labelme\windows\merge.py:57
 msgid "Merge"
 msgstr ""
 
-#: ../labelme\app.py:209
+#: ../labelme\app.py:208
 msgid "&Training"
 msgstr ""
 
-#: ../labelme\app.py:210 ../labelme\windows\training.py:26
-#: ../labelme\windows\training.py:136 ../labelme\windows\training.py:143
-#: ../labelme\windows\training.py:152 ../labelme\windows\training.py:161
-#: ../labelme\windows\training.py:171 ../labelme\windows\training.py:260
-#: ../labelme\windows\training.py:298 ../labelme\windows\training.py:305
-#: ../labelme\windows\validation.py:41
+#: ../labelme\app.py:209 ../labelme\windows\training.py:26
+#: ../labelme\windows\training.py:170 ../labelme\windows\training.py:186
+#: ../labelme\windows\training.py:195 ../labelme\windows\training.py:207
+#: ../labelme\windows\training.py:313 ../labelme\windows\training.py:352
+#: ../labelme\windows\training.py:359 ../labelme\windows\validation.py:42
 msgid "Training"
 msgstr ""
 
-#: ../labelme\app.py:211
+#: ../labelme\app.py:210
 msgid "&Validation"
 msgstr ""
 
-#: ../labelme\app.py:212 ../labelme\windows\export.py:113
-#: ../labelme\windows\validation.py:17 ../labelme\windows\validation.py:83
-#: ../labelme\windows\validation.py:89
+#: ../labelme\app.py:211 ../labelme\windows\export.py:108
+#: ../labelme\windows\inference.py:22 ../labelme\windows\inference.py:137
+#: ../labelme\windows\validation.py:18 ../labelme\windows\validation.py:84
+#: ../labelme\windows\validation.py:90
 msgid "Validation"
 msgstr ""
 
-#: ../labelme\app.py:214
+#: ../labelme\app.py:213
 msgid "&Next Image"
 msgstr ""
 
-#: ../labelme\app.py:218
+#: ../labelme\app.py:217
 msgid "Open next (hold Ctl+Shift to copy labels)"
 msgstr ""
 
-#: ../labelme\app.py:222
+#: ../labelme\app.py:221
 msgid "&Prev Image"
 msgstr ""
 
-#: ../labelme\app.py:226
+#: ../labelme\app.py:225
 msgid "Open prev (hold Ctl+Shift to copy labels)"
 msgstr ""
 
-#: ../labelme\app.py:229
+#: ../labelme\app.py:228
 msgid "&Save"
 msgstr ""
 
-#: ../labelme\app.py:230
+#: ../labelme\app.py:229
 msgid "Save labels to file"
 msgstr ""
 
-#: ../labelme\app.py:231
+#: ../labelme\app.py:230
 msgid "&Save As"
 msgstr ""
 
-#: ../labelme\app.py:232
+#: ../labelme\app.py:231
 msgid "Save labels to a different file"
 msgstr ""
 
-#: ../labelme\app.py:236
+#: ../labelme\app.py:235
 msgid "&Delete File"
 msgstr ""
 
-#: ../labelme\app.py:240
+#: ../labelme\app.py:239
 msgid "Delete current label file"
 msgstr ""
 
-#: ../labelme\app.py:244
+#: ../labelme\app.py:243
 msgid "&Change Output Dir"
 msgstr ""
 
-#: ../labelme\app.py:248
+#: ../labelme\app.py:247
 msgid "Change where annotations are loaded/saved"
 msgstr ""
 
-#: ../labelme\app.py:252
+#: ../labelme\app.py:251
 msgid "Save &Automatically"
 msgstr ""
 
-#: ../labelme\app.py:255
+#: ../labelme\app.py:254
 msgid "Save automatically"
 msgstr ""
 
-#: ../labelme\app.py:261
+#: ../labelme\app.py:260
 msgid "&Close"
 msgstr ""
 
-#: ../labelme\app.py:262
+#: ../labelme\app.py:261
 msgid "Close current file"
 msgstr ""
 
-#: ../labelme\app.py:263
+#: ../labelme\app.py:262
 msgid "Polygon &Line Color"
 msgstr ""
 
-#: ../labelme\app.py:265
+#: ../labelme\app.py:264
 msgid "Choose polygon line color"
 msgstr ""
 
-#: ../labelme\app.py:266
+#: ../labelme\app.py:265
 msgid "Polygon &Fill Color"
 msgstr ""
 
-#: ../labelme\app.py:268
+#: ../labelme\app.py:267
 msgid "Choose polygon fill color"
 msgstr ""
 
-#: ../labelme\app.py:271
+#: ../labelme\app.py:270
 msgid "Keep Previous Annotation"
 msgstr ""
 
-#: ../labelme\app.py:274
+#: ../labelme\app.py:273
 msgid "Toggle \"keep pevious annotation\" mode"
 msgstr ""
 
-#: ../labelme\app.py:279
+#: ../labelme\app.py:278
 msgid "Create Polygons"
 msgstr ""
 
-#: ../labelme\app.py:283
+#: ../labelme\app.py:282
 msgid "Start drawing polygons"
 msgstr ""
 
-#: ../labelme\app.py:287
+#: ../labelme\app.py:286
 msgid "Create Rectangle"
 msgstr ""
 
-#: ../labelme\app.py:291
+#: ../labelme\app.py:290
 msgid "Start drawing rectangles"
 msgstr ""
 
-#: ../labelme\app.py:326
+#: ../labelme\app.py:325
 msgid "Edit Polygons"
 msgstr ""
 
-#: ../labelme\app.py:328
+#: ../labelme\app.py:327
 msgid "Move and edit the selected polygons"
 msgstr ""
 
-#: ../labelme\app.py:330
+#: ../labelme\app.py:329
 msgid "Delete Polygons"
 msgstr ""
 
-#: ../labelme\app.py:332
+#: ../labelme\app.py:331
 msgid "Delete the selected polygons"
 msgstr ""
 
-#: ../labelme\app.py:333
+#: ../labelme\app.py:332
 msgid "Duplicate Polygons"
 msgstr ""
 
-#: ../labelme\app.py:335
+#: ../labelme\app.py:334
 msgid "Create a duplicate of the selected polygons"
 msgstr ""
 
-#: ../labelme\app.py:337
+#: ../labelme\app.py:336
 msgid "Undo last point"
 msgstr ""
 
-#: ../labelme\app.py:339
+#: ../labelme\app.py:338
 msgid "Undo last drawn point"
 msgstr ""
 
@@ -260,220 +264,232 @@ msgstr ""
 msgid "Add Point to Edge"
 msgstr ""
 
-#: ../labelme\app.py:341
+#: ../labelme\app.py:344
 msgid "Add point to the nearest edge"
 msgstr ""
 
-#: ../labelme\app.py:344
+#: ../labelme\app.py:348
 msgid "Undo"
 msgstr ""
 
-#: ../labelme\app.py:345
+#: ../labelme\app.py:349
 msgid "Undo last add and edit of shape"
 msgstr ""
 
-#: ../labelme\app.py:347
+#: ../labelme\app.py:351
 msgid ""
 "&Hide\n"
 "Polygons"
 msgstr ""
 
-#: ../labelme\app.py:349
+#: ../labelme\app.py:353
 msgid "Hide all polygons"
 msgstr ""
 
-#: ../labelme\app.py:350
+#: ../labelme\app.py:354
 msgid ""
 "&Show\n"
 "Polygons"
 msgstr ""
 
-#: ../labelme\app.py:352
+#: ../labelme\app.py:356
 msgid "Show all polygons"
 msgstr ""
 
-#: ../labelme\app.py:354
+#: ../labelme\app.py:358
 msgid "&Tutorial"
 msgstr ""
 
-#: ../labelme\app.py:355
+#: ../labelme\app.py:359
 msgid "Show tutorial page"
 msgstr ""
 
-#: ../labelme\app.py:357
+#: ../labelme\app.py:361
 msgid "&About"
 msgstr ""
 
-#: ../labelme\app.py:358
+#: ../labelme\app.py:362
 msgid "Show about page"
 msgstr ""
 
-#: ../labelme\app.py:363
+#: ../labelme\app.py:367
 msgid "Zoom in or out of the image. Also accessible with {} and {} from the canvas."
 msgstr ""
 
-#: ../labelme\app.py:376
+#: ../labelme\app.py:380
 msgid "Zoom &In"
 msgstr ""
 
-#: ../labelme\app.py:378
+#: ../labelme\app.py:382
 msgid "Increase zoom level"
 msgstr ""
 
-#: ../labelme\app.py:379
+#: ../labelme\app.py:383
 msgid "&Zoom Out"
 msgstr ""
 
-#: ../labelme\app.py:382
+#: ../labelme\app.py:386
 msgid "&Original size"
 msgstr ""
 
-#: ../labelme\app.py:385
+#: ../labelme\app.py:389
 msgid "Zoom to original size"
 msgstr ""
 
-#: ../labelme\app.py:386
+#: ../labelme\app.py:390
 msgid "&Fit Window"
 msgstr ""
 
-#: ../labelme\app.py:388
+#: ../labelme\app.py:392
 msgid "Zoom follows window size"
 msgstr ""
 
-#: ../labelme\app.py:390
+#: ../labelme\app.py:394
 msgid "Fit &Width"
 msgstr ""
 
-#: ../labelme\app.py:392
+#: ../labelme\app.py:396
 msgid "Zoom follows window width"
 msgstr ""
 
-#: ../labelme\app.py:406
+#: ../labelme\app.py:410
 msgid "&Edit Label"
 msgstr ""
 
-#: ../labelme\app.py:407
+#: ../labelme\app.py:411
 msgid "Modify the label of the selected polygon"
 msgstr ""
 
-#: ../labelme\app.py:411
+#: ../labelme\app.py:415
 msgid "Shape &Line Color"
 msgstr ""
 
-#: ../labelme\app.py:412
+#: ../labelme\app.py:416
 msgid "Change the line color for this specific shape"
 msgstr ""
 
-#: ../labelme\app.py:414
+#: ../labelme\app.py:418
 msgid "Shape &Fill Color"
 msgstr ""
 
-#: ../labelme\app.py:415
+#: ../labelme\app.py:419
 msgid "Change the fill color for this specific shape"
 msgstr ""
 
-#: ../labelme\app.py:417
+#: ../labelme\app.py:421
 msgid "Fill Drawing Polygon"
 msgstr ""
 
-#: ../labelme\app.py:421
+#: ../labelme\app.py:425
 msgid "Fill polygon while drawing"
 msgstr ""
 
-#: ../labelme\app.py:497
+#: ../labelme\app.py:504
 msgid "&File"
 msgstr ""
 
-#: ../labelme\app.py:498
+#: ../labelme\app.py:505
 msgid "&Edit"
 msgstr ""
 
-#: ../labelme\app.py:499
+#: ../labelme\app.py:506
 msgid "&View"
 msgstr ""
 
-#: ../labelme\app.py:500
+#: ../labelme\app.py:507
 msgid "&Project"
 msgstr ""
 
-#: ../labelme\app.py:501
+#: ../labelme\app.py:508
 msgid "&Help"
 msgstr ""
 
-#: ../labelme\app.py:502
+#: ../labelme\app.py:509
 msgid "Open &Recent"
 msgstr ""
 
-#: ../labelme\app.py:567
+#: ../labelme\app.py:574
 msgid "&Copy here"
 msgstr ""
 
-#: ../labelme\app.py:568
+#: ../labelme\app.py:575
 msgid "&Move here"
 msgstr ""
 
-#: ../labelme\app.py:572
+#: ../labelme\app.py:579
 msgid "Tools"
 msgstr ""
 
-#: ../labelme\app.py:601
+#: ../labelme\app.py:608
 msgid "%s started."
 msgstr ""
 
-#: ../labelme\app.py:606
+#: ../labelme\app.py:613
 msgid "If `auto_save` argument is True, `output_file` argument is ignored and output filename is automatically set as IMAGE_BASENAME.json."
 msgstr ""
 
-#: ../labelme\app.py:1517
+#: ../labelme\app.py:681
+msgid "No project folder is defined in settings. Please configure one."
+msgstr ""
+
+#: ../labelme\app.py:1536
 msgid "You are about to permanently delete this label file, proceed anyway?"
 msgstr ""
 
-#: ../labelme\app.py:1519 ../labelme\app.py:1600
+#: ../labelme\app.py:1538 ../labelme\app.py:1619
 msgid "Attention"
 msgstr ""
 
-#: ../labelme\app.py:1526
+#: ../labelme\app.py:1545
 msgid "Label file is removed: {}"
 msgstr ""
 
-#: ../labelme\app.py:1537
+#: ../labelme\app.py:1556
 msgid "No objects labeled"
 msgstr ""
 
-#: ../labelme\app.py:1538
+#: ../labelme\app.py:1557
 msgid "You must label at least one object to save the file."
 msgstr ""
 
-#: ../labelme\app.py:1553
+#: ../labelme\app.py:1572
 msgid "Save annotations to \"{}\" before closing?"
 msgstr ""
 
-#: ../labelme\app.py:1555
+#: ../labelme\app.py:1574
 msgid "Save annotations?"
 msgstr ""
 
-#: ../labelme\app.py:1576 ../labelme\app.py:1610
+#: ../labelme\app.py:1595 ../labelme\app.py:1629
 msgid "Choose line color"
 msgstr ""
 
-#: ../labelme\app.py:1586 ../labelme\app.py:1619
+#: ../labelme\app.py:1605 ../labelme\app.py:1638
 msgid "Choose fill color"
 msgstr ""
 
-#: ../labelme\app.py:1598
+#: ../labelme\app.py:1617
 msgid "You are about to permanently delete {} polygons, proceed anyway?"
 msgstr ""
 
-#: ../labelme\app.py:1649
+#: ../labelme\app.py:1668
 msgid "%s - Open Directory"
 msgstr ""
 
-#: ../labelme\app.py:1672
+#: ../labelme\app.py:1689
 msgid "Merging is not implemented yet"
 msgstr ""
 
-#: ../labelme\config\export.py:19
+#: ../labelme\config\export.py:18
 msgid "ImageRecord"
+msgstr ""
+
+#: ../labelme\config\export.py:19
+msgid "COCO"
+msgstr ""
+
+#: ../labelme\config\export.py:20
+msgid "VOC"
 msgstr ""
 
 #: ../labelme\config\training.py:14
@@ -484,28 +500,46 @@ msgstr ""
 msgid "YoloV3 (Mobilenet1.0)"
 msgstr ""
 
-#: ../labelme\extensions\formats\imagerecord.py:55
+#: ../labelme\extensions\formats\coco.py:72
+msgid "Input folder must be initialized for import"
+msgstr ""
+
+#: ../labelme\extensions\formats\coco.py:98
+msgid "Split could not be detected"
+msgstr ""
+
+#: ../labelme\extensions\formats\coco.py:130
+msgid "Intermediate format must be initialized for export"
+msgstr ""
+
+#: ../labelme\extensions\formats\coco.py:132
+#: ../labelme\extensions\formats\imagerecord.py:146
+#: ../labelme\extensions\formats\voc.py:151
 msgid "Gathering samples ..."
 msgstr ""
 
-#: ../labelme\extensions\formats\imagerecord.py:76
+#: ../labelme\extensions\formats\coco.py:290
+msgid "Invalid bbox list: {}"
+msgstr ""
+
+#: ../labelme\extensions\formats\imagerecord.py:161
 msgid "Creating training dataset ..."
 msgstr ""
 
-#: ../labelme\extensions\formats\imagerecord.py:87
+#: ../labelme\extensions\formats\imagerecord.py:175
 msgid "Creating validation dataset ..."
 msgstr ""
 
-#: ../labelme\extensions\formats\imagerecord.py:166
+#: ../labelme\extensions\formats\imagerecord.py:240
 msgid "Writing dataset ..."
 msgstr ""
 
-#: ../labelme\extensions\networks\ssd.py:90
-#: ../labelme\extensions\networks\yolov3.py:51
+#: ../labelme\extensions\networks\ssd.py:89
+#: ../labelme\extensions\networks\yolov3.py:50
 msgid "Start training ..."
 msgstr ""
 
-#: ../labelme\extensions\networks\ssd.py:94
+#: ../labelme\extensions\networks\ssd.py:93
 #: ../labelme\extensions\networks\yolov3.py:64
 msgid "Finished training"
 msgstr ""
@@ -514,130 +548,186 @@ msgstr ""
 msgid "Loading model ..."
 msgstr ""
 
-#: ../labelme\extensions\networks\yolov3.py:127
+#: ../labelme\extensions\networks\yolov3.py:129
 msgid "Loading weights ..."
 msgstr ""
 
-#: ../labelme\extensions\networks\yolov3.py:143
-#: ../labelme\windows\export.py:267
+#: ../labelme\extensions\networks\yolov3.py:145
+#: ../labelme\windows\export.py:259
 msgid "Loading dataset ..."
 msgstr ""
 
-#: ../labelme\extensions\networks\yolov3.py:277
+#: ../labelme\extensions\networks\yolov3.py:287
 msgid "Start training on epoch {} ..."
 msgstr ""
 
-#: ../labelme\extensions\networks\yolov3.py:329
+#: ../labelme\extensions\networks\yolov3.py:339
 msgid ""
 "Training ...\n"
-"Epoch {}, Batch {}, Speed: {:.3f} samples/sec\n"
+"Epoch {}, Batch {}/{}, Speed: {:.3f} samples/sec\n"
 "{}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}"
 msgstr ""
 
-#: ../labelme\main.py:217
+#: ../labelme\main.py:218
 msgid "An error occured with following message"
 msgstr ""
 
-#: ../labelme\windows\export.py:36
+#: ../labelme\windows\export.py:29
 msgid "Export dataset"
 msgstr ""
 
-#: ../labelme\windows\export.py:48 ../labelme\windows\merge.py:24
+#: ../labelme\windows\export.py:41 ../labelme\windows\import_.py:37
+#: ../labelme\windows\merge.py:24 ../labelme\windows\training.py:54
 msgid "Format"
 msgstr ""
 
-#: ../labelme\windows\export.py:58 ../labelme\windows\export.py:89
+#: ../labelme\windows\export.py:49 ../labelme\windows\export.py:84
+#: ../labelme\windows\import_.py:45 ../labelme\windows\import_.py:58
 #: ../labelme\windows\merge.py:45 ../labelme\windows\settings.py:25
-#: ../labelme\windows\training.py:47 ../labelme\windows\training.py:63
-#: ../labelme\windows\validation.py:25 ../labelme\windows\validation.py:37
+#: ../labelme\windows\training.py:62 ../labelme\windows\training.py:68
+#: ../labelme\windows\training.py:88 ../labelme\windows\validation.py:26
+#: ../labelme\windows\validation.py:38
 msgid "Browse"
 msgstr ""
 
-#: ../labelme\windows\export.py:62
+#: ../labelme\windows\export.py:53
 msgid "Data folder"
 msgstr ""
 
-#: ../labelme\windows\export.py:70
+#: ../labelme\windows\export.py:61
 msgid "Label selection"
 msgstr ""
 
-#: ../labelme\windows\export.py:92
+#: ../labelme\windows\export.py:87
 msgid "Dataset name"
 msgstr ""
 
-#: ../labelme\windows\export.py:96 ../labelme\windows\merge.py:49
+#: ../labelme\windows\export.py:91 ../labelme\windows\merge.py:49
 msgid "Export folder"
 msgstr ""
 
-#: ../labelme\windows\export.py:110
+#: ../labelme\windows\export.py:105
 msgid "% of dataset"
 msgstr ""
 
-#: ../labelme\windows\export.py:123 ../labelme\windows\export.py:183
-#: ../labelme\windows\export.py:267 ../labelme\windows\merge.py:59
-#: ../labelme\windows\settings.py:45 ../labelme\windows\training.py:128
-#: ../labelme\windows\training.py:176 ../labelme\windows\validation.py:51
+#: ../labelme\windows\export.py:118 ../labelme\windows\export.py:179
+#: ../labelme\windows\export.py:259 ../labelme\windows\import_.py:72
+#: ../labelme\windows\import_.py:143 ../labelme\windows\merge.py:59
+#: ../labelme\windows\settings.py:45 ../labelme\windows\training.py:153
+#: ../labelme\windows\training.py:212 ../labelme\windows\validation.py:52
 msgid "Cancel"
 msgstr ""
 
-#: ../labelme\windows\export.py:131
+#: ../labelme\windows\export.py:126
 msgid "Please enter a valid data folder"
 msgstr ""
 
-#: ../labelme\windows\export.py:137 ../labelme\windows\merge.py:122
+#: ../labelme\windows\export.py:132 ../labelme\windows\merge.py:122
 msgid "Please enter a valid export folder"
 msgstr ""
 
-#: ../labelme\windows\export.py:148
+#: ../labelme\windows\export.py:143
 msgid "Please select a maximum of {} labels"
 msgstr ""
 
-#: ../labelme\windows\export.py:152
+#: ../labelme\windows\export.py:147
 msgid "Please select at least 1 label"
 msgstr ""
 
-#: ../labelme\windows\export.py:161
+#: ../labelme\windows\export.py:156
 msgid "Please enter a valid dataset name"
 msgstr ""
 
-#: ../labelme\windows\export.py:169 ../labelme\windows\training.py:160
+#: ../labelme\windows\export.py:164 ../labelme\windows\training.py:194
 msgid "The selected output directory \"{}\" is not empty. All containing files will be deleted. Are you sure to continue?"
 msgstr ""
 
-#: ../labelme\windows\export.py:180 ../labelme\windows\training.py:171
+#: ../labelme\windows\export.py:176 ../labelme\windows\training.py:207
 msgid "The selected output directory \"{}\" could not be created"
 msgstr ""
 
-#: ../labelme\windows\export.py:183 ../labelme\windows\training.py:176
+#: ../labelme\windows\export.py:179 ../labelme\windows\import_.py:143
+#: ../labelme\windows\training.py:212
 msgid "Initializing ..."
 msgstr ""
 
-#: ../labelme\windows\export.py:195 ../labelme\windows\training.py:227
+#: ../labelme\windows\export.py:191 ../labelme\windows\import_.py:148
+#: ../labelme\windows\training.py:258
 msgid "Loading data ..."
 msgstr ""
 
-#: ../labelme\windows\export.py:259
+#: ../labelme\windows\export.py:251
 msgid "Select data folder"
 msgstr ""
 
-#: ../labelme\windows\export.py:311 ../labelme\windows\training.py:268
+#: ../labelme\windows\export.py:303 ../labelme\windows\import_.py:105
+#: ../labelme\windows\training.py:322
 msgid "Select output folder"
 msgstr ""
 
-#: ../labelme\windows\export.py:331 ../labelme\windows\training.py:288
+#: ../labelme\windows\export.py:323 ../labelme\windows\import_.py:180
+#: ../labelme\windows\training.py:342
 msgid "Cancelling ..."
 msgstr ""
 
-#: ../labelme\windows\export.py:341
+#: ../labelme\windows\export.py:333
 msgid "Dataset has been exported successfully"
 msgstr ""
 
-#: ../labelme\windows\export.py:348
+#: ../labelme\windows\export.py:340
 msgid "An error occured during export of dataset"
 msgstr ""
 
-#: ../labelme\windows\import_.py:13
+#: ../labelme\windows\import_.py:22
 msgid "Import dataset"
+msgstr ""
+
+#: ../labelme\windows\import_.py:49
+msgid "Dataset folder"
+msgstr ""
+
+#: ../labelme\windows\import_.py:62 ../labelme\windows\training.py:95
+msgid "Output folder"
+msgstr ""
+
+#: ../labelme\windows\import_.py:90 ../labelme\windows\training.py:299
+msgid "files"
+msgstr ""
+
+#: ../labelme\windows\import_.py:94 ../labelme\windows\training.py:304
+msgid "Select dataset file"
+msgstr ""
+
+#: ../labelme\windows\import_.py:96 ../labelme\windows\training.py:306
+msgid "Select dataset folder"
+msgstr ""
+
+#: ../labelme\windows\import_.py:115
+msgid "Please enter a valid dataset file or folder"
+msgstr ""
+
+#: ../labelme\windows\import_.py:121
+msgid "Please enter a valid output folder"
+msgstr ""
+
+#: ../labelme\windows\import_.py:137
+msgid "Invalid dataset format"
+msgstr ""
+
+#: ../labelme\windows\import_.py:190
+msgid "Dataset has been imported successfully"
+msgstr ""
+
+#: ../labelme\windows\import_.py:202
+msgid "An error occured during import of dataset"
+msgstr ""
+
+#: ../labelme\windows\inference.py:111
+msgid "unknown"
+msgstr ""
+
+#: ../labelme\windows\inference.py:137
+msgid "An error occured during validation of training"
 msgstr ""
 
 #: ../labelme\windows\merge.py:16 ../labelme\windows\merge.py:122
@@ -661,7 +751,7 @@ msgstr ""
 msgid "Add dataset file"
 msgstr ""
 
-#: ../labelme\windows\merge.py:37
+#: ../labelme\windows\merge.py:37 ../labelme\windows\training.py:72
 msgid "Datasets"
 msgstr ""
 
@@ -701,91 +791,95 @@ msgstr ""
 msgid "Select project folder"
 msgstr ""
 
+#: ../labelme\windows\settings.py:79
+msgid "Project folder must not be empty"
+msgstr ""
+
 #: ../labelme\windows\training.py:40
 msgid "Network"
 msgstr ""
 
-#: ../labelme\windows\training.py:51
-msgid "Dataset folder"
+#: ../labelme\windows\training.py:60
+msgid "Training dataset"
 msgstr ""
 
-#: ../labelme\windows\training.py:66
-msgid "Training name"
+#: ../labelme\windows\training.py:65
+msgid "Validation dataset"
 msgstr ""
 
-#: ../labelme\windows\training.py:70
-msgid "Output folder"
-msgstr ""
-
-#: ../labelme\windows\training.py:79
-msgid "Epochs"
-msgstr ""
-
-#: ../labelme\windows\training.py:85
-msgid "Batch size"
+#: ../labelme\windows\training.py:65
+msgid "optional"
 msgstr ""
 
 #: ../labelme\windows\training.py:91
+msgid "Training name"
+msgstr ""
+
+#: ../labelme\windows\training.py:104
+msgid "Epochs"
+msgstr ""
+
+#: ../labelme\windows\training.py:110
+msgid "Batch size"
+msgstr ""
+
+#: ../labelme\windows\training.py:116
 msgid "Learning rate"
 msgstr ""
 
-#: ../labelme\windows\training.py:99
+#: ../labelme\windows\training.py:124
 msgid "GPUs"
 msgstr ""
 
-#: ../labelme\windows\training.py:126
+#: ../labelme\windows\training.py:151
 msgid "Start Training"
 msgstr ""
 
-#: ../labelme\windows\training.py:136
-msgid "Please select a valid dataset file"
+#: ../labelme\windows\training.py:170
+msgid "Please select a valid training dataset"
 msgstr ""
 
-#: ../labelme\windows\training.py:143 ../labelme\windows\training.py:260
-msgid "Could not detect format of selected dataset"
-msgstr ""
-
-#: ../labelme\windows\training.py:152
+#: ../labelme\windows\training.py:186
 msgid "Please enter a valid training name"
 msgstr ""
 
-#: ../labelme\windows\training.py:253
-msgid "Select dataset folder"
+#: ../labelme\windows\training.py:313
+msgid "Could not detect format of selected dataset"
 msgstr ""
 
-#: ../labelme\windows\training.py:298
+#: ../labelme\windows\training.py:352
 msgid "Network has been trained successfully"
 msgstr ""
 
-#: ../labelme\windows\training.py:305
+#: ../labelme\windows\training.py:359
 msgid "An error occured during training of network"
 msgstr ""
 
-#: ../labelme\windows\validation.py:29
+#: ../labelme\windows\validation.py:30
 msgid "Input image"
 msgstr ""
 
-#: ../labelme\windows\validation.py:49
+#: ../labelme\windows\validation.py:50
 msgid "Validate"
 msgstr ""
 
-#: ../labelme\windows\validation.py:61
+#: ../labelme\windows\validation.py:62
 msgid "Image files"
 msgstr ""
 
-#: ../labelme\windows\validation.py:62
+#: ../labelme\windows\validation.py:63
 msgid "Select input image"
 msgstr ""
 
-#: ../labelme\windows\validation.py:72
+#: ../labelme\windows\validation.py:73
 msgid "Select training file"
 msgstr ""
 
-#: ../labelme\windows\validation.py:83
+#: ../labelme\windows\validation.py:84
 msgid "Please select a valid input image"
 msgstr ""
 
-#: ../labelme\windows\validation.py:89
+#: ../labelme\windows\validation.py:90
 msgid "Please select a valid training folder"
 msgstr ""
 
