@@ -76,6 +76,7 @@ class FormatCoco(DatasetFormat):
 
         self.intermediate = IntermediateFormat()
         self.importToIntermediate(self.input_folder_or_file, output_folder, input_folder)
+        self.thread.update.emit(_('Writing label files ...'), 95)
         self.intermediate.toLabelFiles()
 
     def fileNameToSplit(self, file_name):
@@ -99,17 +100,24 @@ class FormatCoco(DatasetFormat):
         else:
             split = '../' + split
 
+        self.thread.update.emit(_('Loading dataset ...'), 10)
+        self.checkAborted()
+
         image_id_to_path = {}
         image_id_to_size = {}
-        for image in data['images']:
+        for idx, image in enumerate(data['images']):
             src_image = os.path.join(input_folder, split, image['file_name'])
             dst_image = os.path.join(output_folder, os.path.basename(image['file_name']))
             if not os.path.exists(dst_image):
                 shutil.copyfile(src_image, dst_image)
             image_id_to_path[image['id']] = dst_image
-            image_id_to_size[image['id']] = (image['height'], image['width'])   
+            image_id_to_size[image['id']] = (image['height'], image['width'])
 
-        for annotation in data['annotations']:
+            percentage = idx / len(data['images']) * 40
+            self.thread.update.emit(_('Loading dataset ...'), 10 + percentage)
+            self.checkAborted()
+
+        for idx, annotation in enumerate(data['annotations']):
             image_id = annotation['image_id']
             image_path = image_id_to_path[image_id]
             image_size = image_id_to_size[image_id]
@@ -121,6 +129,11 @@ class FormatCoco(DatasetFormat):
             if self.isBBox(points):
                 points = self.bboxToPolygon(points)
             self.intermediate.addSample(image_path, image_size, label_name, points, 'polygon')
+
+            percentage = idx / len(data['annotations']) * 40
+            self.thread.update.emit(_('Loading dataset ...'), 50 + percentage)
+            self.checkAborted()
+
             #bbox = annotation['segmentation']['bbox']
             #points = [bbox[0], bbox[1], bbox[0]+bbox[2], bbox[1]+bbox[3]]
             #self.intermediate.addSample(image_path, image_size, label_name, points, 'rectangle')

@@ -109,13 +109,27 @@ class FormatImageRecord(DatasetFormat):
         else:
             logger.warning('No label file found at {}'.format(label_file))
 
+        self.thread.update.emit(_('Loading image record file ...'), 10)
+        self.checkAborted()
+
+        file_pos = 0
+        file_size = os.path.getsize(rec_file)
+        logger.debug('Start loading of image record file {} with size of {} bytes'.format(rec_file, file_size))
+
         record = mx.recordio.MXRecordIO(rec_file, 'r')
         record.reset()
         while True:
             try:
+                self.checkAborted()
                 item = record.read()
                 if not item:
                     break
+                
+                file_pos += len(item)
+                percentage = file_pos / file_size * 90
+                self.thread.update.emit(_('Loading image record file ...'), 10 + percentage)
+                self.checkAborted()
+
                 header, image = mx.recordio.unpack_img(item)
                 img_file = os.path.join(output_folder, '{:09d}.jpg'.format(header.id))
                 cv2.imwrite(img_file, image)
@@ -134,9 +148,12 @@ class FormatImageRecord(DatasetFormat):
                     ]
                     # imagerecord has only rectangle shapes
                     self.intermediate.addSample(img_file, (image_height, image_width), label_name, points, 'rectangle')
+                    self.checkAborted()
+
             except Exception as e:
                 logger.error(e)
-                
+                raise Exception(e)
+
         record.close()
 
     def export(self):

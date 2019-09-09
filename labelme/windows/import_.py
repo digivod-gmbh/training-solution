@@ -144,8 +144,8 @@ class ImportWindow(QtWidgets.QDialog):
         self.set_default_window_flags(self.progress)
         self.progress.setWindowModality(Qt.ApplicationModal)
         self.progress.show()
-        self.progress.setMaximum(999)
-        self.progress.setLabelText(_('Loading data ...'))
+        self.progress.setMaximum(100)
+        self.progress.setLabelText(_('Initializing ...'))
         self.progress.setValue(0)
 
         worker_idx, worker = Application.createWorker()

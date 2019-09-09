@@ -113,10 +113,15 @@ class FormatVoc(DatasetFormat):
                     except:
                         pass
 
-        for annotation_file in annotation_files:
+        self.thread.update.emit(_('Loading dataset ...'), 10)
+        self.checkAborted()
+
+        for idx1, annotation_file in enumerate(annotation_files):
             file_path = os.path.join(annotations_dir, annotation_file)
             root = lxml.etree.parse(file_path)
             filename = root.find('filename').text
+
+            self.checkAborted()
 
             # Copy image
             src_image = os.path.join(input_folder, FormatVoc._directories['images'], filename)
@@ -134,8 +139,10 @@ class FormatVoc(DatasetFormat):
             size = root.find('size')
             image_size = (int(size.find('height').text), int(size.find('width').text))
             
+            self.checkAborted()
+
             objects = root.findall('object')
-            for obj in objects:
+            for idx2, obj in enumerate(objects):
                 bbox = obj.find('bndbox')
                 points = [
                     [int(bbox.find('xmin').text), int(bbox.find('ymin').text)],
@@ -143,6 +150,10 @@ class FormatVoc(DatasetFormat):
                 ]
                 label_name = obj.find('name').text
                 self.intermediate.addSample(dst_image, image_size, label_name, points, 'rectangle')
+
+                percentage = idx2 / len(objects) * 90 * idx1 / len(annotation_files)
+                self.thread.update.emit(_('Loading dataset ...'), 10 + percentage)
+                self.checkAborted()
 
     def export(self):
         if self.intermediate is None:
