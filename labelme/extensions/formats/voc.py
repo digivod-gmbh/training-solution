@@ -199,6 +199,8 @@ class FormatVoc(DatasetFormat):
         labels = self.intermediate.getLabels()
         class_names = list(labels)
 
+        self.checkAborted()
+
         out_split_file = os.path.join(output_folder, FormatVoc._directories['splits'], split + '.txt')
         open(out_split_file, 'w').close()
 
@@ -212,6 +214,8 @@ class FormatVoc(DatasetFormat):
             img = np.asarray(PIL.Image.open(img_file))
             if not os.path.exists(out_img_file):
                 PIL.Image.fromarray(img).save(out_img_file)
+
+            self.checkAborted()
 
             samples_count = len(samples) if len(samples) > 0 else -1
             with open(out_split_file, 'a') as f:
@@ -231,6 +235,8 @@ class FormatVoc(DatasetFormat):
                 ),
                 maker.segmented(),
             )
+
+            self.checkAborted()
 
             bboxes = []
             labels = []
@@ -263,6 +269,11 @@ class FormatVoc(DatasetFormat):
                         ),
                     )
                 )
+                
+                self.thread.update.emit(_('Writing sample ...'), -1)
+                self.checkAborted()
+
+            self.checkAborted()
 
             with open(out_xml_file, 'wb') as f:
                 f.write(lxml.etree.tostring(xml, pretty_print=True))

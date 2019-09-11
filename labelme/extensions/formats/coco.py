@@ -169,6 +169,8 @@ class FormatCoco(DatasetFormat):
         image_id = 0
         num_samples = 0
 
+        self.checkAborted()
+
         data = self.getEmptyData()
 
         class_name_to_id = {}
@@ -195,6 +197,8 @@ class FormatCoco(DatasetFormat):
 
         input_folder = self.input_folder_or_file
 
+        self.checkAborted()
+
         for image in samples_per_image:
             samples = samples_per_image[image]
             num_samples = num_samples + len(samples)
@@ -204,6 +208,8 @@ class FormatCoco(DatasetFormat):
             img = np.asarray(PIL.Image.open(img_file))
             if not os.path.exists(out_img_file):
                 PIL.Image.fromarray(img).save(out_img_file)
+
+            self.checkAborted()
 
             data['images'].append(dict(
                 license=0,
@@ -227,6 +233,8 @@ class FormatCoco(DatasetFormat):
                 )
 
                 points = np.asarray(points).flatten().tolist()
+
+                self.checkAborted()
 
                 if label in masks:
                     masks[label].append(mask)
@@ -258,7 +266,12 @@ class FormatCoco(DatasetFormat):
                         iscrowd=0,
                     ))
 
+                    self.thread.update.emit(_('Writing samples ...'), -1)
+                    self.checkAborted()
+
             image_id = image_id + 1
+
+        self.checkAborted()
 
         with open(out_ann_file, 'w') as f:
             json.dump(data, f)
