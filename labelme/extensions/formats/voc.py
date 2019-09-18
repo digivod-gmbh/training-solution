@@ -29,8 +29,9 @@ class FormatVoc(DatasetFormat):
     }
     _format = 'voc'
 
-    def __init__(self, all_image_sets=False):
+    def __init__(self, thread = None, all_image_sets = False):
         super().__init__()
+        self.thread = thread
         self.intermediate = None
         self.dataset = None
         self.all_image_sets = all_image_sets
@@ -113,7 +114,7 @@ class FormatVoc(DatasetFormat):
                     except:
                         pass
 
-        self.thread.update.emit(_('Loading dataset ...'), 10)
+        self.thread.update(_('Loading dataset ...'), 10)
         self.checkAborted()
 
         for idx1, annotation_file in enumerate(annotation_files):
@@ -152,14 +153,14 @@ class FormatVoc(DatasetFormat):
                 self.intermediate.addSample(dst_image, image_size, label_name, points, 'rectangle')
 
                 percentage = idx2 / len(objects) * 90 * idx1 / len(annotation_files)
-                self.thread.update.emit(_('Loading dataset ...'), 10 + percentage)
+                self.thread.update(_('Loading dataset ...'), 10 + percentage)
                 self.checkAborted()
 
     def export(self):
         if self.intermediate is None:
             raise Exception('Intermediate format must be initialized for export')
         
-        self.thread.update.emit(_('Gathering samples ...'), -1)
+        self.thread.update(_('Gathering samples ...'), -1)
         self.checkAborted()
 
         num_samples = 0
@@ -270,7 +271,7 @@ class FormatVoc(DatasetFormat):
                     )
                 )
                 
-                self.thread.update.emit(_('Writing sample ...'), -1)
+                self.thread.update(_('Writing sample ...'), -1)
                 self.checkAborted()
 
             self.checkAborted()

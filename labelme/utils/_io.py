@@ -1,9 +1,11 @@
 import os.path as osp
+import os
 
 import numpy as np
 import PIL.Image
 
 from labelme.utils.draw import label_colormap
+from labelme.logger import logger
 
 
 def lblsave(filename, lbl):
@@ -21,3 +23,13 @@ def lblsave(filename, lbl):
             '[%s] Cannot save the pixel-wise class label as PNG. '
             'Please consider using the .npy format.' % filename
         )
+
+def deltree(target):
+    for d in os.listdir(target):
+        try:
+            deltree(target + '/' + d)
+        except OSError:
+            os.remove(target + '/' + d)
+    os.rmdir(target)
+    logger.debug('Deleted folder {}'.format(target))
+

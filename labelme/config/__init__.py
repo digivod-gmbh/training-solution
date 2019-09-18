@@ -7,6 +7,7 @@ from labelme.logger import logger
 
 from .export import Export
 from .training import Training
+from .enums import *
 
 
 here = osp.dirname(osp.abspath(__file__))

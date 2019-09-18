@@ -26,8 +26,9 @@ class FormatImageRecord(DatasetFormat):
     _files = {}
     _format = 'imagerecord'
 
-    def __init__(self):
+    def __init__(self, thread = None):
         super().__init__()
+        self.thread = thread
         self.intermediate = None
         self.num_samples = -1
         FormatImageRecord._files['labels'] = Export.config('labels_file')
@@ -109,7 +110,7 @@ class FormatImageRecord(DatasetFormat):
         else:
             logger.warning('No label file found at {}'.format(label_file))
 
-        self.thread.update.emit(_('Loading image record file ...'), 10)
+        self.thread.update(_('Loading image record file ...'), 10)
         self.checkAborted()
 
         file_pos = 0
@@ -127,7 +128,7 @@ class FormatImageRecord(DatasetFormat):
                 
                 file_pos += len(item)
                 percentage = file_pos / file_size * 90
-                self.thread.update.emit(_('Loading image record file ...'), 10 + percentage)
+                self.thread.update(_('Loading image record file ...'), 10 + percentage)
                 self.checkAborted()
 
                 header, image = mx.recordio.unpack_img(item)
@@ -160,7 +161,7 @@ class FormatImageRecord(DatasetFormat):
         if self.intermediate is None:
             raise Exception('Intermediate format must be initialized for export')
         
-        self.thread.update.emit(_('Gathering samples ...'), -1)
+        self.thread.update(_('Gathering samples ...'), -1)
         self.checkAborted()
 
         labels = self.intermediate.getLabels()
@@ -175,7 +176,7 @@ class FormatImageRecord(DatasetFormat):
         data_folder = self.intermediate.getRoot()
 
         # train
-        self.thread.update.emit(_('Creating training dataset ...'), -1)
+        self.thread.update(_('Creating training dataset ...'), -1)
         self.checkAborted()
         train_output_folder = os.path.join(output_folder, 'train')
         if not os.path.isdir(train_output_folder):
@@ -189,7 +190,7 @@ class FormatImageRecord(DatasetFormat):
         # validate
         validation_ratio = self.intermediate.getValidationRatio()
         if validation_ratio > 0.0:
-            self.thread.update.emit(_('Creating validation dataset ...'), -1)
+            self.thread.update(_('Creating validation dataset ...'), -1)
             self.checkAborted()
             val_output_folder = os.path.join(output_folder, 'val')
             if not os.path.isdir(val_output_folder):
@@ -202,6 +203,8 @@ class FormatImageRecord(DatasetFormat):
 
     def makeLstFile(self, output_folder, file_name, samples):
         lst_file = os.path.join(output_folder, file_name)
+
+        self.checkAborted()
 
         # group samples by image
         samples_per_image = self.intermediate.getSamplesPerImage()
@@ -222,10 +225,13 @@ class FormatImageRecord(DatasetFormat):
                 line = self.createLstLine(sample.image, sample.image_size, boxes, ids, idx)
                 f.write(line)
                 idx += 1
+                self.checkAborted()
 
     def makeRecFile(self, data_folder, output_folder, file_name_rec, file_name_idx, file_name_lst):
         image_list = self.readLstFile(os.path.join(output_folder, file_name_lst))
         record = mx.recordio.MXIndexedRecordIO(os.path.join(output_folder, file_name_idx), os.path.join(output_folder, file_name_rec), 'w')
+
+        self.checkAborted()
 
         args = Map({
             'root': data_folder,
@@ -254,7 +260,8 @@ class FormatImageRecord(DatasetFormat):
                 logger.debug('time: {} count: {}'.format(cur_time - pre_time, cnt))
                 pre_time = cur_time
             cnt += 1
-            self.thread.update.emit(_('Writing dataset ...'), -1)
+            self.thread.update(_('Writing dataset ...'), -1)
+            self.checkAborted()
 
     def readLstFile(self, path_in):
         """Reads the .lst file and generates corresponding iterator.
@@ -267,6 +274,7 @@ class FormatImageRecord(DatasetFormat):
         """
         with open(path_in) as fin:
             while True:
+                self.checkAborted()
                 line = fin.readline()
                 if not line:
                     break

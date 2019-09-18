@@ -26,9 +26,9 @@ class Export():
                 # False for directory
             },
             'objects': {
-                'imagerecord': lambda: formats.FormatImageRecord(),
-                'coco': lambda: formats.FormatCoco(),
-                'voc': lambda: formats.FormatVoc(),
+                'imagerecord': lambda t: formats.FormatImageRecord(t),
+                'coco': lambda t: formats.FormatCoco(t),
+                'voc': lambda t: formats.FormatVoc(t),
             },
             'limits': {
                 'max_num_labels': 20
@@ -54,7 +54,7 @@ class Export():
     def detectDatasetFormat(dataset_folder):
         objects = Export.config('objects')
         for key in objects:
-            candidate = objects[key]()
+            candidate = objects[key](None)
             if candidate.isValidFormat(dataset_folder):
                 return key
         return None

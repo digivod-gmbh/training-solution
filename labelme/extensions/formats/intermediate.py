@@ -4,6 +4,7 @@ import base64
 
 from labelme.logger import logger
 from labelme.label_file import LabelFile
+from labelme.extensions import ThreadExtension
 
 
 class IntermediateSample():
@@ -17,9 +18,10 @@ class IntermediateSample():
         # for bounding box: [[xmin, ymin], [xmax, ymax]]
         self.points = points
 
-class IntermediateFormat():
+class IntermediateFormat(ThreadExtension):
     
     def __init__(self):
+        super().__init__()
         self.root = None
         self.images = set([])
         self.labels = set([])
@@ -103,9 +105,11 @@ class IntermediateFormat():
         self.root = data_folder
         label_files = self.getLabelFilesFromDataFolder(data_folder)
         for label_file in label_files:
+            self.checkAborted()
             self.addFromLabelFile(label_file)
         if shuffle:
             for label_samples in self.samplesPerLabel:
+                self.checkAborted()
                 random.shuffle(self.samplesPerLabel[label_samples])
 
     def addFromLabelFile(self, label_file):

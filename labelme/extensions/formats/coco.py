@@ -29,8 +29,9 @@ class FormatCoco(DatasetFormat):
     }
     _format = 'coco'
 
-    def __init__(self):
+    def __init__(self, thread = None):
         super().__init__()
+        self.thread = thread
         self.intermediate = None
         self.num_samples = -1
         FormatCoco._files['labels'] = Export.config('labels_file')
@@ -76,7 +77,7 @@ class FormatCoco(DatasetFormat):
 
         self.intermediate = IntermediateFormat()
         self.importToIntermediate(self.input_folder_or_file, output_folder, input_folder)
-        self.thread.update.emit(_('Writing label files ...'), 95)
+        self.thread.update(_('Writing label files ...'), 95)
         self.intermediate.toLabelFiles()
 
     def fileNameToSplit(self, file_name):
@@ -100,7 +101,7 @@ class FormatCoco(DatasetFormat):
         else:
             split = '../' + split
 
-        self.thread.update.emit(_('Loading dataset ...'), 10)
+        self.thread.update(_('Loading dataset ...'), 10)
         self.checkAborted()
 
         image_id_to_path = {}
@@ -114,7 +115,7 @@ class FormatCoco(DatasetFormat):
             image_id_to_size[image['id']] = (image['height'], image['width'])
 
             percentage = idx / len(data['images']) * 40
-            self.thread.update.emit(_('Loading dataset ...'), 10 + percentage)
+            self.thread.update(_('Loading dataset ...'), 10 + percentage)
             self.checkAborted()
 
         for idx, annotation in enumerate(data['annotations']):
@@ -131,7 +132,7 @@ class FormatCoco(DatasetFormat):
             self.intermediate.addSample(image_path, image_size, label_name, points, 'polygon')
 
             percentage = idx / len(data['annotations']) * 40
-            self.thread.update.emit(_('Loading dataset ...'), 50 + percentage)
+            self.thread.update(_('Loading dataset ...'), 50 + percentage)
             self.checkAborted()
 
             #bbox = annotation['segmentation']['bbox']
@@ -142,7 +143,7 @@ class FormatCoco(DatasetFormat):
         if self.intermediate is None:
             raise Exception(_('Intermediate format must be initialized for export'))
         
-        self.thread.update.emit(_('Gathering samples ...'), -1)
+        self.thread.update(_('Gathering samples ...'), -1)
         self.checkAborted()
         
         samples_per_image = {}
@@ -266,7 +267,7 @@ class FormatCoco(DatasetFormat):
                         iscrowd=0,
                     ))
 
-                    self.thread.update.emit(_('Writing samples ...'), -1)
+                    self.thread.update(_('Writing samples ...'), -1)
                     self.checkAborted()
 
             image_id = image_id + 1
