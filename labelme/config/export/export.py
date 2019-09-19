@@ -54,7 +54,7 @@ class Export():
     def detectDatasetFormat(dataset_folder):
         objects = Export.config('objects')
         for key in objects:
-            candidate = objects[key](None)
+            candidate = objects[key]()
             if candidate.isValidFormat(dataset_folder):
                 return key
         return None

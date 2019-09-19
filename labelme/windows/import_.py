@@ -4,7 +4,6 @@ from qtpy import QtGui
 from qtpy import QtWidgets
 
 import os
-import ptvsd
 
 from labelme.logger import logger
 from labelme.label_file import LabelFile
@@ -143,7 +142,12 @@ class ImportExecutor(WorkerExecutor):
 
     def run(self):
         logger.debug('Prepare import')
-        ptvsd.debug_this_thread()
+        
+        try:
+            import ptvsd
+            ptvsd.debug_this_thread()
+        except:
+            pass
 
         data_folder_or_file = self.data['data_folder']
         is_data_folder_valid = True

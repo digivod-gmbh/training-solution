@@ -11,9 +11,7 @@ import time
 import shutil
 import importlib
 import subprocess
-
 import traceback
-import ptvsd
 
 from labelme.logger import logger
 from labelme.label_file import LabelFile
@@ -248,7 +246,12 @@ class ExportExecutor(WorkerExecutor):
 
     def run(self):
         logger.debug('Prepare export')
-        ptvsd.debug_this_thread()
+
+        try:
+            import ptvsd
+            ptvsd.debug_this_thread()
+        except:
+            pass
         
         data_folder = self.data['data_folder']
         is_data_folder_valid = True
@@ -326,7 +329,6 @@ class ExportExecutor(WorkerExecutor):
         selected_labels = self.data['selected_labels']
         validation_ratio = self.data['validation_ratio']
         data_folder = self.data['data_folder']
-        export_dataset_folder = self.data['export_dataset_folder']
         format_name = self.data['format_name']
 
         self.checkAborted()
