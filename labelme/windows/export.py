@@ -12,22 +12,22 @@ import shutil
 import importlib
 import subprocess
 
-import ptvsd
 import traceback
+import ptvsd
 
 from labelme.logger import logger
 from labelme.label_file import LabelFile
-from labelme.utils import Worker, ProgressObject, Application, AbortWorkerException, deltree
+from labelme.utils import deltree, WorkerDialog
 from labelme.utils.map import Map
+from labelme.extensions.thread import WorkerExecutor
 from labelme.extensions.formats import *
-from labelme.config import Export, MessageType
+from labelme.config import MessageType
+from labelme.config.export import Export
 
 
-class ExportWindow(QtWidgets.QDialog):
+class ExportWindow(WorkerDialog):
 
     def __init__(self, parent=None, labels=[]):
-        self.parent = parent
-
         super().__init__(parent)
         self.setWindowTitle(_('Export dataset'))
         self.set_default_window_flags(self)
@@ -124,109 +124,6 @@ class ExportWindow(QtWidgets.QDialog):
         cancel_btn.clicked.connect(self.cancel_btn_clicked)
         layout.addWidget(button_box)
 
-    # def export_btn_clicked2(self):
-    #     data_folder = self.data_folder.text()
-    #     if not data_folder or not os.path.isdir(data_folder):
-    #         mb = QtWidgets.QMessageBox
-    #         mb.warning(self, _('Export'), _('Please enter a valid data folder'))
-    #         return
-
-    #     export_folder = os.path.normpath(self.export_folder.text())
-    #     if not export_folder or not os.path.isdir(export_folder):
-    #         mb = QtWidgets.QMessageBox
-    #         mb.warning(self, _('Export'), _('Please enter a valid export folder'))
-    #         return
-
-    #     selected_labels = []
-    #     for i, checkbox in enumerate(self.label_checkboxes):
-    #         if checkbox.isChecked():
-    #             selected_labels.append(checkbox.text())
-    #     num_selected_labels = len(selected_labels)
-    #     limit = Export.config('limits')['max_num_labels']
-    #     if num_selected_labels > limit:
-    #         mb = QtWidgets.QMessageBox
-    #         mb.warning(self, _('Export'), _('Please select a maximum of {} labels').format(limit))
-    #         return
-    #     elif num_selected_labels <= 0:
-    #         mb = QtWidgets.QMessageBox
-    #         mb.warning(self, _('Export'), _('Please select at least 1 label'))
-    #         return
-
-    #     validation_ratio = int(self.validation.value()) / 100.0
-    #     dataset_name = self.export_name.text()
-    #     dataset_name = re.sub(r'[^a-zA-Z0-9 _-]+', '', dataset_name)
-
-    #     if not dataset_name:
-    #         mb = QtWidgets.QMessageBox
-    #         mb.warning(self, _('Export'), _('Please enter a valid dataset name'))
-    #         return
-            
-    #     export_dataset_folder = os.path.normpath(os.path.join(export_folder, dataset_name))
-    #     if not os.path.isdir(export_dataset_folder):
-    #         os.makedirs(export_dataset_folder)
-    #     elif len(os.listdir(export_dataset_folder)) > 0:
-    #         mb = QtWidgets.QMessageBox
-    #         msg = _('The selected output directory "{}" is not empty. All containing files will be deleted. Are you sure to continue?').format(export_dataset_folder)
-    #         clicked_btn = mb.warning(self, _('Export'), msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-    #         if clicked_btn != QtWidgets.QMessageBox.Yes:
-    #             return
-    #         else:
-    #             deltree(export_dataset_folder)
-    #             if not os.path.exists(export_dataset_folder):
-    #                 os.makedirs(export_dataset_folder)
-
-    #     if not os.path.isdir(export_dataset_folder):
-    #         mb = QtWidgets.QMessageBox
-    #         mb.warning(self, _('Export'), _('The selected output directory "{}" could not be created').format(export_dataset_folder))
-    #         return
-
-    #     self.progress = QtWidgets.QProgressDialog(_('Initializing ...'), _('Cancel'), 0, 100, self)
-    #     self.set_default_window_flags(self.progress)
-    #     self.progress.setWindowModality(Qt.ApplicationModal)
-    #     self.progress.setMaximum(100)
-    #     self.progress.setValue(0)
-    #     self.progress.show()
-
-    #     # Intermediate Format
-    #     intermediate = IntermediateFormat()
-    #     intermediate.setIncludedLabels(selected_labels)
-    #     intermediate.setValidationRatio(validation_ratio)
-    #     intermediate.addFromLabelFiles(data_folder, shuffle=False)
-
-    #     self.progress.setMaximum(intermediate.getNumberOfSamples() + 5)
-    #     self.progress.setLabelText(_('Loading data ...'))
-    #     self.progress.setValue(0)
-
-    #     val = self.formats.currentText()
-    #     formats = Export.config('formats')
-    #     inv_formats = Export.invertDict(formats)
-    #     if val not in inv_formats:
-    #         logger.error('Export format {} could not be found'.format(val))
-    #         return
-    #     else:
-    #         format_name = inv_formats[val]
-
-    #     args = Map({
-    #         'validation_ratio': validation_ratio,
-    #     })
-
-    #     dataset_format = Export.config('objects')[format_name]()
-    #     dataset_format.setIntermediateFormat(intermediate)
-    #     dataset_format.setInputFolderOrFile(data_folder)
-    #     dataset_format.setOutputFolder(export_dataset_folder)
-    #     dataset_format.setArgs(args)
-
-    #     worker_idx, worker = Application.createWorker()
-    #     self.worker_idx = worker_idx
-    #     self.worker_object = ProgressObject(worker, dataset_format.export, self.error_export_progress, dataset_format.abort, 
-    #         self.update_export_progress, self.finish_export_progress)
-    #     dataset_format.setThread(self.worker_object)
-
-    #     self.progress.canceled.disconnect()
-    #     self.progress.canceled.connect(self.abort_export_progress)
-    #     worker.addObject(self.worker_object)
-    #     worker.start()
-
     def get_label_files_from_data_folder(self, data_folder, selected_labels = [], get_all_labels = False):
         label_files = []
         for root, dirs, files in os.walk(data_folder):
@@ -321,308 +218,136 @@ class ExportWindow(QtWidgets.QDialog):
             export_folder = os.path.normpath(export_folder)
             self.export_folder.setText(export_folder)
 
-    def set_default_window_flags(self, obj):
-        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
-
-    # def update_export_progress(self, msg=None, value=None):
-    #     if self.progress.wasCanceled():
-    #         return
-    #     if msg:
-    #         self.progress.setLabelText(msg)
-    #     if value is not None:
-    #         self.progress.setValue(value)
-    #     if value == -1:
-    #         val = self.progress.value() + 1
-    #         self.progress.setValue(val)
-
-    # def abort_export_progress(self):
-    #     self.progress.setLabelText(_('Cancelling ...'))
-    #     self.progress.setMaximum(0)
-    #     self.worker_object.abort()
-    #     worker = Application.getWorker(self.worker_idx)
-    #     worker.wait()
-    #     self.progress.cancel()
-    #     Application.destroyWorker(self.worker_idx)
-
-    # def finish_export_progress(self):
-    #     mb = QtWidgets.QMessageBox()
-    #     mb.information(self, _('Export'), _('Dataset has been exported successfully'))
-    #     self.progress.close()
-    #     self.close()
-
-    # def error_export_progress(self, e):
-    #     self.progress.cancel()
-    #     mb = QtWidgets.QMessageBox()
-    #     mb.warning(self, _('Export'), _('An error occured during export of dataset'))
-
     def export_btn_clicked(self):
-        # Data
-        data = {
-            'data_folder': os.path.normpath(self.data_folder.text()),
-            'export_folder': os.path.normpath(self.export_folder.text()),
-            'selected_labels': [x.text() for x in self.label_checkboxes if x.isChecked()],
-            'validation_ratio': int(self.validation.value()) / 100.0,
-            'dataset_name': re.sub(r'[^a-zA-Z0-9 _-]+', '', self.export_name.text()),
-            'max_num_labels': Export.config('limits')['max_num_labels'],
-            'selected_format': self.formats.currentText(),
-        }
-        data['export_dataset_folder'] = os.path.normpath(os.path.join(data['export_folder'], data['dataset_name']))
+        try:
+            # Data
+            data = {
+                'data_folder': os.path.normpath(self.data_folder.text()),
+                'export_folder': os.path.normpath(self.export_folder.text()),
+                'selected_labels': [x.text() for x in self.label_checkboxes if x.isChecked()],
+                'validation_ratio': int(self.validation.value()) / 100.0,
+                'dataset_name': re.sub(r'[^a-zA-Z0-9 _-]+', '', self.export_name.text()),
+                'max_num_labels': Export.config('limits')['max_num_labels'],
+                'selected_format': self.formats.currentText(),
+            }
+            data['export_dataset_folder'] = os.path.normpath(os.path.join(data['export_folder'], data['dataset_name']))
 
-        self.progress = QtWidgets.QProgressDialog(_('Initializing ...'), _('Cancel'), 0, 100, self)
-        self.set_default_window_flags(self.progress)
-        self.progress.setWindowModality(Qt.ApplicationModal)
-        self.progress.show()
+            # Preparation
+            executor = ExportExecutor(data)
+            self.run_thread(executor, self.finish_export)
+        except Exception as e:
+            logger.error(e)
 
-        # Thread
-        self.worker = ExportWorker(data)
-        self.thread = QThread()
-        self.worker.moveToThread(self.thread)
-        #self.worker.finished.connect(self.thread.quit)
-        self.worker.terminate.connect(self.terminate)
-        self.worker.progress.connect(self.update_progress)
-        self.worker.message.connect(self.show_message)
-        self.worker.confirm.connect(self.show_confirm)
-        self.thread.started.connect(self.worker.prepare_export) # function to start with
-        #self.thread.finished.connect(self.finished)
+    def finish_export(self):
+        try:
+            mb = QtWidgets.QMessageBox()
+            mb.information(self, _('Export'), _('Dataset has been exported successfully'))
+            self.close()
+        except Exception as e:
+            logger.error(e)
 
-        self.thread.finished.connect(self.finish_thread)
 
-        #self.progress.canceled.disconnect()
-        self.progress.canceled.connect(self.abort_progress)
-        self.thread.start()
-
-    def terminate(self):
-        self.thread.quit()
-
-    def finish_thread(self):
-        logger.debug("foo")
-
-    def update_progress(self, msg=None, value=None, maximum=None):
-        if self.progress.wasCanceled():
-            return
-        if msg:
-            self.progress.setLabelText(msg)
-        if value is not None:
-            self.progress.setValue(value)
-        if value == -1:
-            val = self.progress.value() + 1
-            self.progress.setValue(val)
-        if maximum is not None:
-            self.progress.setMaximum(maximum)
-            
-    def abort_progress(self):
-        self.progress.setLabelText(_('Cancelling ...'))
-        self.progress.setMaximum(0)
-        self.worker.cancel()
-        self.thread.wait()
-        self.progress.cancel()
-
-    def show_message(self, title, msg, kind=None):
-        mb = QtWidgets.QMessageBox
-        if kind == MessageType.Warning:
-            mb.warning(self, title, msg)
-        elif kind == MessageType.Error:
-            mb.critical(self, title, msg)
-        elif kind == MessageType.Question:
-            mb.question(self, title, msg)
-        else:
-            mb.information(self, title, msg)
-
-    def show_confirm(self, title, msg, kind=None):
-        clicked_btn = False
-        mb = QtWidgets.QMessageBox
-        if kind == MessageType.Warning:
-            clicked_btn = mb.warning(self, title, msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        elif kind == MessageType.Error:
-            clicked_btn = mb.critical(self, title, msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        elif kind == MessageType.Question:
-            clicked_btn = mb.question(self, title, msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        else:
-            clicked_btn = mb.information(self, title, msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        result = clicked_btn == QtWidgets.QMessageBox.Yes
-        self.worker.confirm_result(result)
-
-    def finished(self):
-        #self.progress.close()
-        #self.close()
-        pass
- 
-
-class ExportWorker(QObject):
-
-    finished = Signal()
-    terminate = Signal()
-    progress = Signal(str, int, int)
-    message = Signal(str, str, int)
-    confirm = Signal(str, str, int)
+class ExportExecutor(WorkerExecutor):
 
     def __init__(self, data):
         super().__init__()
         self.data = data
-        self.workers = []
-        self.isAborted = False
 
-    def cancel(self):
-        for w in self.workers:
-            w.abort()
-
-    # Sub-Worker callbacks
-
-    @Slot()
-    def on_finish(self):
-        self.message.emit(_('Export'), _('Dataset has been exported successfully'), MessageType.Info)
-        self.finished.emit()
-
-    @Slot()
-    def on_error(self):
-        self.message.emit(_('Export'), _('An error occured during export of dataset'), MessageType.Error)
-        self.finished.emit()
+    def run(self):
+        logger.debug('Prepare export')
+        ptvsd.debug_this_thread()
         
-    @Slot(str, int)
-    def on_update(self, msg, value=None):
-        self.progress.emit(msg, value, None)
+        data_folder = self.data['data_folder']
+        if not data_folder or not os.path.isdir(data_folder):
+            self.thread.message.emit(_('Export'), _('Please enter a valid data folder'), MessageType.Warning)
+            self.abort()
+            return
 
-    def update(self, msg, value=None):
-        self.progress.emit(msg, value, None)
+        export_folder = self.data['export_folder']
+        if not export_folder or not os.path.isdir(export_folder):
+            self.thread.message.emit(_('Export'), _('Please enter a valid export folder'), MessageType.Warning)
+            self.abort()
+            return
 
-    # Confirm
+        selected_labels = self.data['selected_labels']
+        num_selected_labels = len(selected_labels)
+        limit = self.data['max_num_labels']
+        if num_selected_labels > limit:
+            self.thread.message.emit(_('Export'), _('Please select a maximum of {} labels').format(limit), MessageType.Warning)
+            self.abort()
+            return
+        elif num_selected_labels <= 0:
+            self.thread.message.emit(_('Export'), _('Please select at least 1 label'), MessageType.Warning)
+            self.abort()
+            return
 
-    def do_confirm(self, title, msg, kind):
-        self.wait_for_confirm = True
-        self.confirm_value = None
-        self.confirm.emit(title, msg, kind)
-        while self.wait_for_confirm:
-            time.sleep(0.5)
-        return self.confirm_value
+        dataset_name = self.data['dataset_name']
+        if not dataset_name:
+            self.thread.message.emit(_('Export'), _('Please enter a valid dataset name'), MessageType.Warning)
+            self.abort()
+            return
 
-    @Slot(bool)
-    def confirm_result(self, result):
-        self.wait_for_confirm = False
-        self.confirm_value = result
-
-    # Error
-
-    def do_error(self, ex):
-        logger.error(traceback.format_exc())
-        self.message.emit(_('Export'), str(ex), MessageType.Error)
-        self.finished.emit()
-
-    # Preparing
-
-    @Slot()
-    def prepare_export(self):
-        try:
-            logger.debug("Prepare export")
-            ptvsd.debug_this_thread()
-            
-            data_folder = self.data['data_folder']
-            if not data_folder or not os.path.isdir(data_folder):
-                self.message.emit(_('Export'), _('Please enter a valid data folder'), MessageType.Warning)
-                self.finished.emit()
-                return
-
-            export_folder = self.data['export_folder']
-            if not export_folder or not os.path.isdir(export_folder):
-                self.message.emit(_('Export'), _('Please enter a valid export folder'), MessageType.Warning)
-                self.finished.emit()
-                return
-
-            selected_labels = self.data['selected_labels']
-            num_selected_labels = len(selected_labels)
-            limit = self.data['max_num_labels']
-            if num_selected_labels > limit:
-                self.message.emit(_('Export'), _('Please select a maximum of {} labels').format(limit), MessageType.Warning)
-                self.finished.emit()
-                return
-            elif num_selected_labels <= 0:
-                self.message.emit(_('Export'), _('Please select at least 1 label'), MessageType.Warning)
-                self.finished.emit()
-                return
-
-            dataset_name = self.data['dataset_name']
-            if not dataset_name:
-                self.message.emit(_('Export'), _('Please enter a valid dataset name'), MessageType.Warning)
-                self.finished.emit()
-                return
-
-            export_dataset_folder = self.data['export_dataset_folder']
-            if not os.path.isdir(export_dataset_folder):
-                os.makedirs(export_dataset_folder)
-            elif len(os.listdir(export_dataset_folder)) > 0:
-                msg = _('The selected output directory "{}" is not empty. All containing files will be deleted. Are you sure to continue?').format(export_dataset_folder)
-                if self.do_confirm(_('Export'), msg, MessageType.Warning):
-                    deltree(export_dataset_folder)
-                    time.sleep(0.5) # wait for deletion to be finished
-                    if not os.path.exists(export_dataset_folder):
-                        os.makedirs(export_dataset_folder)
-                else:
-                    self.finished.emit()
-                    return
-
-            if not os.path.isdir(export_dataset_folder):
-                self.message.emit(_('Export'), _('The selected output directory "{}" could not be created').format(export_dataset_folder), MessageType.Warning)
-                self.finished.emit()
-                return
-
-            selected_format = self.data['selected_format']
-            all_formats = Export.config('formats')
-            inv_formats = Export.invertDict(all_formats)
-            if selected_format not in inv_formats:
-                logger.error('Export format {} could not be found'.format(selected_format))
-                self.finished.emit()
-                return
+        export_dataset_folder = self.data['export_dataset_folder']
+        if not os.path.isdir(export_dataset_folder):
+            os.makedirs(export_dataset_folder)
+        elif len(os.listdir(export_dataset_folder)) > 0:
+            msg = _('The selected output directory "{}" is not empty. All containing files will be deleted. Are you sure to continue?').format(export_dataset_folder)
+            if self.doConfirm(_('Export'), msg, MessageType.Warning):
+                deltree(export_dataset_folder)
+                time.sleep(0.5) # wait for deletion to be finished
+                if not os.path.exists(export_dataset_folder):
+                    os.makedirs(export_dataset_folder)
             else:
-                self.data['format_name'] = inv_formats[selected_format]
-
-            self.start_export()
-
-        except Exception as e:
-            logger.error(traceback.format_exc())
-            self.do_error(e)
-
-    # Export
-
-    def start_export(self):
-        try:
-            logger.debug("Start export")
-
-            selected_labels = self.data['selected_labels']
-            validation_ratio = self.data['validation_ratio']
-            data_folder = self.data['data_folder']
-            export_dataset_folder = self.data['export_dataset_folder']
-            format_name = self.data['format_name']
-
-            intermediate = IntermediateFormat()
-            self.workers.append(intermediate)
-            intermediate.setIncludedLabels(selected_labels)
-            intermediate.setValidationRatio(validation_ratio)
-            intermediate.addFromLabelFiles(data_folder, shuffle=False)
-
-            self.progress.emit(_('Loading data ...'), 0, intermediate.getNumberOfSamples() + 5)
-
-            args = Map({
-                'validation_ratio': validation_ratio,
-            })
-
-            dataset_format = Export.config('objects')[format_name](self)
-            self.workers.append(dataset_format)
-            dataset_format.setIntermediateFormat(intermediate)
-            dataset_format.setInputFolderOrFile(data_folder)
-            dataset_format.setOutputFolder(export_dataset_folder)
-            dataset_format.setArgs(args)
-
-            if self.isAborted:
+                self.abort()
                 return
 
-            dataset_format.export()
+        if not os.path.isdir(export_dataset_folder):
+            self.thread.message.emit(_('Export'), _('The selected output directory "{}" could not be created').format(export_dataset_folder), MessageType.Warning)
+            self.abort()
+            return
 
-            self.finished.emit()
+        selected_format = self.data['selected_format']
+        all_formats = Export.config('formats')
+        inv_formats = Export.invertDict(all_formats)
+        if selected_format not in inv_formats:
+            logger.error('Export format {} could not be found'.format(selected_format))
+            self.abort()
+            return
+        else:
+            self.data['format_name'] = inv_formats[selected_format]
 
-        except AbortWorkerException as e:
-            logger.debug('Worker thread aborted')
-            self.terminate.emit()
+        logger.debug('Start export')
 
-        except Exception as e:
-            logger.error(traceback.format_exc())
-            self.do_error(e)
-        
+        selected_labels = self.data['selected_labels']
+        validation_ratio = self.data['validation_ratio']
+        data_folder = self.data['data_folder']
+        export_dataset_folder = self.data['export_dataset_folder']
+        format_name = self.data['format_name']
+
+        self.checkAborted()
+
+        intermediate = IntermediateFormat()
+        intermediate.setAbortable(self.abortable)
+        intermediate.setThread(self.thread)
+        intermediate.setIncludedLabels(selected_labels)
+        intermediate.setValidationRatio(validation_ratio)
+        intermediate.addFromLabelFiles(data_folder, shuffle=False)
+
+        self.thread.update.emit(_('Loading data ...'), 0, intermediate.getNumberOfSamples() + 5)
+
+        args = Map({
+            'validation_ratio': validation_ratio,
+        })
+
+        dataset_format = Export.config('objects')[format_name](self)
+        dataset_format.setAbortable(self.abortable)
+        dataset_format.setThread(self.thread)
+        dataset_format.setIntermediateFormat(intermediate)
+        dataset_format.setInputFolderOrFile(data_folder)
+        dataset_format.setOutputFolder(export_dataset_folder)
+        dataset_format.setArgs(args)
+
+        self.checkAborted()
+
+        dataset_format.export()
+

@@ -7,8 +7,8 @@ class Application():
     def __init__(self):
         pass
 
-    def createWorker():
-        worker = Worker()
+    def createWorker(parent):
+        worker = Worker(parent)
         idx = str(len(Application.workerPool))
         Application.workerPool[idx] = worker
         return idx, worker

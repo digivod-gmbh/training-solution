@@ -14,7 +14,8 @@ import math
 from labelme.logger import logger
 from labelme.utils import Worker, ProgressObject, Application
 from labelme.utils.map import Map
-from labelme.config import Export, Training
+from labelme.config import Training
+from labelme.config.export import Export
 
 
 class TrainingWindow(QtWidgets.QDialog):

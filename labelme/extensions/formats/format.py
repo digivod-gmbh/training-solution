@@ -3,10 +3,10 @@ import os
 
 from labelme.logger import logger
 from labelme.utils.map import Map
-from labelme.extensions import ThreadExtension
+from labelme.extensions.thread import WorkerExecutor
 
 
-class DatasetFormat(ThreadExtension):
+class DatasetFormat(WorkerExecutor):
 
     def importFolder(self):
         raise NotImplementedError('Method importFolder() must be implemented in subclass')

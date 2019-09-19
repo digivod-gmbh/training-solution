@@ -7,10 +7,11 @@ from qtpy import QtWidgets
 
 from labelme.utils.map import Map
 from labelme.logger import logger
-from labelme.config import Export, Training
+from labelme.config import Training
 from labelme.extensions.networks import Network
 from labelme.utils import Worker, ProgressObject, Application
 from labelme.config import get_config
+from labelme.config.export import Export
 
 
 class InferenceWindow(QtWidgets.QDialog):

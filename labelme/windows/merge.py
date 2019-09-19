@@ -4,7 +4,7 @@ from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from labelme.utils.map import Map
 from labelme.logger import logger
-from labelme.config import Export
+from labelme.config.export import Export
 
 
 class MergeWindow(QtWidgets.QDialog):

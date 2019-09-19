@@ -6,6 +6,7 @@ from qtpy import QtWidgets
 import os
 
 from labelme.logger import logger
+from labelme.config.export import Export
 
 
 class SettingsWindow(QtWidgets.QDialog):

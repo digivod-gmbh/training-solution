@@ -5,9 +5,9 @@ import yaml
 
 from labelme.logger import logger
 
-from .export import Export
-from .training import Training
+#from .export.export import Export
 from .enums import *
+from .training import Training
 
 
 here = osp.dirname(osp.abspath(__file__))

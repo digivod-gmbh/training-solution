@@ -1,11 +1,10 @@
 import traceback
 
 from qtpy import QtCore
+from qtpy.QtCore import Qt
+
 from labelme.logger import logger
-
-
-class AbortWorkerException(Exception):
-    pass
+from labelme.extensions.thread import AbortWorkerException, Abortable
 
 
 class Worker(QtCore.QThread):
@@ -50,11 +49,13 @@ class ProgressObject(WorkerObject):
 
     handleError = QtCore.Signal(str)
     finished = QtCore.Signal()
-    update = QtCore.Signal(str, int)
+    update = QtCore.Signal(str, int, int)
     aborted = QtCore.Signal()
     data = QtCore.Signal(dict)
+    message = QtCore.Signal(str, str, int)
+    confirm = QtCore.Signal(str, str, int)
 
-    def __init__(self, worker, start_func, error_func, abort_func=None, update_func=None, finish_func=None, data_func=None):
+    def __init__(self, worker, start_func, error_func, abort_func=None, update_func=None, finish_func=None, data_func=None, message_func=None, confirm_func=None):
         super().__init__(worker)
 
         self.start_func = start_func
@@ -63,6 +64,8 @@ class ProgressObject(WorkerObject):
         self.update_func = update_func
         self.finish_func = finish_func
         self.data_func = data_func
+        self.message_func = message_func
+        self.confirm_func = confirm_func
 
         if self.update_func is not None:
             self.update.connect(self.update_func)
@@ -70,6 +73,10 @@ class ProgressObject(WorkerObject):
             self.finished.connect(self.finish_func)
         if self.data_func is not None:
             self.data.connect(self.data_func)
+        if self.message_func is not None:
+            self.message.connect(self.message_func)
+        if self.confirm_func is not None:
+            self.confirm.connect(self.confirm_func)
         self.handleError.connect(self.error_func)
         self.aborted.connect(worker.abort)
 

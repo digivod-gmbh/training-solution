@@ -10,7 +10,7 @@ from labelme.label_file import LabelFile
 from labelme.utils import Worker, ProgressObject, Application
 from labelme.utils.map import Map
 from labelme.extensions.formats import *
-from labelme.config import Export
+from labelme.config.export import Export
 
 
 class ImportWindow(QtWidgets.QDialog):

@@ -7,11 +7,11 @@ from gluoncv.data.transforms import image as timage
 from gluoncv.utils import viz
 
 from labelme.logger import logger
-from labelme.extensions import ThreadExtension
+from labelme.extensions.thread import WorkerExecutor
 from labelme.utils.map import Map
 
 
-class Network(ThreadExtension):
+class Network(WorkerExecutor):
 
     def __init__(self):
         super().__init__()

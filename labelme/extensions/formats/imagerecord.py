@@ -15,7 +15,7 @@ import gluoncv as gcv
 from labelme.label_file import LabelFile
 from labelme.logger import logger
 from labelme.utils.map import Map
-from labelme.config import Export
+from labelme.config.export import Export
 
 from .format import DatasetFormat
 from .intermediate import IntermediateFormat
@@ -110,7 +110,7 @@ class FormatImageRecord(DatasetFormat):
         else:
             logger.warning('No label file found at {}'.format(label_file))
 
-        self.thread.update(_('Loading image record file ...'), 10)
+        self.thread.update.emit(_('Loading image record file ...'), 10, -1)
         self.checkAborted()
 
         file_pos = 0
@@ -128,7 +128,7 @@ class FormatImageRecord(DatasetFormat):
                 
                 file_pos += len(item)
                 percentage = file_pos / file_size * 90
-                self.thread.update(_('Loading image record file ...'), 10 + percentage)
+                self.thread.update.emit(_('Loading image record file ...'), 10 + percentage, -1)
                 self.checkAborted()
 
                 header, image = mx.recordio.unpack_img(item)
@@ -161,7 +161,7 @@ class FormatImageRecord(DatasetFormat):
         if self.intermediate is None:
             raise Exception('Intermediate format must be initialized for export')
         
-        self.thread.update(_('Gathering samples ...'), -1)
+        self.thread.update.emit(_('Gathering samples ...'), -1, -1)
         self.checkAborted()
 
         labels = self.intermediate.getLabels()
@@ -176,7 +176,7 @@ class FormatImageRecord(DatasetFormat):
         data_folder = self.intermediate.getRoot()
 
         # train
-        self.thread.update(_('Creating training dataset ...'), -1)
+        self.thread.update.emit(_('Creating training dataset ...'), -1, -1)
         self.checkAborted()
         train_output_folder = os.path.join(output_folder, 'train')
         if not os.path.isdir(train_output_folder):
@@ -190,7 +190,7 @@ class FormatImageRecord(DatasetFormat):
         # validate
         validation_ratio = self.intermediate.getValidationRatio()
         if validation_ratio > 0.0:
-            self.thread.update(_('Creating validation dataset ...'), -1)
+            self.thread.update.emit(_('Creating validation dataset ...'), -1, -1)
             self.checkAborted()
             val_output_folder = os.path.join(output_folder, 'val')
             if not os.path.isdir(val_output_folder):
@@ -260,8 +260,9 @@ class FormatImageRecord(DatasetFormat):
                 logger.debug('time: {} count: {}'.format(cur_time - pre_time, cnt))
                 pre_time = cur_time
             cnt += 1
-            self.thread.update(_('Writing dataset ...'), -1)
+            self.thread.update.emit(_('Writing dataset ...'), -1, -1)
             self.checkAborted()
+        logger.debug('total time: {} total count: {}'.format(time.time() - pre_time, cnt))
 
     def readLstFile(self, path_in):
         """Reads the .lst file and generates corresponding iterator.

@@ -4,9 +4,10 @@ from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from labelme.utils.map import Map
 from labelme.logger import logger
-from labelme.config import Export, Training
+from labelme.config import Training
 from labelme.extensions.networks import Network
 from .inference import InferenceWindow
+from labelme.config.export import Export
 
 
 class ValidationWindow(QtWidgets.QDialog):

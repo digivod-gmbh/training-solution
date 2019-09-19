@@ -1,1 +1,1 @@
-from .thread import ThreadExtension
+from .thread import WorkerExecutor

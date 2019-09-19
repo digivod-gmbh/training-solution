@@ -4,7 +4,7 @@ import base64
 
 from labelme.logger import logger
 from labelme.label_file import LabelFile
-from labelme.extensions import ThreadExtension
+from labelme.extensions.thread import WorkerExecutor
 
 
 class IntermediateSample():
@@ -18,7 +18,7 @@ class IntermediateSample():
         # for bounding box: [[xmin, ymin], [xmax, ymax]]
         self.points = points
 
-class IntermediateFormat(ThreadExtension):
+class IntermediateFormat(WorkerExecutor):
     
     def __init__(self):
         super().__init__()
