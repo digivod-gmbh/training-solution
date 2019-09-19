@@ -7,6 +7,7 @@ import yaml
 
 from qtpy import QtWidgets
 from qtpy import QtGui
+from qtpy import QtCore
 
 from labelme import __appname__
 from labelme import __version__
@@ -184,7 +185,11 @@ def main():
         else:
             output_dir = output
 
+    # Enable high dpi for 4k monitors
+    os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
+
     app = QtWidgets.QApplication(sys.argv)
+    app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon('digivod'))
     win = MainWindow(
