@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2019-05-24 14:56+0200\n"
-"PO-Revision-Date: 2019-05-24 15:47+0200\n"
+"PO-Revision-Date: 2019-09-19 11:38+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -437,7 +437,7 @@ msgstr ""
 
 #: ../labelme\app.py:1519 ../labelme\app.py:1600
 msgid "Attention"
-msgstr ""
+msgstr "Achtung"
 
 #: ../labelme\app.py:1526
 msgid "Label file is removed: {}"
@@ -477,7 +477,7 @@ msgstr "%s - Ordner öffnen"
 
 #: ../labelme\app.py:1672
 msgid "Merging is not implemented yet"
-msgstr ""
+msgstr "Zusammenführen ist noch nicht verfügbar"
 
 #: ../labelme\config\export.py:19
 msgid "ImageRecord"
@@ -493,7 +493,7 @@ msgstr ""
 
 #: ../labelme\extensions\formats\imagerecord.py:55
 msgid "Gathering samples ..."
-msgstr ""
+msgstr "Proben sammeln ..."
 
 #: ../labelme\extensions\formats\imagerecord.py:76
 msgid "Creating training dataset ..."
@@ -515,20 +515,20 @@ msgstr "Training starten ..."
 #: ../labelme\extensions\networks\ssd.py:94
 #: ../labelme\extensions\networks\yolov3.py:64
 msgid "Finished training"
-msgstr ""
+msgstr "Training beendet"
 
 #: ../labelme\extensions\networks\yolov3.py:113
 msgid "Loading model ..."
-msgstr ""
+msgstr "Modell laden ..."
 
 #: ../labelme\extensions\networks\yolov3.py:127
 msgid "Loading weights ..."
-msgstr ""
+msgstr "Gewichte laden ..."
 
 #: ../labelme\extensions\networks\yolov3.py:143
 #: ../labelme\windows\export.py:267
 msgid "Loading dataset ..."
-msgstr ""
+msgstr "Datensatz laden ..."
 
 #: ../labelme\extensions\networks\yolov3.py:277
 msgid "Start training on epoch {} ..."
@@ -592,15 +592,15 @@ msgstr "Abbrechen"
 
 #: ../labelme\windows\export.py:131
 msgid "Please enter a valid data folder"
-msgstr ""
+msgstr "Bitte geben Sie einen gültigen Datenordner ein"
 
 #: ../labelme\windows\export.py:137 ../labelme\windows\merge.py:122
 msgid "Please enter a valid export folder"
-msgstr ""
+msgstr "Bitte geben Sie einen gültigen Exportordner ein"
 
 #: ../labelme\windows\export.py:148
 msgid "Please select a maximum of {} labels"
-msgstr ""
+msgstr "Bitte wählen Sie maximal {} Labels"
 
 #: ../labelme\windows\export.py:152
 msgid "Please select at least 1 label"
@@ -615,10 +615,12 @@ msgid ""
 "The selected output directory \"{}\" is not empty. All containing files will "
 "be deleted. Are you sure to continue?"
 msgstr ""
+"Der Ordner \"{}\" ist nicht leer. Alle enthaltenen Elemente werden gelöscht. "
+"Wollen Sie fortfahren?"
 
 #: ../labelme\windows\export.py:180 ../labelme\windows\training.py:171
 msgid "The selected output directory \"{}\" could not be created"
-msgstr ""
+msgstr "Der Ordner \"{}\" konnte nicht erstellt werden"
 
 #: ../labelme\windows\export.py:183 ../labelme\windows\training.py:176
 msgid "Initializing ..."
@@ -630,7 +632,7 @@ msgstr "Daten laden ..."
 
 #: ../labelme\windows\export.py:259
 msgid "Select data folder"
-msgstr ""
+msgstr "Datenordner auswählen"
 
 #: ../labelme\windows\export.py:311 ../labelme\windows\training.py:268
 msgid "Select output folder"
@@ -646,7 +648,7 @@ msgstr "Datensatz wurde erfolgreich exportiert"
 
 #: ../labelme\windows\export.py:348
 msgid "An error occured during export of dataset"
-msgstr ""
+msgstr "Während des Exports ist ein Fehler aufgetreten"
 
 #: ../labelme\windows\import_.py:13
 msgid "Import dataset"
@@ -659,7 +661,7 @@ msgstr "Datensätze zusammenführen"
 
 #: ../labelme\windows\merge.py:24
 msgid "# Samples"
-msgstr ""
+msgstr "# Proben"
 
 #: ../labelme\windows\merge.py:24
 msgid "Dataset"
@@ -671,7 +673,7 @@ msgstr "Ordner"
 
 #: ../labelme\windows\merge.py:33
 msgid "Add dataset file"
-msgstr ""
+msgstr "Datensatz hinzufügen"
 
 #: ../labelme\windows\merge.py:37
 msgid "Datasets"
@@ -703,7 +705,7 @@ msgstr ""
 
 #: ../labelme\windows\settings.py:35
 msgid "Project folder"
-msgstr ""
+msgstr "Projektordner"
 
 #: ../labelme\windows\settings.py:43
 msgid "Save"
@@ -751,15 +753,15 @@ msgstr "Training starten"
 
 #: ../labelme\windows\training.py:136
 msgid "Please select a valid dataset file"
-msgstr ""
+msgstr "Bitte wählen Sie einen gültigen Datensatz"
 
 #: ../labelme\windows\training.py:143 ../labelme\windows\training.py:260
 msgid "Could not detect format of selected dataset"
-msgstr ""
+msgstr "Das Format des ausgewählten Datensatzes konnte nicht ermittelt werden"
 
 #: ../labelme\windows\training.py:152
 msgid "Please enter a valid training name"
-msgstr ""
+msgstr "Bitte wählen Sie einen gültigen Trainingnamen"
 
 #: ../labelme\windows\training.py:253
 msgid "Select dataset folder"
@@ -775,7 +777,7 @@ msgstr "Während des Trainings ist ein Fehler aufgetreten"
 
 #: ../labelme\windows\validation.py:29
 msgid "Input image"
-msgstr ""
+msgstr "Eingabebild"
 
 #: ../labelme\windows\validation.py:49
 msgid "Validate"
@@ -788,22 +790,22 @@ msgstr "Bilddateien"
 #: ../labelme\windows\validation.py:62
 #| msgid "Select output folder"
 msgid "Select input image"
-msgstr ""
+msgstr "Eingabebild auswählen"
 
 #: ../labelme\windows\validation.py:72
 #| msgid "Select dataset file"
 msgid "Select training file"
-msgstr ""
+msgstr "Training auswählen"
 
 #: ../labelme\windows\validation.py:83
 #| msgid "Please select a valid output folder"
 msgid "Please select a valid input image"
-msgstr ""
+msgstr "Bitte wählen Sie ein gültiges Eingabebild"
 
 #: ../labelme\windows\validation.py:89
 #| msgid "Please select a valid training dataset file"
 msgid "Please select a valid training folder"
-msgstr ""
+msgstr "Bitte wählen Sie einen gültigen Trainingordner"
 
 #~ msgid "Delete"
 #~ msgstr "Löschen"
