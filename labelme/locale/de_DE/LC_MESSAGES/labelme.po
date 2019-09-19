@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2019-05-24 14:56+0200\n"
-"PO-Revision-Date: 2019-09-19 11:38+0200\n"
+"PO-Revision-Date: 2019-09-19 13:42+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -387,23 +387,23 @@ msgstr ""
 
 #: ../labelme\app.py:497
 msgid "&File"
-msgstr "Datei"
+msgstr "&Datei"
 
 #: ../labelme\app.py:498
 msgid "&Edit"
-msgstr "Bearbeiten"
+msgstr "&Bearbeiten"
 
 #: ../labelme\app.py:499
 msgid "&View"
-msgstr "Ansicht"
+msgstr "&Ansicht"
 
 #: ../labelme\app.py:500
 msgid "&Project"
-msgstr ""
+msgstr "&Projekt"
 
 #: ../labelme\app.py:501
 msgid "&Help"
-msgstr "Hilfe"
+msgstr "&Hilfe"
 
 #: ../labelme\app.py:502
 msgid "Open &Recent"
