@@ -62,6 +62,7 @@ class SettingsWindow(QtWidgets.QDialog):
         project_directories = [
             self.parent._config['project_dataset_folder'],
             self.parent._config['project_training_folder'],
+            self.parent._config['project_import_folder'],
         ]
         for directory in project_directories:
             abs_directory = os.path.join(project_folder, directory)

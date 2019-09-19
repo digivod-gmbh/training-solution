@@ -88,21 +88,23 @@ class ImportWindow(WorkerDialog):
         format_name = Export.config('formats')[self.selected_format]
         if extension != False:
             ext_filter = '{} {}({})'.format(format_name, _('files'), extension)
-        last_dir = self.parent.settings.value('import/last_data_dir', '')
-        logger.debug('Restored value "{}" for setting import/last_data_dir'.format(last_dir))
+        project_folder = self.parent.settings.value('settings/project/folder', '')
+        logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
+        dataset_folder = os.path.join(project_folder, self.parent._config['project_dataset_folder'])
         if ext_filter:
-            import_file_or_dir, selected_filter = QtWidgets.QFileDialog.getOpenFileName(self, _('Select dataset file'), last_dir, ext_filter)
+            import_file_or_dir, selected_filter = QtWidgets.QFileDialog.getOpenFileName(self, _('Select dataset file'), dataset_folder, ext_filter)
         else:
-            import_file_or_dir = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select dataset folder'), last_dir)
+            import_file_or_dir = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select dataset folder'), dataset_folder)
         if import_file_or_dir:
             import_file_or_dir = os.path.normpath(import_file_or_dir)
             self.parent.settings.setValue('import/last_data_dir', os.path.dirname(import_file_or_dir))
             self.data_folder.setText(import_file_or_dir)
 
     def output_browse_btn_clicked(self):
-        last_dir = self.parent.settings.value('import/last_output_dir', '')
-        logger.debug('Restored value "{}" for setting import/last_output_dir'.format(last_dir))
-        output_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select output folder'), last_dir)
+        project_folder = self.parent.settings.value('settings/project/folder', '')
+        logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
+        import_folder = os.path.join(project_folder, self.parent._config['project_import_folder'])
+        output_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select output folder'), import_folder)
         if output_folder:
             output_folder = os.path.normpath(output_folder)
             self.parent.settings.setValue('import/last_output_dir', output_folder)

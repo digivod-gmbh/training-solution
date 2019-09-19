@@ -10,6 +10,7 @@ window_width: 1350
 window_height: 850
 project_dataset_folder: datasets
 project_training_folder: trainings
+project_import_folder: imports
 image_max_size: 800
 
 flags: null
