@@ -66,13 +66,12 @@ class WorkerDialog(QtWidgets.QDialog):
     def on_finish(self):
         logger.debug('on_finish')
         self.reset_thread()
+        self.progress.cancel()
         if not self.worker_executor.isAborted():
             if self.finish_func is not None:
                 self.finish_func()
             else:
                 self.close()
-        else:
-            self.progress.cancel()
 
     def on_message(self, title, message, kind=None):
         mb = QtWidgets.QMessageBox
