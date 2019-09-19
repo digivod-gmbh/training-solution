@@ -86,11 +86,11 @@ class NetworkSSD(Network):
 
     def training(self):
         self.prepare()
-        self.thread.update.emit(_('Start training ...'), 4)
+        self.thread.update.emit(_('Start training ...'), 4, -1)
         self.train()
         training_name = '{}_{}'.format(self.args.training_name, self.net_name)
         self.net.export(os.path.join(self.args.output_dir, self.architecture_filename))
-        self.thread.update.emit(_('Finished training'), self.args.epochs + 4)
+        self.thread.update.emit(_('Finished training'), self.args.epochs + 4, -1)
 
     def inference(self, input_image_file, classes_list, architecture_file, weights_file, args):
         logger.debug('Try loading network from files "{}" and "{}"'.format(architecture_file, weights_file))

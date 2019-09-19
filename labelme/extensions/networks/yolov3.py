@@ -47,7 +47,7 @@ class NetworkYoloV3(Network):
 
     def training(self):
         self.prepare()
-        self.thread.update.emit(_('Start training ...'), -1)
+        self.thread.update.emit(_('Start training ...'), -1, -1)
         self.train()
 
         # export
@@ -61,7 +61,7 @@ class NetworkYoloV3(Network):
         #self.args.dataset_folder
         self.saveConfig(config_file, NetworkYoloV3._network, files, '', self.labels, self.args)
 
-        self.thread.update.emit(_('Finished training'), -1)
+        self.thread.update.emit(_('Finished training'), -1, -1)
 
     def setArgs(self, args):
         default_args = {
@@ -110,7 +110,7 @@ class NetworkYoloV3(Network):
         if not self.args.validate_dataset:
             self.args.val_interval = sys.maxsize
 
-        self.thread.update.emit(_('Loading model ...'), -1)
+        self.thread.update.emit(_('Loading model ...'), -1, -1)
 
         self.ctx = self.getContext(self.args.gpus)
 
@@ -126,7 +126,7 @@ class NetworkYoloV3(Network):
 
         self.net = get_model(self.net_name, pretrained=False, ctx=self.ctx)
 
-        self.thread.update.emit(_('Loading weights ...'), -1)
+        self.thread.update.emit(_('Loading weights ...'), -1, -1)
 
         if self.args.resume.strip():
             self.net.load_parameters(self.args.resume.strip())
@@ -142,7 +142,7 @@ class NetworkYoloV3(Network):
                 self.net.initialize()
                 async_net.initialize()
     
-        self.thread.update.emit(_('Loading dataset ...'), -1)
+        self.thread.update.emit(_('Loading dataset ...'), -1, -1)
 
         # training data
         train_dataset, val_dataset, self.eval_metric = self.get_dataset()
@@ -284,7 +284,7 @@ class NetworkYoloV3(Network):
 
         for epoch in range(self.args.start_epoch, self.args.epochs):
 
-            self.thread.update.emit(_('Start training on epoch {} ...').format(epoch + 1), None)
+            self.thread.update.emit(_('Start training on epoch {} ...').format(epoch + 1), None, -1)
             self.checkAborted()
             epoch_count += 1
 
@@ -337,10 +337,10 @@ class NetworkYoloV3(Network):
                         epoch, i + 1, num_batches, trainer.learning_rate, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4))
 
                     self.thread.update.emit(_('Training ...\nEpoch {}, Batch {}/{}, Speed: {:.3f} samples/sec\n{}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}')
-                        .format(epoch + 1, i + 1, num_batches, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4), None)
+                        .format(epoch + 1, i + 1, num_batches, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4), None, -1)
 
                 
-                self.thread.update.emit(None, -1)
+                self.thread.update.emit(None, -1, -1)
                 self.checkAborted()
 
                 btic = time.time()

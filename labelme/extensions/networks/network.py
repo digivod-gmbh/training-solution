@@ -98,7 +98,7 @@ class Network(WorkerExecutor):
             img = timage.resize_short_within(img, 608, max_size=1024, mult_base=1)
 
             self.checkAborted()
-            self.thread.update.emit(None, -1)
+            self.thread.update.emit(None, -1, -1)
 
             def make_tensor(img):
                 np_array = np.expand_dims(np.transpose(img, (0,1,2)),axis=0).astype(np.float32)
@@ -114,7 +114,7 @@ class Network(WorkerExecutor):
                 'score': score.asnumpy().tolist(),
                 'bbox': bbox.asnumpy().tolist(),
             })
-            self.thread.update.emit(None, -1)
+            self.thread.update.emit(None, -1, -1)
 
             n_top = args.print_top_n
             classes = cid[0][:n_top].asnumpy().astype('int32').flatten().tolist()

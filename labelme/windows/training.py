@@ -12,17 +12,18 @@ import json
 import math
 
 from labelme.logger import logger
-from labelme.utils import Worker, ProgressObject, Application
+from labelme.utils import deltree, WorkerDialog
 from labelme.utils.map import Map
+from labelme.extensions.thread import WorkerExecutor
+from labelme.extensions.formats import *
+from labelme.config import MessageType
 from labelme.config import Training
 from labelme.config.export import Export
 
 
-class TrainingWindow(QtWidgets.QDialog):
+class TrainingWindow(WorkerDialog):
 
     def __init__(self, parent=None):
-        self.parent = parent
-
         super().__init__(parent)
         self.setWindowTitle(_('Training'))
         self.set_default_window_flags(self)
@@ -164,121 +165,6 @@ class TrainingWindow(QtWidgets.QDialog):
         else:
             logger.debug('Dataset format not found: {}'.format(value))
 
-    def training_btn_clicked(self):
-        train_dataset = self.train_dataset_folder.text()
-        if not train_dataset or not (os.path.isdir(train_dataset) or os.path.isfile(train_dataset)):
-            mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Training'), _('Please select a valid training dataset'))
-            return
-
-        val_dataset = self.val_dataset_folder.text()
-        if not val_dataset or not (os.path.isdir(val_dataset) or os.path.isfile(val_dataset)):
-            # Validation dataset is optional
-            val_dataset = False
-
-        dataset_format = self.selected_format
-
-        output_folder = os.path.normpath(self.output_folder.text())
-        training_name = self.training_name.text()
-        training_name = re.sub(r'[^a-zA-Z0-9 _-]+', '', training_name)
-
-        if not training_name:
-            mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Training'), _('Please enter a valid training name'))
-            return
-        
-        output_folder = os.path.join(output_folder, training_name)
-        if not os.path.isdir(output_folder):
-            os.makedirs(output_folder)
-        elif len(os.listdir(output_folder)) > 0:
-            mb = QtWidgets.QMessageBox
-            msg = _('The selected output directory "{}" is not empty. All containing files will be deleted. Are you sure to continue?').format(output_folder)
-            clicked_btn = mb.warning(self, _('Training'), msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-            if clicked_btn != QtWidgets.QMessageBox.Yes:
-                return
-            else:
-                import shutil
-                shutil.rmtree(output_folder)
-                time.sleep(1)
-                if not os.path.exists(output_folder):
-                    os.makedirs(output_folder)
-
-        if not os.path.isdir(output_folder):
-            mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Training'), _('The selected output directory "{}" could not be created').format(output_folder))
-            return
-
-        network = self.networks.currentText()
-
-        self.progress = QtWidgets.QProgressDialog(_('Initializing ...'), _('Cancel'), 0, 100, self)
-        self.set_default_window_flags(self.progress)
-        self.progress.setWindowModality(Qt.NonModal)
-        self.progress.show()
-
-        networks = Training.config('networks')
-        func_name = None
-        for key in networks:
-            if network in networks[key]:
-                func_name = key
-        
-        if func_name is None:
-            logger.error('Network {} could not be found'.format(network))
-            return
-
-        # Training settings
-        gpus = []
-        for i, gpu in enumerate(self.gpu_checkboxes):
-            if gpu.checkState() == Qt.Checked:
-                gpus.append(str(i))
-        gpus = ','.join(gpus)
-        epochs = int(self.args_epochs.value())
-        batch_size = int(self.args_batch_size.value())
-
-        # Dataset
-        train_dataset_obj = Export.config('objects')[dataset_format]()
-        train_dataset_obj.setInputFolderOrFile(train_dataset)
-        if val_dataset:
-            val_dataset_obj = Export.config('objects')[dataset_format]()
-            val_dataset_obj.setInputFolderOrFile(val_dataset)
-
-        labels = train_dataset_obj.getLabels()
-        num_train_samples = train_dataset_obj.getNumSamples()
-        num_batches = int(math.ceil(num_train_samples / batch_size))
-        
-        args = Map({
-            'train_dataset': train_dataset,
-            'validate_dataset': val_dataset,
-            'training_name': training_name,
-            'batch_size': batch_size,
-            'learning_rate': float(self.args_learning_rate.value()),
-            'gpus': gpus,
-            'epochs': epochs,
-        })
-
-        self.progress.setMaximum(epochs * num_batches + 5)
-        self.progress.setLabelText(_('Loading data ...'))
-        self.progress.setValue(0)
-
-        network = Training.config('objects')[func_name]()
-        network.setArgs(args)
-        network.setOutputFolder(output_folder)
-        network.setTrainDataset(train_dataset_obj)
-        network.setLabels(labels)
-
-        if val_dataset:
-            network.setValDataset(val_dataset_obj)
-
-        worker_idx, worker = Application.createWorker()
-        self.worker_idx = worker_idx
-        self.worker_object = ProgressObject(worker, network.training, self.error_training_progress, network.abort, 
-            self.update_training_progress, self.finish_training_progress)
-        network.setThread(self.worker_object)
-
-        self.progress.canceled.disconnect()
-        self.progress.canceled.connect(self.abort_training_progress)
-        worker.addObject(self.worker_object)
-        worker.start()
-
     def cancel_btn_clicked(self):
         self.close()
 
@@ -325,36 +211,209 @@ class TrainingWindow(QtWidgets.QDialog):
             output_folder = os.path.normpath(output_folder)
             self.output_folder.setText(output_folder)
 
-    def set_default_window_flags(self, obj):
-        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
+    # def set_default_window_flags(self, obj):
+    #     obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
 
-    def update_training_progress(self, msg=None, value=None):
-        if self.progress.wasCanceled():
-            return
-        if msg:
-            self.progress.setLabelText(msg)
-        if value is not None:
-            self.progress.setValue(value)
-        if value == -1:
-            val = self.progress.value() + 1
-            self.progress.setValue(val)
+    # def update_training_progress(self, msg=None, value=None):
+    #     if self.progress.wasCanceled():
+    #         return
+    #     if msg:
+    #         self.progress.setLabelText(msg)
+    #     if value is not None:
+    #         self.progress.setValue(value)
+    #     if value == -1:
+    #         val = self.progress.value() + 1
+    #         self.progress.setValue(val)
 
-    def abort_training_progress(self):
-        self.progress.setLabelText(_('Cancelling ...'))
-        self.progress.setMaximum(0)
-        self.worker_object.abort()
-        worker = Application.getWorker(self.worker_idx)
-        worker.wait()
-        self.progress.cancel()
-        Application.destroyWorker(self.worker_idx)
+    # def abort_training_progress(self):
+    #     self.progress.setLabelText(_('Cancelling ...'))
+    #     self.progress.setMaximum(0)
+    #     self.worker_object.abort()
+    #     worker = Application.getWorker(self.worker_idx)
+    #     worker.wait()
+    #     self.progress.cancel()
+    #     Application.destroyWorker(self.worker_idx)
 
-    def finish_training_progress(self):
+    # def finish_training_progress(self):
+    #     mb = QtWidgets.QMessageBox()
+    #     mb.information(self, _('Training'), _('Network has been trained successfully'))
+    #     self.progress.close()
+    #     self.close()
+
+    # def error_training_progress(self, e):
+    #     self.progress.cancel()
+    #     mb = QtWidgets.QMessageBox()
+    #     mb.warning(self, _('Training'), _('An error occured during training of network'))
+
+    def training_btn_clicked(self):
+        # Data
+        data = {
+            'train_dataset': self.train_dataset_folder.text(),
+            'val_dataset': self.val_dataset_folder.text(),
+            'output_folder': self.output_folder.text(),
+            'selected_format': self.selected_format,
+            'training_name': self.training_name.text(),
+            'network': self.networks.currentText(),
+            'gpu_checkboxes': self.gpu_checkboxes,
+            'args_epochs': self.args_epochs.value(),
+            'args_batch_size': self.args_batch_size.value(),
+            'args_learning_rate': self.args_learning_rate.value(),
+        }
+
+        # Execution
+        executor = TrainingExecutor(data)
+        self.run_thread(executor, self.finish_training)
+
+    def finish_training(self):
         mb = QtWidgets.QMessageBox()
         mb.information(self, _('Training'), _('Network has been trained successfully'))
-        self.progress.close()
         self.close()
 
-    def error_training_progress(self, e):
-        self.progress.cancel()
-        mb = QtWidgets.QMessageBox()
-        mb.warning(self, _('Training'), _('An error occured during training of network'))
+
+class TrainingExecutor(WorkerExecutor):
+
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+
+    def run(self):
+        logger.debug('Prepare training')
+
+        try:
+            import ptvsd
+            ptvsd.debug_this_thread()
+        except:
+            pass
+
+        train_dataset = self.data['train_dataset']
+        is_train_dataset_valid = True
+        if not train_dataset:
+            is_train_dataset_valid = False
+        train_dataset = os.path.normpath(train_dataset)
+        if not (os.path.isdir(train_dataset) or os.path.isfile(train_dataset)):
+            is_train_dataset_valid = False
+        if not is_train_dataset_valid:
+            self.thread.message.emit(_('Training'), _('Please select a valid training dataset'), MessageType.Warning)
+            self.abort()
+            return
+
+        val_dataset = self.data['val_dataset']
+        is_val_dataset_valid = True
+        if not val_dataset:
+            is_val_dataset_valid = False
+        val_dataset = os.path.normpath(val_dataset)
+        if not (os.path.isdir(val_dataset) or os.path.isfile(val_dataset)):
+            is_val_dataset_valid = False
+        if not is_val_dataset_valid:
+            # Validation dataset is optional
+            val_dataset = False
+
+        output_folder = os.path.normpath(self.data['output_folder'])
+        training_name = self.data['training_name']
+        training_name = re.sub(r'[^a-zA-Z0-9 _-]+', '', training_name)
+
+        if not training_name:
+            self.thread.message.emit(_('Training'), _('Please enter a valid training name'), MessageType.Warning)
+            self.abort()
+            return
+        
+        output_folder = os.path.join(output_folder, training_name)
+        if not os.path.isdir(output_folder):
+            os.makedirs(output_folder)
+        elif len(os.listdir(output_folder)) > 0:
+            msg = _('The selected output directory "{}" is not empty. All containing files will be deleted. Are you sure to continue?').format(output_folder)
+            if self.doConfirm(_('Training'), msg, MessageType.Warning):
+                deltree(output_folder)
+                time.sleep(0.5) # wait for deletion to be finished
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+            else:
+                self.abort()
+                return
+
+        if not os.path.isdir(output_folder):
+            self.thread.message.emit(_('Training'), _('The selected output directory "{}" could not be created').format(output_folder), MessageType.Warning)
+            self.abort()
+            return
+
+        network = self.data['network']
+
+        # self.progress = QtWidgets.QProgressDialog(_('Initializing ...'), _('Cancel'), 0, 100, self)
+        # self.set_default_window_flags(self.progress)
+        # self.progress.setWindowModality(Qt.NonModal)
+        # self.progress.show()
+
+        networks = Training.config('networks')
+        func_name = None
+        for key in networks:
+            if network in networks[key]:
+                func_name = key
+        
+        if func_name is None:
+            self.thread.message.emit(_('Training'), _('Network {} could not be found').format(network), MessageType.Error)
+            self.abort()
+            return
+
+        # Training settings
+        gpus = []
+        gpu_checkboxes = self.data['gpu_checkboxes']
+        for i, gpu in enumerate(gpu_checkboxes):
+            if gpu.checkState() == Qt.Checked:
+                gpus.append(str(i))
+        gpus = ','.join(gpus)
+        epochs = int(self.data['args_epochs'])
+        batch_size = int(self.data['args_batch_size'])
+
+        # Dataset
+        dataset_format = self.data['selected_format']
+        train_dataset_obj = Export.config('objects')[dataset_format]()
+        train_dataset_obj.setInputFolderOrFile(train_dataset)
+        if val_dataset:
+            val_dataset_obj = Export.config('objects')[dataset_format]()
+            val_dataset_obj.setInputFolderOrFile(val_dataset)
+
+        labels = train_dataset_obj.getLabels()
+        num_train_samples = train_dataset_obj.getNumSamples()
+        num_batches = int(math.ceil(num_train_samples / batch_size))
+        
+        args = Map({
+            'train_dataset': train_dataset,
+            'validate_dataset': val_dataset,
+            'training_name': training_name,
+            'batch_size': batch_size,
+            'learning_rate': float(self.data['args_learning_rate']),
+            'gpus': gpus,
+            'epochs': epochs,
+        })
+
+        self.thread.update.emit(_('Loading data ...'), 0, epochs * num_batches + 5)
+
+        # self.progress.setMaximum(epochs * num_batches + 5)
+        # self.progress.setLabelText(_('Loading data ...'))
+        # self.progress.setValue(0)
+
+        network = Training.config('objects')[func_name]()
+        network.setAbortable(self.abortable)
+        network.setThread(self.thread)
+        network.setArgs(args)
+        network.setOutputFolder(output_folder)
+        network.setTrainDataset(train_dataset_obj)
+        network.setLabels(labels)
+
+        if val_dataset:
+            network.setValDataset(val_dataset_obj)
+
+        self.checkAborted()
+
+        network.training()
+
+        # worker_idx, worker = Application.createWorker()
+        # self.worker_idx = worker_idx
+        # self.worker_object = ProgressObject(worker, network.training, self.error_training_progress, network.abort, 
+        #     self.update_training_progress, self.finish_training_progress)
+        # network.setThread(self.worker_object)
+
+        # self.progress.canceled.disconnect()
+        # self.progress.canceled.connect(self.abort_training_progress)
+        # worker.addObject(self.worker_object)
+        # worker.start()
