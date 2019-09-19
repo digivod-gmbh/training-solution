@@ -39,6 +39,7 @@ class WorkerDialog(QtWidgets.QDialog):
 
         self.init_progress()
 
+        worker.finished.connect(self.reset_thread)
         worker.addObject(self.current_worker_object)
         worker.start()
 
@@ -57,17 +58,15 @@ class WorkerDialog(QtWidgets.QDialog):
         worker = Application.getWorker(self.current_worker_idx)
         worker.wait()
         self.cancel_progress()
-        self.reset_thread()
 
     def on_error(self, e):
         logger.debug('on_error')
         self.cancel_progress()
         mb = QtWidgets.QMessageBox()
-        mb.warning(self, _('Export'), _('An error occured during export of dataset'))
+        mb.warning(self, _('Error'), _('An error occured. For further details look into the log files'))
 
     def on_finish(self):
         logger.debug('on_finish')
-        self.reset_thread()
         self.cancel_progress()
         if not self.worker_executor.isAborted():
             if self.finish_func is not None:

@@ -63,7 +63,7 @@ class Network(WorkerExecutor):
         self.val_dataset = dataset
 
     def getContext(self, gpus=None):
-        if gpus is None:
+        if gpus is None or gpus == '':
             return [mx.cpu()]
         ctx = [mx.gpu(int(i)) for i in gpus.split(',') if i.strip()]
         try:

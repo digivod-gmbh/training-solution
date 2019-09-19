@@ -124,6 +124,7 @@ class TrainingWindow(WorkerDialog):
         self.args_learning_rate.setValue(0.0001)
 
         args_gpus_label = QtWidgets.QLabel(_('GPUs'))
+        no_gpus_available_label = QtWidgets.QLabel(_('No GPUs available'))
         self.gpus = mx.test_utils.list_gpus() # ['0']
         self.gpu_checkboxes = []
         for i in self.gpus:
@@ -143,10 +144,13 @@ class TrainingWindow(WorkerDialog):
         settings_group_layout.addWidget(self.args_learning_rate, 2, 1)
 
         settings_group_layout.addWidget(args_gpus_label, 3, 0)
-        row = 3
-        for i, checkbox in enumerate(self.gpu_checkboxes):
-            settings_group_layout.addWidget(checkbox, row, 1)
-            row += 1
+        if len(self.gpu_checkboxes) > 0:
+            row = 3
+            for i, checkbox in enumerate(self.gpu_checkboxes):
+                settings_group_layout.addWidget(checkbox, row, 1)
+                row += 1
+        else:
+            settings_group_layout.addWidget(no_gpus_available_label, 3, 1)
         layout.addWidget(settings_group)
 
         button_box = QtWidgets.QDialogButtonBox()
