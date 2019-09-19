@@ -9,16 +9,16 @@ from labelme.utils.map import Map
 from labelme.logger import logger
 from labelme.config import Training
 from labelme.extensions.networks import Network
-from labelme.utils import Worker, ProgressObject, Application
+from labelme.extensions.thread import WorkerExecutor
+from labelme.utils import WorkerDialog
+from labelme.config import MessageType
 from labelme.config import get_config
 from labelme.config.export import Export
 
 
-class InferenceWindow(QtWidgets.QDialog):
+class InferenceWindow(WorkerDialog):
 
     def __init__(self, parent=None):
-        self.parent = parent
-        
         super().__init__(parent)
         self.setWindowTitle(_('Validation'))
         self.set_default_window_flags(self)
@@ -32,9 +32,6 @@ class InferenceWindow(QtWidgets.QDialog):
 
         self.progress_bar = QtWidgets.QProgressBar()
         layout.addWidget(self.progress_bar)
-
-    def set_default_window_flags(self, obj):
-        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
 
     def get_scaled_size(self, w, h, max_size):
         if w > max_size or h > max_size:
@@ -64,54 +61,28 @@ class InferenceWindow(QtWidgets.QDialog):
         self.progress_bar.setRange(0, 4)
         self.progress_bar.setValue(0)
 
-        config_file = os.path.join(training_folder, Training.config('config_file'))
-
-        self.network = Network()
-        network_config = self.network.loadConfig(config_file)
-
-        architecture_file = ''
-        weights_file = ''
-        files = network_config.files
-        for f in files:
-            if '.json' in f:
-                architecture_file = os.path.join(training_folder, f)
-            elif '.params' in f:
-                weights_file = os.path.join(training_folder, f)
-
-        dataset_folder = network_config.dataset
-
-        self.inference_data = Map({
+        # Data
+        data = {
+            'training_folder': training_folder,
             'input_image_file': input_image_file,
-            'architecture_file': architecture_file,
-            'weights_file': weights_file,
-            'labels': network_config.labels,
-        })
+        }
 
-        worker_idx, worker = Application.createWorker()
-        self.worker_idx = worker_idx
-        self.worker_object = ProgressObject(worker, self.inference, self.error_progress, self.network.abort, 
-            self.update_progress, data_func=self.receive_data)
-        self.network.setThread(self.worker_object)
+        # Execution
+        executor = InferenceExecutor(data)
+        self.run_thread(executor, self.finish_inference, custom_progress=self.progress_bar)
 
-        self.progress_bar.setValue(1)
-
-        worker.addObject(self.worker_object)
-        worker.start()
-
-    def inference(self):
-        self.network.inference(self.inference_data.input_image_file, self.inference_data.labels, 
-            self.inference_data.architecture_file, self.inference_data.weights_file, args = None)
-
-    def receive_data(self, data):
+    def finish_inference(self):
+        data = self.data
+        logger.debug(data)
         self.progress_bar.setValue(4)
         data = Map(data)
         for i in range(len(data.bbox[0])):
             label = int(data.classid[0][i][0])
             score = data.score[0][i][0]
-            if label > -1:
+            if label > -1 and score > 0.5:
                 label_name = _('unknown')
-                if label < len(self.inference_data.labels):
-                    label_name = str(self.inference_data.labels[label])
+                if label < len(data.labels):
+                    label_name = str(data.labels[label])
                 xr = self.pixmap.width() / data.imgsize[0]
                 yr = self.pixmap.height() / data.imgsize[1]
                 x, y = data.bbox[0][i][0] * xr, data.bbox[0][i][1] * yr
@@ -126,13 +97,51 @@ class InferenceWindow(QtWidgets.QDialog):
         self.image_label.setPixmap(self.pixmap)
         self.image_label.show()
 
-    def update_progress(self, msg=None, value=None):
-        if value is not None:
-            self.progress_bar.setValue(value)
-        if value == -1:
-            val = self.progress_bar.value() + 1
-            self.progress_bar.setValue(val)
 
-    def error_progress(self, e):
-        mb = QtWidgets.QMessageBox()
-        mb.warning(self, _('Validation'), _('An error occured during validation of training'))
+class InferenceExecutor(WorkerExecutor):
+
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+
+    def run(self):
+        logger.debug('Prepare inference')
+
+        try:
+            import ptvsd
+            ptvsd.debug_this_thread()
+        except:
+            pass
+
+        training_folder = self.data['training_folder']
+        input_image_file = self.data['input_image_file']
+
+        config_file = os.path.join(training_folder, Training.config('config_file'))
+
+        network = Network()
+        network.setAbortable(self.abortable)
+        network.setThread(self.thread)
+
+        network_config = network.loadConfig(config_file)
+
+        architecture_file = ''
+        weights_file = ''
+        files = network_config.files
+        for f in files:
+            if '.json' in f:
+                architecture_file = os.path.join(training_folder, f)
+            elif '.params' in f:
+                weights_file = os.path.join(training_folder, f)
+
+        dataset_folder = network_config.dataset
+
+        inference_data = Map({
+            'input_image_file': input_image_file,
+            'architecture_file': architecture_file,
+            'weights_file': weights_file,
+            'labels': network_config.labels,
+        })
+
+        network.inference(inference_data.input_image_file, inference_data.labels, 
+            inference_data.architecture_file, inference_data.weights_file, args = None)
+        

@@ -19,8 +19,9 @@ class WorkerDialog(QtWidgets.QDialog):
         self.worker_executor = None
         self.finish_func = None
         self.data = {}
+        self.custom_progress = None
 
-    def run_thread(self, worker_executor, finish_func=None):
+    def run_thread(self, worker_executor, finish_func=None, custom_progress=None):
         if not isinstance(worker_executor, WorkerExecutor):
             raise Exception('Object {} must be of type WorkerExecutor'.format(worker_executor))
 
@@ -29,6 +30,7 @@ class WorkerDialog(QtWidgets.QDialog):
 
         self.worker_executor = worker_executor
         self.finish_func = finish_func
+        self.custom_progress = custom_progress
 
         self.current_worker_idx, worker = Application.createWorker(self)
         self.current_worker_object = ProgressObject(worker, worker_executor.run, self.on_error, worker_executor.abort, 
@@ -54,19 +56,19 @@ class WorkerDialog(QtWidgets.QDialog):
         self.current_worker_object.abort()
         worker = Application.getWorker(self.current_worker_idx)
         worker.wait()
-        self.progress.cancel()
+        self.cancel_progress()
         self.reset_thread()
 
     def on_error(self, e):
         logger.debug('on_error')
-        self.progress.cancel()
+        self.cancel_progress()
         mb = QtWidgets.QMessageBox()
         mb.warning(self, _('Export'), _('An error occured during export of dataset'))
 
     def on_finish(self):
         logger.debug('on_finish')
         self.reset_thread()
-        self.progress.cancel()
+        self.cancel_progress()
         if not self.worker_executor.isAborted():
             if self.finish_func is not None:
                 self.finish_func()
@@ -104,8 +106,9 @@ class WorkerDialog(QtWidgets.QDialog):
         self.worker_executor.confirmResult(result)
 
     def on_progress(self, message=None, value=None, maximum=None):
-        if self.progress.wasCanceled():
-            return
+        if isinstance(self.progress, QtWidgets.QProgressDialog):
+            if self.progress.wasCanceled():
+                return
         if message:
             self.progress.setLabelText(message)
         if value is not None:
@@ -116,17 +119,24 @@ class WorkerDialog(QtWidgets.QDialog):
         if maximum is not None and maximum > -1:
             self.progress.setMaximum(maximum)
 
+    def cancel_progress(self):
+        if isinstance(self.progress, QtWidgets.QProgressDialog):
+            self.progress.cancel()
+
     def on_data(self, data):
         logger.debug('on_data')
         self.data = data
 
     def init_progress(self, maximum=100):
-        self.progress = QtWidgets.QProgressDialog(_('Initializing ...'), _('Cancel'), 0, maximum, self)
-        self.set_default_window_flags(self.progress)
-        self.progress.setWindowModality(Qt.ApplicationModal)
-        self.progress.show()
-        self.progress.canceled.disconnect()
-        self.progress.canceled.connect(self.on_abort)
+        if not self.custom_progress:
+            self.progress = QtWidgets.QProgressDialog(_('Initializing ...'), _('Cancel'), 0, maximum, self)
+            self.set_default_window_flags(self.progress)
+            self.progress.setWindowModality(Qt.ApplicationModal)
+            self.progress.show()
+            self.progress.canceled.disconnect()
+            self.progress.canceled.connect(self.on_abort)
+        else:
+            self.progress = self.custom_progress
 
     def set_default_window_flags(self, obj):
         obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)

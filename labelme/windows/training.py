@@ -211,40 +211,6 @@ class TrainingWindow(WorkerDialog):
             output_folder = os.path.normpath(output_folder)
             self.output_folder.setText(output_folder)
 
-    # def set_default_window_flags(self, obj):
-    #     obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
-
-    # def update_training_progress(self, msg=None, value=None):
-    #     if self.progress.wasCanceled():
-    #         return
-    #     if msg:
-    #         self.progress.setLabelText(msg)
-    #     if value is not None:
-    #         self.progress.setValue(value)
-    #     if value == -1:
-    #         val = self.progress.value() + 1
-    #         self.progress.setValue(val)
-
-    # def abort_training_progress(self):
-    #     self.progress.setLabelText(_('Cancelling ...'))
-    #     self.progress.setMaximum(0)
-    #     self.worker_object.abort()
-    #     worker = Application.getWorker(self.worker_idx)
-    #     worker.wait()
-    #     self.progress.cancel()
-    #     Application.destroyWorker(self.worker_idx)
-
-    # def finish_training_progress(self):
-    #     mb = QtWidgets.QMessageBox()
-    #     mb.information(self, _('Training'), _('Network has been trained successfully'))
-    #     self.progress.close()
-    #     self.close()
-
-    # def error_training_progress(self, e):
-    #     self.progress.cancel()
-    #     mb = QtWidgets.QMessageBox()
-    #     mb.warning(self, _('Training'), _('An error occured during training of network'))
-
     def training_btn_clicked(self):
         # Data
         data = {
@@ -338,11 +304,6 @@ class TrainingExecutor(WorkerExecutor):
 
         network = self.data['network']
 
-        # self.progress = QtWidgets.QProgressDialog(_('Initializing ...'), _('Cancel'), 0, 100, self)
-        # self.set_default_window_flags(self.progress)
-        # self.progress.setWindowModality(Qt.NonModal)
-        # self.progress.show()
-
         networks = Training.config('networks')
         func_name = None
         for key in networks:
@@ -388,10 +349,6 @@ class TrainingExecutor(WorkerExecutor):
 
         self.thread.update.emit(_('Loading data ...'), 0, epochs * num_batches + 5)
 
-        # self.progress.setMaximum(epochs * num_batches + 5)
-        # self.progress.setLabelText(_('Loading data ...'))
-        # self.progress.setValue(0)
-
         network = Training.config('objects')[func_name]()
         network.setAbortable(self.abortable)
         network.setThread(self.thread)
@@ -406,14 +363,3 @@ class TrainingExecutor(WorkerExecutor):
         self.checkAborted()
 
         network.training()
-
-        # worker_idx, worker = Application.createWorker()
-        # self.worker_idx = worker_idx
-        # self.worker_object = ProgressObject(worker, network.training, self.error_training_progress, network.abort, 
-        #     self.update_training_progress, self.finish_training_progress)
-        # network.setThread(self.worker_object)
-
-        # self.progress.canceled.disconnect()
-        # self.progress.canceled.connect(self.abort_training_progress)
-        # worker.addObject(self.worker_object)
-        # worker.start()

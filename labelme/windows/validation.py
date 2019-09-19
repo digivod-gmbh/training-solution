@@ -2,6 +2,7 @@ import os
 
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
+from labelme.utils import WorkerDialog
 from labelme.utils.map import Map
 from labelme.logger import logger
 from labelme.config import Training
@@ -10,11 +11,9 @@ from .inference import InferenceWindow
 from labelme.config.export import Export
 
 
-class ValidationWindow(QtWidgets.QDialog):
+class ValidationWindow(WorkerDialog):
 
     def __init__(self, parent=None):
-        self.parent = parent
-
         super().__init__(parent)
         self.setWindowTitle(_('Validation'))
         self.set_default_window_flags(self)
@@ -54,9 +53,6 @@ class ValidationWindow(QtWidgets.QDialog):
         cancel_btn.clicked.connect(self.cancel_btn_clicked)
         layout.addWidget(button_box)
 
-    def set_default_window_flags(self, obj):
-        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
-
     def input_image_file_browse_btn_clicked(self):
         last_dir = self.parent.settings.value('validation/last_input_image_dir', '')
         logger.debug('Restored value "{}" for setting validation/last_input_image_dir'.format(last_dir))
@@ -91,7 +87,6 @@ class ValidationWindow(QtWidgets.QDialog):
             mb.warning(self, _('Validation'), _('Please select a valid training folder'))
             return
 
-
         inferenceWin = InferenceWindow(self)
         inferenceWin.show()
         inferenceWin.start_inference(input_image_file, training_folder)
@@ -99,4 +94,3 @@ class ValidationWindow(QtWidgets.QDialog):
 
     def cancel_btn_clicked(self):
         self.close()
-

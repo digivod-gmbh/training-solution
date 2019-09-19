@@ -113,6 +113,7 @@ class Network(WorkerExecutor):
                 'classid': cid.asnumpy().tolist(),
                 'score': score.asnumpy().tolist(),
                 'bbox': bbox.asnumpy().tolist(),
+                'labels': labels,
             })
             self.thread.update.emit(None, -1, -1)
 
