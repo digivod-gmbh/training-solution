@@ -74,14 +74,19 @@ class WorkerDialog(QtWidgets.QDialog):
                 self.close()
 
     def on_message(self, title, message, kind=None):
+        log_msg = 'Show message: {}'.format(message)
         mb = QtWidgets.QMessageBox
         if kind == MessageType.Warning:
+            logger.warn(log_msg)
             mb.warning(self, title, message)
         elif kind == MessageType.Error:
+            logger.error(log_msg)
             mb.critical(self, title, message)
         elif kind == MessageType.Question:
+            logger.info(log_msg)
             mb.question(self, title, message)
         else:
+            logger.info(log_msg)
             mb.information(self, title, message)
 
     def on_confirm(self, title, message, kind=None):

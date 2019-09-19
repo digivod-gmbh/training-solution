@@ -26,9 +26,8 @@ class FormatImageRecord(DatasetFormat):
     _files = {}
     _format = 'imagerecord'
 
-    def __init__(self, thread = None):
+    def __init__(self):
         super().__init__()
-        self.thread = thread
         self.intermediate = None
         self.num_samples = -1
         FormatImageRecord._files['labels'] = Export.config('labels_file')
@@ -175,8 +174,10 @@ class FormatImageRecord(DatasetFormat):
         output_folder = self.output_folder
         data_folder = self.intermediate.getRoot()
 
+        num_max_progress = num_train_samples + num_val_samples + 10
+
         # train
-        self.thread.update.emit(_('Creating training dataset ...'), -1, -1)
+        self.thread.update.emit(_('Creating training dataset ...'), -1, num_max_progress)
         self.checkAborted()
         train_output_folder = os.path.join(output_folder, 'train')
         if not os.path.isdir(train_output_folder):

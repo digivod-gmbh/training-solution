@@ -4,20 +4,21 @@ from qtpy import QtGui
 from qtpy import QtWidgets
 
 import os
+import ptvsd
 
 from labelme.logger import logger
 from labelme.label_file import LabelFile
-from labelme.utils import Worker, ProgressObject, Application
+from labelme.utils import deltree, WorkerDialog
+from labelme.extensions.thread import WorkerExecutor
+from labelme.config import MessageType
 from labelme.utils.map import Map
 from labelme.extensions.formats import *
 from labelme.config.export import Export
 
 
-class ImportWindow(QtWidgets.QDialog):
+class ImportWindow(WorkerDialog):
 
     def __init__(self, parent=None):
-        self.parent = parent
-
         super().__init__(parent)
         self.setWindowTitle(_('Import dataset'))
         self.set_default_window_flags(self)
@@ -108,96 +109,89 @@ class ImportWindow(QtWidgets.QDialog):
             self.parent.settings.setValue('import/last_output_dir', output_folder)
             self.output_folder.setText(output_folder)
 
+    def cancel_btn_clicked(self):
+        self.close()
+
     def import_btn_clicked(self):
-        data_folder_or_file = self.data_folder.text()
-        if not data_folder_or_file or not (os.path.isdir(data_folder_or_file) or os.path.isfile(data_folder_or_file)):
-            mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Import'), _('Please enter a valid dataset file or folder'))
+        # Data
+        data = {
+            'data_folder': self.data_folder.text(),
+            'output_folder': self.output_folder.text(),
+            'selected_format': self.formats.currentText(),
+        }
+
+        # Execution
+        executor = ImportExecutor(data)
+        self.run_thread(executor, self.finish_import)
+
+    def finish_import(self):
+        # Open import folder
+        output_folder = os.path.normpath(self.output_folder.text())
+        self.parent.importDirImages(output_folder)
+
+        mb = QtWidgets.QMessageBox()
+        mb.information(self, _('Import'), _('Dataset has been imported successfully'))
+
+        self.close()
+
+
+class ImportExecutor(WorkerExecutor):
+
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+
+    def run(self):
+        logger.debug('Prepare import')
+        ptvsd.debug_this_thread()
+
+        data_folder_or_file = self.data['data_folder']
+        is_data_folder_valid = True
+        if not data_folder_or_file:
+            is_data_folder_valid = False
+        data_folder_or_file = os.path.normpath(data_folder_or_file)
+        if not (os.path.isdir(data_folder_or_file) or os.path.isfile(data_folder_or_file)):
+            is_data_folder_valid = False
+        if not is_data_folder_valid:
+            self.thread.message.emit(_('Import'), _('Please enter a valid dataset file or folder'), MessageType.Warning)
+            self.abort()
             return
 
-        output_folder = self.output_folder.text()
-        if not output_folder or not os.path.isdir(output_folder):
-            mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Import'), _('Please enter a valid output folder'))
+        output_folder = self.data['output_folder']
+        is_output_folder_valid = True
+        if not output_folder:
+            is_output_folder_valid = False
+        output_folder = os.path.normpath(output_folder)
+        if not os.path.isdir(output_folder):
+            is_output_folder_valid = False
+        if not is_output_folder_valid:
+            self.thread.message.emit(_('Import'), _('Please enter a valid output folder'), MessageType.Warning)
+            self.abort()
             return
 
-        val = self.formats.currentText()
-        formats = Export.config('formats')
-        inv_formats = Export.invertDict(formats)
-        if val not in inv_formats:
-            logger.error('Import format {} could not be found'.format(val))
+        selected_format = self.data['selected_format']
+        all_formats = Export.config('formats')
+        inv_formats = Export.invertDict(all_formats)
+        if selected_format not in inv_formats:
+            self.thread.message.emit(_('Import'), _('Import format {} could not be found').format(selected_format), MessageType.Warning)
+            self.abort()
             return
         else:
-            format_name = inv_formats[val]
+            self.data['format_name'] = inv_formats[selected_format]
+        format_name = self.data['format_name']
 
         # Dataset
         dataset_format = Export.config('objects')[format_name]()
         if not dataset_format.isValidFormat(data_folder_or_file):
-            mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Import'), _('Invalid dataset format'))
+            self.thread.message.emit(_('Import'), _('Invalid dataset format'), MessageType.Warning)
+            self.abort()
             return
 
+        dataset_format.setAbortable(self.abortable)
+        dataset_format.setThread(self.thread)
         dataset_format.setOutputFolder(output_folder)
         dataset_format.setInputFolderOrFile(data_folder_or_file)
 
-        self.progress = QtWidgets.QProgressDialog(_('Initializing ...'), _('Cancel'), 0, 100, self)
-        self.set_default_window_flags(self.progress)
-        self.progress.setWindowModality(Qt.ApplicationModal)
-        self.progress.show()
-        self.progress.setMaximum(100)
-        self.progress.setLabelText(_('Initializing ...'))
-        self.progress.setValue(0)
+        self.checkAborted()
 
-        worker_idx, worker = Application.createWorker()
-        self.worker_idx = worker_idx
-        self.worker_object = ProgressObject(worker, dataset_format.importFolder, self.error_import_progress, dataset_format.abort, 
-            self.update_import_progress, self.finish_import_progress)
-        dataset_format.setThread(self.worker_object)
-
-        self.progress.canceled.disconnect()
-        self.progress.canceled.connect(self.abort_import_progress)
-        worker.addObject(self.worker_object)
-        worker.start()
-
-    def cancel_btn_clicked(self):
-        self.close()
-
-    def set_default_window_flags(self, obj):
-        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
-
-    def update_import_progress(self, msg=None, value=None):
-        if self.progress.wasCanceled():
-            return
-        if msg:
-            self.progress.setLabelText(msg)
-        if value is not None:
-            self.progress.setValue(value)
-        if value == -1:
-            val = self.progress.value() + 1
-            self.progress.setValue(val)
-
-    def abort_import_progress(self):
-        self.progress.setLabelText(_('Cancelling ...'))
-        self.progress.setMaximum(0)
-        self.worker_object.abort()
-        worker = Application.getWorker(self.worker_idx)
-        worker.wait()
-        self.progress.cancel()
-        Application.destroyWorker(self.worker_idx)
-
-    def finish_import_progress(self):
-        mb = QtWidgets.QMessageBox()
-        mb.information(self, _('Import'), _('Dataset has been imported successfully'))
-        self.progress.close()
-        
-        # open import folder
-        output_folder = os.path.normpath(self.output_folder.text())
-        self.parent.importDirImages(output_folder)
-
-        self.close()
-
-    def error_import_progress(self, e):
-        self.progress.cancel()
-        mb = QtWidgets.QMessageBox()
-        mb.warning(self, _('Import'), _('An error occured during import of dataset'))
-    
+        dataset_format.importFolder()

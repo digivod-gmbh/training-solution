@@ -219,32 +219,25 @@ class ExportWindow(WorkerDialog):
             self.export_folder.setText(export_folder)
 
     def export_btn_clicked(self):
-        try:
-            # Data
-            data = {
-                'data_folder': os.path.normpath(self.data_folder.text()),
-                'export_folder': os.path.normpath(self.export_folder.text()),
-                'selected_labels': [x.text() for x in self.label_checkboxes if x.isChecked()],
-                'validation_ratio': int(self.validation.value()) / 100.0,
-                'dataset_name': re.sub(r'[^a-zA-Z0-9 _-]+', '', self.export_name.text()),
-                'max_num_labels': Export.config('limits')['max_num_labels'],
-                'selected_format': self.formats.currentText(),
-            }
-            data['export_dataset_folder'] = os.path.normpath(os.path.join(data['export_folder'], data['dataset_name']))
+        # Data
+        data = {
+            'data_folder': self.data_folder.text(),
+            'export_folder': self.export_folder.text(),
+            'selected_labels': [x.text() for x in self.label_checkboxes if x.isChecked()],
+            'validation_ratio': int(self.validation.value()) / 100.0,
+            'dataset_name': re.sub(r'[^a-zA-Z0-9 _-]+', '', self.export_name.text()),
+            'max_num_labels': Export.config('limits')['max_num_labels'],
+            'selected_format': self.formats.currentText(),
+        }
 
-            # Preparation
-            executor = ExportExecutor(data)
-            self.run_thread(executor, self.finish_export)
-        except Exception as e:
-            logger.error(e)
+        # Execution
+        executor = ExportExecutor(data)
+        self.run_thread(executor, self.finish_export)
 
     def finish_export(self):
-        try:
-            mb = QtWidgets.QMessageBox()
-            mb.information(self, _('Export'), _('Dataset has been exported successfully'))
-            self.close()
-        except Exception as e:
-            logger.error(e)
+        mb = QtWidgets.QMessageBox()
+        mb.information(self, _('Export'), _('Dataset has been exported successfully'))
+        self.close()
 
 
 class ExportExecutor(WorkerExecutor):
@@ -258,13 +251,25 @@ class ExportExecutor(WorkerExecutor):
         ptvsd.debug_this_thread()
         
         data_folder = self.data['data_folder']
-        if not data_folder or not os.path.isdir(data_folder):
+        is_data_folder_valid = True
+        if not data_folder:
+            is_data_folder_valid = False
+        data_folder = os.path.normpath(data_folder)
+        if not os.path.isdir(data_folder):
+            is_data_folder_valid = False
+        if not is_data_folder_valid:
             self.thread.message.emit(_('Export'), _('Please enter a valid data folder'), MessageType.Warning)
             self.abort()
             return
 
         export_folder = self.data['export_folder']
-        if not export_folder or not os.path.isdir(export_folder):
+        is_export_folder_valid = True
+        if not export_folder:
+            is_export_folder_valid = False
+        export_folder = os.path.normpath(export_folder)
+        if not os.path.isdir(export_folder):
+            is_export_folder_valid = False
+        if not is_export_folder_valid:
             self.thread.message.emit(_('Export'), _('Please enter a valid export folder'), MessageType.Warning)
             self.abort()
             return
@@ -287,7 +292,7 @@ class ExportExecutor(WorkerExecutor):
             self.abort()
             return
 
-        export_dataset_folder = self.data['export_dataset_folder']
+        export_dataset_folder = os.path.normpath(os.path.join(self.data['export_folder'], self.data['dataset_name']))
         if not os.path.isdir(export_dataset_folder):
             os.makedirs(export_dataset_folder)
         elif len(os.listdir(export_dataset_folder)) > 0:
@@ -310,7 +315,7 @@ class ExportExecutor(WorkerExecutor):
         all_formats = Export.config('formats')
         inv_formats = Export.invertDict(all_formats)
         if selected_format not in inv_formats:
-            logger.error('Export format {} could not be found'.format(selected_format))
+            self.thread.message.emit(_('Export'), _('Export format {} could not be found').format(selected_format), MessageType.Warning)
             self.abort()
             return
         else:
@@ -339,7 +344,7 @@ class ExportExecutor(WorkerExecutor):
             'validation_ratio': validation_ratio,
         })
 
-        dataset_format = Export.config('objects')[format_name](self)
+        dataset_format = Export.config('objects')[format_name]()
         dataset_format.setAbortable(self.abortable)
         dataset_format.setThread(self.thread)
         dataset_format.setIntermediateFormat(intermediate)

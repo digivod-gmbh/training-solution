@@ -29,9 +29,8 @@ class FormatVoc(DatasetFormat):
     }
     _format = 'voc'
 
-    def __init__(self, thread = None, all_image_sets = False):
+    def __init__(self, all_image_sets = False):
         super().__init__()
-        self.thread = thread
         self.intermediate = None
         self.dataset = None
         self.all_image_sets = all_image_sets

@@ -29,9 +29,8 @@ class FormatCoco(DatasetFormat):
     }
     _format = 'coco'
 
-    def __init__(self, thread = None):
+    def __init__(self):
         super().__init__()
-        self.thread = thread
         self.intermediate = None
         self.num_samples = -1
         FormatCoco._files['labels'] = Export.config('labels_file')

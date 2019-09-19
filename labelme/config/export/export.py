@@ -26,9 +26,9 @@ class Export():
                 # False for directory
             },
             'objects': {
-                'imagerecord': lambda t: formats.FormatImageRecord(t),
-                'coco': lambda t: formats.FormatCoco(t),
-                'voc': lambda t: formats.FormatVoc(t),
+                'imagerecord': lambda: formats.FormatImageRecord(),
+                'coco': lambda: formats.FormatCoco(),
+                'voc': lambda: formats.FormatVoc(),
             },
             'limits': {
                 'max_num_labels': 20
