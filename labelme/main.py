@@ -204,7 +204,7 @@ def main():
         win.settings.clear()
         sys.exit(0)
 
-    win.show()
+    win.showMaximized()
     win.raise_()
     sys.excepthook = excepthook
     win.check_startup()

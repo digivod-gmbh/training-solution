@@ -26,6 +26,9 @@ class DatasetFormat(WorkerExecutor):
     def getDatasetForTraining(self):
         raise NotImplementedError('Method getDatasetForTraining() must be implemented in subclass')
 
+    def getOutputFileName(self, split):
+        raise NotImplementedError('Method getOutputFileName() must be implemented in subclass')
+
     def setArgs(self, args):
         self.args = args
 

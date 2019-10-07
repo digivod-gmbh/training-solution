@@ -86,3 +86,17 @@ def distancetoline(point, line):
 def fmtShortcut(text):
     mod, key = text.split('+', 1)
     return '<b>%s</b>+<b>%s</b>' % (mod, key)
+
+
+class QHLine(QtWidgets.QFrame):
+    def __init__(self, style=QtWidgets.QFrame.Sunken):
+        super().__init__()
+        self.setFrameShape(QtWidgets.QFrame.HLine)
+        self.setFrameShadow(style)
+
+class QVLine(QtWidgets.QFrame):
+    def __init__(self, style=QtWidgets.QFrame.Sunken):
+        super().__init__()
+        self.setFrameShape(QtWidgets.QFrame.VLine)
+        self.setFrameShadow(style)
+

@@ -25,13 +25,11 @@ from labelme.config.export import Export
 
 class ExportWindow(WorkerDialog):
 
-    def __init__(self, parent=None, labels=[]):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(_('Export dataset'))
         self.set_default_window_flags(self)
         self.setWindowModality(Qt.ApplicationModal)
-
-        logger.debug('Open export window with labels: {}'.format(', '.join(labels)))
 
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
@@ -49,15 +47,12 @@ class ExportWindow(WorkerDialog):
 
         self.data_folder = QtWidgets.QLineEdit()
         self.data_folder.setReadOnly(True)
-        #data_browse_btn = QtWidgets.QPushButton(_('Browse'))
-        #data_browse_btn.clicked.connect(self.data_browse_btn_clicked)
 
         data_folder_group = QtWidgets.QGroupBox()
         data_folder_group.setTitle(_('Data folder'))
         data_folder_group_layout = QtWidgets.QHBoxLayout()
         data_folder_group.setLayout(data_folder_group_layout)
         data_folder_group_layout.addWidget(self.data_folder)
-        #data_folder_group_layout.addWidget(data_browse_btn)
         layout.addWidget(data_folder_group)
 
         self.label_checkboxes = []
@@ -71,11 +66,13 @@ class ExportWindow(WorkerDialog):
         self.label_selection_scroll = QtWidgets.QScrollArea()
         self.label_selection_scroll.setVisible(False)
         self.label_selection_scroll.setWidgetResizable(True)
-        self.label_selection_scroll.setFixedHeight(100)
+        self.label_selection_scroll.setMinimumHeight(40)
+        self.label_selection_scroll.setMaximumHeight(150)
         self.label_selection_scroll.setWidget(self.label_parent_widget)
         layout.addWidget(self.label_selection_scroll)
 
-        if self.parent.lastOpenDir is not None:
+        labels = self.get_labels()
+        if self.parent.lastOpenDir is not None and len(labels) > 0:
             self.data_folder.setText(self.parent.lastOpenDir)
             self.load_labels(labels)
 
@@ -122,6 +119,27 @@ class ExportWindow(WorkerDialog):
         cancel_btn.clicked.connect(self.cancel_btn_clicked)
         layout.addWidget(button_box)
 
+    def get_labels(self):
+        labels = []
+        for i in range(len(self.parent.uniqLabelList)):
+            labels.append(self.parent.uniqLabelList.item(i).text())
+        logger.debug('Loaded labels: {}'.format(', '.join(labels)))
+        return labels
+
+    def setVisible(self, visible):
+        if not self.has_opened_images():
+            mb = QtWidgets.QMessageBox()
+            mb.information(self, _('Export'), _('Please open a folder with images first'))
+        else:
+            super().setVisible(visible)
+
+    def has_opened_images(self):
+        image_list = self.parent.imageList
+        labels = self.get_labels()
+        if len(image_list) == 0 or len(labels) == 0:
+            return False
+        return True
+
     def get_label_files_from_data_folder(self, data_folder, selected_labels = [], get_all_labels = False):
         label_files = []
         for root, dirs, files in os.walk(data_folder):
@@ -146,56 +164,17 @@ class ExportWindow(WorkerDialog):
     def cancel_btn_clicked(self):
         self.close()
 
-    # def data_browse_btn_clicked(self):
-    #     last_dir = self.parent.settings.value('export/last_dataset_dir', '')
-    #     logger.debug('Restored value "{}" for setting export/last_dataset_dir'.format(last_dir))
-    #     data_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select data folder'), last_dir)
-    #     if data_folder:
-    #         data_folder = os.path.normpath(data_folder)
-    #         self.parent.settings.setValue('export/last_dataset_dir', data_folder)
-    #         self.data_folder.setText(data_folder)
-    #         self.load_labels_from_data_folder(data_folder)
-
     def load_labels(self, labels):
-        self.label_checkboxes = []
-        labels.sort()
-        for label in labels:
-            checkbox = QtWidgets.QCheckBox(label)
-            self.label_checkboxes.append(checkbox)
-        self.update_label_checkboxes()
-
-    # def load_labels_from_data_folder(self, data_folder):
-    #     self.progress = QtWidgets.QProgressDialog(_('Loading dataset ...'), _('Cancel'), 0, 100, self)
-    #     self.set_default_window_flags(self.progress)
-    #     self.progress.setWindowModality(Qt.ApplicationModal)
-    #     self.progress.show()
-    #     self.progress.setMaximum(100)
-    #     self.progress.setValue(0)
-    #     label_files, num_label_files = self.get_label_files_from_data_folder(data_folder, get_all_labels=True)
-    #     self.progress.setMaximum(num_label_files + 1)
-    #     self.progress.setValue(1)
-    #     self.label_checkboxes = []
-    #     label_set = set()
-    #     for i, label_file in enumerate(label_files):
-    #         lf = LabelFile(label_file)
-    #         labels = [s[0] for s in lf.shapes]
-    #         label_set.update(labels)
-    #         self.progress.setValue(i + 2)
-    #         if self.progress.wasCanceled():
-    #             break
-    #     if self.progress.wasCanceled():
-    #         self.data_folder.setText('')
-    #         return
-    #     self.label_selection_label.setVisible(True)
-    #     self.label_selection_scroll.setVisible(True)
-    #     label_list = list(label_set)
-    #     label_list.sort()
-    #     logger.debug('Found labels {} in folder {}'.format(label_list, data_folder))
-    #     for label in label_list:
-    #         checkbox = QtWidgets.QCheckBox(label)
-    #         self.label_checkboxes.append(checkbox)
-    #     self.update_label_checkboxes()
-    #     self.progress.close()
+        image_list = self.parent.imageList
+        if len(image_list) > 0:
+            self.label_checkboxes = []
+            labels.sort()
+            for label in labels:
+                checkbox = QtWidgets.QCheckBox(label)
+                self.label_checkboxes.append(checkbox)
+            self.label_selection_label.setVisible(True)
+            self.label_selection_scroll.setVisible(True)
+            self.update_label_checkboxes()
 
     def update_label_checkboxes(self):
         while self.label_parent_widget.layout().count():

@@ -27,6 +27,7 @@ from .qt import struct
 from .qt import distance
 from .qt import distancetoline
 from .qt import fmtShortcut
+from .qt import QHLine, QVLine
 
 from .threads import *
 from .application import Application

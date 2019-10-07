@@ -12,13 +12,14 @@ import json
 import math
 
 from labelme.logger import logger
-from labelme.utils import deltree, WorkerDialog
+from labelme.utils import deltree, WorkerDialog, QHLine
 from labelme.utils.map import Map
 from labelme.extensions.thread import WorkerExecutor
 from labelme.extensions.formats import *
 from labelme.config import MessageType
 from labelme.config import Training
 from labelme.config.export import Export
+from labelme.windows import ExportExecutor
 
 
 class TrainingWindow(WorkerDialog):
@@ -45,19 +46,40 @@ class TrainingWindow(WorkerDialog):
         network_group_layout.addWidget(self.networks)
         layout.addWidget(network_group)
 
+        validation_label = QtWidgets.QLabel(_('Validation ratio'))
+        self.validation = QtWidgets.QSpinBox()
+        self.validation.setValue(0)
+        self.validation.setMinimum(0)
+        self.validation.setMaximum(90)
+        self.validation.setFixedWidth(50)
+        validation_description_label = QtWidgets.QLabel(_('% of dataset'))
+
+        dataset_name_label = QtWidgets.QLabel(_('Dataset name'))
+        self.dataset_name = QtWidgets.QLineEdit()
+
+        image_list = self.parent.imageList
+        show_dataset_create = len(image_list) > 0
+        self.create_dataset_group = QtWidgets.QGroupBox()
+        self.create_dataset_group.setObjectName('createDatasetGroup')
+        self.create_dataset_group.setStyleSheet('QWidget#createDatasetGroup { border: 0; margin-top: 8px; padding-top: 14px; }')
+        self.create_dataset_group.setTitle(_('Create dataset from opened images'))
+        create_dataset_group_layout = QtWidgets.QGridLayout()
+        self.create_dataset_group.setLayout(create_dataset_group_layout)
+        create_dataset_group_layout.addWidget(dataset_name_label, 0, 0, 1, 2)
+        create_dataset_group_layout.addWidget(self.dataset_name, 1, 0, 1, 2)
+        create_dataset_group_layout.addWidget(validation_label, 2, 0, 1, 2)
+        create_dataset_group_layout.addWidget(self.validation, 3, 0)
+        create_dataset_group_layout.addWidget(validation_description_label, 3, 1)
+        self.create_dataset_group.setCheckable(True)
+        self.create_dataset_group.setChecked(show_dataset_create)
+
+        formats_label = QtWidgets.QLabel(_('Format'))
         self.formats = QtWidgets.QComboBox()
         for key, val in Export.config('formats').items():
             self.formats.addItem(val)
         self.formats.setCurrentIndex(0)
         self.formats.currentTextChanged.connect(self.on_format_change)
         self.selected_format = list(Export.config('formats').keys())[0]
-
-        format_group = QtWidgets.QGroupBox()
-        format_group.setTitle(_('Format'))
-        format_group_layout = QtWidgets.QVBoxLayout()
-        format_group.setLayout(format_group_layout)
-        format_group_layout.addWidget(self.formats)
-        layout.addWidget(format_group)
 
         train_dataset_label = QtWidgets.QLabel(_('Training dataset'))
         self.train_dataset_folder = QtWidgets.QLineEdit()
@@ -70,17 +92,35 @@ class TrainingWindow(WorkerDialog):
         val_dataset_folder_browse_btn = QtWidgets.QPushButton(_('Browse'))
         val_dataset_folder_browse_btn.clicked.connect(self.val_dataset_folder_browse_btn_clicked)
 
-        dataset_folder_group = QtWidgets.QGroupBox()
-        dataset_folder_group.setTitle(_('Datasets'))
+        self.dataset_folder_group = QtWidgets.QGroupBox()
+        self.dataset_folder_group.setObjectName('datasetFolderGroup')
+        self.dataset_folder_group.setStyleSheet('QWidget#datasetFolderGroup { border: 0; margin-top: 8px; padding-top: 14px; }')
+        self.dataset_folder_group.setTitle(_('Use dataset file(s)'))
+        self.dataset_folder_group.setCheckable(True)
+        self.dataset_folder_group.setChecked(not show_dataset_create)
         dataset_folder_group_layout = QtWidgets.QGridLayout()
-        dataset_folder_group.setLayout(dataset_folder_group_layout)
-        dataset_folder_group_layout.addWidget(train_dataset_label, 0, 0, 1, 2)
-        dataset_folder_group_layout.addWidget(self.train_dataset_folder, 1, 0)
-        dataset_folder_group_layout.addWidget(train_dataset_folder_browse_btn, 1, 1)
-        dataset_folder_group_layout.addWidget(val_dataset_label, 2, 0, 1, 2)
-        dataset_folder_group_layout.addWidget(self.val_dataset_folder, 3, 0)
-        dataset_folder_group_layout.addWidget(val_dataset_folder_browse_btn, 3, 1)
-        layout.addWidget(dataset_folder_group)
+        self.dataset_folder_group.setLayout(dataset_folder_group_layout)
+        dataset_folder_group_layout.addWidget(formats_label, 0, 0, 1, 2)
+        dataset_folder_group_layout.addWidget(self.formats, 1, 0, 1, 2)
+        dataset_folder_group_layout.addWidget(train_dataset_label, 2, 0, 1, 2)
+        dataset_folder_group_layout.addWidget(self.train_dataset_folder, 3, 0)
+        dataset_folder_group_layout.addWidget(train_dataset_folder_browse_btn, 3, 1)
+        dataset_folder_group_layout.addWidget(val_dataset_label, 4, 0, 1, 2)
+        dataset_folder_group_layout.addWidget(self.val_dataset_folder, 5, 0)
+        dataset_folder_group_layout.addWidget(val_dataset_folder_browse_btn, 5, 1)
+
+        parent_dataset_group = QtWidgets.QGroupBox()
+        parent_dataset_group.setTitle(_('Dataset'))
+        parent_dataset_group_layout = QtWidgets.QVBoxLayout()
+        parent_dataset_group.setLayout(parent_dataset_group_layout)
+        parent_dataset_group_layout.addWidget(self.create_dataset_group)
+        parent_dataset_group_layout.addWidget(QHLine(QtWidgets.QFrame.Raised))
+        parent_dataset_group_layout.addWidget(self.dataset_folder_group)
+        layout.addWidget(parent_dataset_group)
+
+        self.create_dataset_group.toggled.connect(lambda: self.toggle_groups(self.create_dataset_group, self.dataset_folder_group))
+        self.dataset_folder_group.toggled.connect(lambda: self.toggle_groups(self.dataset_folder_group, self.create_dataset_group))
+        self.toggle_groups(self.create_dataset_group, self.dataset_folder_group)
 
         self.output_folder = QtWidgets.QLineEdit()
         project_folder = self.parent.settings.value('settings/project/folder', '')
@@ -103,15 +143,17 @@ class TrainingWindow(WorkerDialog):
         output_folder_group_layout.addWidget(self.training_name, 2, 0, 1, 3)
         layout.addWidget(output_folder_group)
 
+        training_defaults = self.parent._config['training_defaults']
+
         args_epochs_label = QtWidgets.QLabel(_('Epochs'))
         self.args_epochs = QtWidgets.QSpinBox()
-        self.args_epochs.setValue(10)
+        self.args_epochs.setValue(training_defaults['epochs'])
         self.args_epochs.setMinimum(1)
         self.args_epochs.setMaximum(100)
 
         args_batch_size_label = QtWidgets.QLabel(_('Batch size'))
         self.args_batch_size = QtWidgets.QSpinBox()
-        self.args_batch_size.setValue(8)
+        self.args_batch_size.setValue(training_defaults['batch_size'])
         self.args_batch_size.setMinimum(1)
         self.args_batch_size.setMaximum(100)
 
@@ -121,7 +163,7 @@ class TrainingWindow(WorkerDialog):
         self.args_learning_rate.setMaximum(1.0)
         self.args_learning_rate.setSingleStep(1e-7)
         self.args_learning_rate.setDecimals(7)
-        self.args_learning_rate.setValue(0.0001)
+        self.args_learning_rate.setValue(training_defaults['learning_rate'])
 
         args_gpus_label = QtWidgets.QLabel(_('GPUs'))
         no_gpus_available_label = QtWidgets.QLabel(_('No GPUs available'))
@@ -152,6 +194,7 @@ class TrainingWindow(WorkerDialog):
         else:
             settings_group_layout.addWidget(no_gpus_available_label, 3, 1)
         layout.addWidget(settings_group)
+        layout.addStretch()
 
         button_box = QtWidgets.QDialogButtonBox()
         training_btn = button_box.addButton(_('Start Training'), QtWidgets.QDialogButtonBox.AcceptRole)
@@ -159,6 +202,19 @@ class TrainingWindow(WorkerDialog):
         cancel_btn = button_box.addButton(_('Cancel'), QtWidgets.QDialogButtonBox.RejectRole)
         cancel_btn.clicked.connect(self.cancel_btn_clicked)
         layout.addWidget(button_box)
+
+        h = self.sizeHint().height()
+        self.resize(400, h)
+
+    def toggle_groups(self, toggled, other):
+        state = toggled.isChecked()
+        other.setChecked(not state)
+        if state:
+            toggled.setFixedHeight(toggled.sizeHint().height())
+            other.setFixedHeight(30)
+        else:
+            toggled.setFixedHeight(30)
+            other.setFixedHeight(other.sizeHint().height())
 
     def on_format_change(self, value):
         formats = Export.config('formats')
@@ -216,8 +272,70 @@ class TrainingWindow(WorkerDialog):
             self.output_folder.setText(output_folder)
 
     def training_btn_clicked(self):
+        create_dataset = self.create_dataset_group.isChecked()
+        self.dataset_export_data = {}
+        if create_dataset:
+            self.export_before_training()
+        else:
+            self.start_training()
+
+    def export_before_training(self):
+        training_defaults = self.parent._config['training_defaults']
+        selected_format = training_defaults['dataset_format']
+        dataset_name = re.sub(r'[^a-zA-Z0-9 _-]+', '', self.dataset_name.text())
+
+        data_folder = None
+        if self.parent.lastOpenDir is not None:
+            data_folder = self.parent.lastOpenDir
+        if data_folder is None:
+            mb = QtWidgets.QMessageBox()
+            mb.warning(self, _('Training'), _('Please open a folder with images first'))
+            return
+
+        all_labels = []
+        for i in range(len(self.parent.uniqLabelList)):
+            all_labels.append(self.parent.uniqLabelList.item(i).text())
+        if len(all_labels) == 0:
+            mb = QtWidgets.QMessageBox()
+            mb.warning(self, _('Training'), _('No labels found in dataset'))
+            return
+
+        project_folder = self.parent.settings.value('settings/project/folder', '')
+        project_dataset_folder = self.parent._config['project_dataset_folder']
+        logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
+        export_folder = os.path.join(project_folder, project_dataset_folder)
+
+        validation_ratio = int(self.validation.text()) / 100.0
+
+        self.dataset_export_data = {
+            'dataset_name': dataset_name,
+            'format': selected_format,
+            'output_folder': os.path.join(export_folder, dataset_name),
+            'validation_ratio': validation_ratio,
+        }
+        self.selected_format = selected_format
+
+        data = {
+            'data_folder': data_folder,
+            'export_folder': export_folder,
+            'selected_labels': all_labels,
+            'validation_ratio': validation_ratio,
+            'dataset_name': dataset_name,
+            'max_num_labels': Export.config('limits')['max_num_labels'],
+            'selected_format': Export.config('formats')[selected_format],
+        }
+
+        # Execution
+        executor = ExportExecutor(data)
+        self.run_thread(executor, self.start_training)
+
+    def start_training(self):
+        training_defaults = self.parent._config['training_defaults']
+
         # Data
         data = {
+            'create_dataset': self.create_dataset_group.isChecked(),
+            'dataset_export_data': self.dataset_export_data,
             'train_dataset': self.train_dataset_folder.text(),
             'val_dataset': self.val_dataset_folder.text(),
             'output_folder': self.output_folder.text(),
@@ -255,28 +373,45 @@ class TrainingExecutor(WorkerExecutor):
         except:
             pass
 
-        train_dataset = self.data['train_dataset']
-        is_train_dataset_valid = True
-        if not train_dataset:
-            is_train_dataset_valid = False
-        train_dataset = os.path.normpath(train_dataset)
-        if not (os.path.isdir(train_dataset) or os.path.isfile(train_dataset)):
-            is_train_dataset_valid = False
-        if not is_train_dataset_valid:
-            self.thread.message.emit(_('Training'), _('Please select a valid training dataset'), MessageType.Warning)
-            self.abort()
-            return
+        create_dataset = self.data['create_dataset']
+        if create_dataset:
+            export_data = self.data['dataset_export_data']
+            format_name = export_data['format']
+            dataset_format = Export.config('objects')[format_name]()
+            output_folder = export_data['output_folder']
+            train_file = dataset_format.getOutputFileName('train')
+            train_dataset = os.path.join(output_folder, train_file)
+            validation_ratio = export_data['validation_ratio']
+            if validation_ratio > 0:
+                val_file = dataset_format.getOutputFileName('val')
+                val_dataset = os.path.join(output_folder, val_file)
+            else:
+                # Validation dataset is optional
+                val_dataset = False
 
-        val_dataset = self.data['val_dataset']
-        is_val_dataset_valid = True
-        if not val_dataset:
-            is_val_dataset_valid = False
-        val_dataset = os.path.normpath(val_dataset)
-        if not (os.path.isdir(val_dataset) or os.path.isfile(val_dataset)):
-            is_val_dataset_valid = False
-        if not is_val_dataset_valid:
-            # Validation dataset is optional
-            val_dataset = False
+        else:
+            train_dataset = self.data['train_dataset']
+            is_train_dataset_valid = True
+            if not train_dataset:
+                is_train_dataset_valid = False
+            train_dataset = os.path.normpath(train_dataset)
+            if not (os.path.isdir(train_dataset) or os.path.isfile(train_dataset)):
+                is_train_dataset_valid = False
+            if not is_train_dataset_valid:
+                self.thread.message.emit(_('Training'), _('Please select a valid training dataset'), MessageType.Warning)
+                self.abort()
+                return
+
+            val_dataset = self.data['val_dataset']
+            is_val_dataset_valid = True
+            if not val_dataset:
+                is_val_dataset_valid = False
+            val_dataset = os.path.normpath(val_dataset)
+            if not (os.path.isdir(val_dataset) or os.path.isfile(val_dataset)):
+                is_val_dataset_valid = False
+            if not is_val_dataset_valid:
+                # Validation dataset is optional
+                val_dataset = False
 
         output_folder = os.path.normpath(self.data['output_folder'])
         training_name = self.data['training_name']

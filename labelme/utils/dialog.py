@@ -46,6 +46,7 @@ class WorkerDialog(QtWidgets.QDialog):
         return self.current_worker_idx
     
     def reset_thread(self):
+        logger.debug('reset_thread')
         Application.destroyWorker(self.current_worker_idx)
         self.current_worker_idx = None
         self.current_worker_object = None
@@ -69,6 +70,7 @@ class WorkerDialog(QtWidgets.QDialog):
         logger.debug('on_finish')
         self.cancel_progress()
         if not self.worker_executor.isAborted():
+            self.reset_thread()
             if self.finish_func is not None:
                 self.finish_func()
             else:

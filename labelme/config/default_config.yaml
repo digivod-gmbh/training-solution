@@ -13,6 +13,13 @@ project_training_folder: trainings
 project_import_folder: imports
 image_max_size: 800
 
+# training
+training_defaults:
+  epochs: 10
+  batch_size: 8
+  learning_rate: 0.0001
+  dataset_format: coco
+
 flags: null
 label_flags: null
 labels: null

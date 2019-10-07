@@ -32,6 +32,13 @@ class FormatImageRecord(DatasetFormat):
         self.num_samples = -1
         FormatImageRecord._files['labels'] = Export.config('labels_file')
 
+    def getOutputFileName(self, split='train'):
+        if split == 'train':
+            return 'train.rec'
+        elif split == 'val':
+            return 'val.rec'
+        raise Exception('Unknown split {}'.format(split))
+
     def isValidFormat(self, dataset_folder_or_file):
         if not os.path.isfile(dataset_folder_or_file):
             logger.warning('Dataset file {} does not exist'.format(dataset_folder_or_file))
@@ -183,7 +190,8 @@ class FormatImageRecord(DatasetFormat):
         if not os.path.isdir(train_output_folder):
             os.makedirs(train_output_folder)
         self.makeLstFile(train_output_folder, 'train.lst', train_samples)
-        self.makeRecFile(data_folder, train_output_folder, 'train.rec', 'train.idx', 'train.lst')
+        train_rec_file = self.getOutputFileName('train')
+        self.makeRecFile(data_folder, train_output_folder, train_rec_file, 'train.idx', 'train.lst')
         train_label_file = os.path.join(train_output_folder, FormatImageRecord._files['labels'])
         with open(train_label_file, 'w+') as f:
             f.write('\n'.join(labels))
@@ -197,7 +205,8 @@ class FormatImageRecord(DatasetFormat):
             if not os.path.isdir(val_output_folder):
                 os.makedirs(val_output_folder)
             self.makeLstFile(val_output_folder, 'val.lst', val_samples)
-            self.makeRecFile(data_folder, val_output_folder, 'val.rec', 'val.idx', 'val.lst')
+            val_rec_file = self.getOutputFileName('val')
+            self.makeRecFile(data_folder, val_output_folder, val_rec_file, 'val.idx', 'val.lst')
             val_label_file = os.path.join(val_output_folder, FormatImageRecord._files['labels'])
             with open(val_label_file, 'w+') as f:
                 f.write('\n'.join(labels))

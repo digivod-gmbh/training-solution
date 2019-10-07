@@ -36,6 +36,11 @@ class FormatVoc(DatasetFormat):
         self.all_image_sets = all_image_sets
         FormatVoc._files['labels'] = Export.config('labels_file')
 
+    def getOutputFileName(self, split='train'):
+        if split in FormatVoc._splits:
+            return os.path.join(FormatVoc._directories['splits'], split + '.txt')
+        raise Exception('Unknown split {}'.format(split))
+
     def isValidFormat(self, dataset_folder_or_file):
         root_folder = dataset_folder_or_file
         if self.all_image_sets:
@@ -201,7 +206,8 @@ class FormatVoc(DatasetFormat):
 
         self.checkAborted()
 
-        out_split_file = os.path.join(output_folder, FormatVoc._directories['splits'], split + '.txt')
+        output_file = self.getOutputFileName(split)
+        out_split_file = os.path.join(output_folder, output_file)
         open(out_split_file, 'w').close()
 
         for image in samples_per_image:
@@ -310,5 +316,5 @@ class VOCDetectionCustom(data.VOCDetection):
         for name in splits:
             lf = os.path.join(self._root, 'ImageSets', 'Main', name + '.txt')
             with open(lf, 'r') as f:
-                ids += [(self._root, line.strip()) for line in f.readlines()]
+                ids += [(self._root, line.strip().split(' ')[0]) for line in f.readlines()]
         return ids

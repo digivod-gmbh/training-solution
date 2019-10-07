@@ -1679,12 +1679,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.importWindow.show()
 
     def exportDialog(self):
-        # Get labels
-        labels = []
-        for i in range(len(self.uniqLabelList)):
-            labels.append(self.uniqLabelList.item(i).text())
-
-        self.exportWindow = ExportWindow(self, labels)
+        self.exportWindow = ExportWindow(self)
         self.exportWindow.show()
 
     def mergeDialog(self):

@@ -32,8 +32,15 @@ class FormatCoco(DatasetFormat):
     def __init__(self):
         super().__init__()
         self.intermediate = None
+        self.dataset = None
         self.num_samples = -1
         FormatCoco._files['labels'] = Export.config('labels_file')
+
+    def getOutputFileName(self, split='train'):
+        if split in FormatCoco._splits:
+            file_name = '{}_{}.json'.format(FormatCoco._files['instances'], FormatCoco._splits[split])
+            return os.path.join(FormatCoco._directories['annotations'], file_name)
+        raise Exception('Unknown split {}'.format(split))
 
     def isValidFormat(self, dataset_folder_or_file):
         if not os.path.isfile(dataset_folder_or_file):
@@ -62,7 +69,7 @@ class FormatCoco(DatasetFormat):
 
     def _loadDataset(self):
         if self.dataset is None:
-            root_folder = os.path.normpath(os.path.dirname(self.input_folder_or_file) + '../')
+            root_folder = os.path.normpath(os.path.dirname(self.input_folder_or_file) + '/../')
             split = self.fileNameToSplit(self.input_folder_or_file)
             self.dataset = COCODetectionCustom(root_folder, splits=[split])
         return self.dataset
@@ -185,9 +192,9 @@ class FormatCoco(DatasetFormat):
                 name=class_name,
             ))
 
-        file_name = '{}_{}.json'.format(FormatCoco._files['instances'], split)
         output_folder = self.output_folder
-        out_ann_file = os.path.join(output_folder, FormatCoco._directories['annotations'], file_name)
+        output_file = self.getOutputFileName(split)
+        out_ann_file = os.path.join(output_folder, output_file)
         out_ann_dir = os.path.dirname(out_ann_file)
         if not os.path.exists(out_ann_dir):
             os.makedirs(out_ann_dir)
@@ -325,11 +332,57 @@ class COCODetectionCustom(data.COCODetection):
 
     def __init__(self, root, splits=[FormatCoco._splits['train']], transform=None, min_object_area=0, skip_empty=True, use_crowd=True):
         self._classes = None
+        # for i, split in enumerate(splits):
+        #     splits[i] = FormatCoco._files['instances'] + '_' + split
         super(COCODetectionCustom, self).__init__(root, splits, transform, min_object_area, skip_empty, use_crowd)
 
     def __str__(self):
         detail = ','.join([str(s) for s in self._splits])
         return self.__class__.__name__ + '(' + detail + ')'
+
+    def _parse_image_path(self, entry):
+        abs_path = os.path.join(self._root, )
+        dirname, filename = entry['coco_url'].split('/')[-2:]
+        abs_path = os.path.join(self._root, dirname, filename)
+        return abs_path
+
+    def _load_jsons(self):
+        """Load all image paths and labels from JSON annotation files into buffer."""
+        items = []
+        labels = []
+        im_aspect_ratios = []
+        from pycocotools.coco import COCO
+        for split in self._splits:
+            file_name = FormatCoco._files['instances'] + '_' + split + '.json'
+            anno = os.path.join(self._root, self.annotation_dir, file_name) 
+            _coco = COCO(anno)
+            self._coco.append(_coco)
+            classes = [c['name'] for c in _coco.loadCats(_coco.getCatIds())]
+            if not classes == self.classes:
+                raise ValueError("Incompatible category names with COCO: ")
+            assert classes == self.classes
+            json_id_to_contiguous = {
+                v: k for k, v in enumerate(_coco.getCatIds())}
+            if self.json_id_to_contiguous is None:
+                self.json_id_to_contiguous = json_id_to_contiguous
+                self.contiguous_id_to_json = {
+                    v: k for k, v in self.json_id_to_contiguous.items()}
+            else:
+                assert self.json_id_to_contiguous == json_id_to_contiguous
+
+            # iterate through the annotations
+            image_ids = sorted(_coco.getImgIds())
+            for entry in _coco.loadImgs(image_ids):
+                abs_path = os.path.join(self._root, split, entry['file_name'])
+                if not os.path.exists(abs_path):
+                    raise IOError('Image: {} not exists.'.format(abs_path))
+                label = self._check_load_bbox(_coco, entry)
+                if not label:
+                    continue
+                im_aspect_ratios.append(float(entry['width']) / entry['height'])
+                items.append(abs_path)
+                labels.append(label)
+        return items, labels
 
     @property
     def classes(self):
@@ -337,8 +390,7 @@ class COCODetectionCustom(data.COCODetection):
             try:
                 label_file = os.path.join(self._root, Export.config('labels_file'))
                 with open(label_file, 'r') as f:
-                    labels = [l.strip().lower() for l in f.readlines()]
-                self._validate_class_names(labels)
+                    labels = [l.strip() for l in f.readlines()]
                 self._classes = labels
             except AssertionError as e:
                 raise RuntimeError("Class names must not contain {}".format(e))
