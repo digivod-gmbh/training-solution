@@ -66,6 +66,8 @@ class ImportWindow(WorkerDialog):
         output_folder_group_layout.addWidget(output_browse_btn)
         layout.addWidget(output_folder_group)
 
+        layout.addStretch()
+
         button_box = QtWidgets.QDialogButtonBox()
         export_btn = button_box.addButton(_('Import'), QtWidgets.QDialogButtonBox.AcceptRole)
         export_btn.clicked.connect(self.import_btn_clicked)

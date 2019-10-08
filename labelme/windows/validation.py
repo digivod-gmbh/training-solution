@@ -19,6 +19,8 @@ class ValidationWindow(WorkerDialog):
         self.set_default_window_flags(self)
         self.setWindowModality(Qt.ApplicationModal)
 
+        self.inference_windows = []
+
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
 
@@ -45,6 +47,8 @@ class ValidationWindow(WorkerDialog):
         network_files_group_layout.addWidget(self.training_folder, 0, 0)
         network_files_group_layout.addWidget(training_folder_browse_btn, 0, 1)
         layout.addWidget(network_files_group)
+
+        layout.addStretch()
 
         button_box = QtWidgets.QDialogButtonBox()
         validate_btn = button_box.addButton(_('Validate'), QtWidgets.QDialogButtonBox.AcceptRole)
@@ -87,10 +91,15 @@ class ValidationWindow(WorkerDialog):
             mb.warning(self, _('Validation'), _('Please select a valid training folder'))
             return
 
-        inferenceWin = InferenceWindow(self)
-        inferenceWin.show()
-        inferenceWin.start_inference(input_image_file, training_folder)
-        self.close()
+        inference_window = InferenceWindow(self)
+        inference_window.show()
+        inference_window.start_inference(input_image_file, training_folder)
+        self.inference_windows.append(inference_window)
 
     def cancel_btn_clicked(self):
         self.close()
+
+    def closeEvent(self, event):
+        for window in self.inference_windows:
+            window.close()
+        super().closeEvent(event)

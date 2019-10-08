@@ -22,13 +22,34 @@ class InferenceWindow(WorkerDialog):
         super().__init__(parent)
         self.setWindowTitle(_('Validation'))
         self.set_default_window_flags(self)
-        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowModality(Qt.NonModal)
 
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
 
         self.image_label = QtWidgets.QLabel()
         layout.addWidget(self.image_label)
+
+        self.score_value = QtWidgets.QLabel('50%')
+        self.score_slider = QtWidgets.QSlider(Qt.Horizontal)
+        self.score_slider.setMinimum(0)
+        self.score_slider.setMaximum(100)
+        self.score_slider.setSingleStep(1)
+        self.score_slider.setValue(50)
+        self.score_slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
+        self.score_slider.setTickInterval(10)
+        self.score_slider.valueChanged.connect(self.update_results)
+
+        self.confidence_group = QtWidgets.QGroupBox()
+        self.confidence_group.setTitle(_('Minimum confidence'))
+        confidence_group_layout = QtWidgets.QGridLayout()
+        self.confidence_group.setLayout(confidence_group_layout)
+        confidence_group_layout.addWidget(self.score_value, 0, 0)
+        confidence_group_layout.addWidget(self.score_slider, 0, 1, 1, 8)
+        layout.addWidget(self.confidence_group)
+        self.confidence_group.hide()
+
+        layout.addStretch()
 
         self.progress_bar = QtWidgets.QProgressBar()
         layout.addWidget(self.progress_bar)
@@ -47,6 +68,7 @@ class InferenceWindow(WorkerDialog):
 
     def start_inference(self, input_image_file, training_folder):
         config = get_config()
+
         self.pixmap = QtGui.QPixmap(input_image_file)
         w, h = self.get_scaled_size(self.pixmap.width(), self.pixmap.height(), config['image_max_size'])
         self.pixmap = self.pixmap.scaled(w, h)
@@ -66,6 +88,7 @@ class InferenceWindow(WorkerDialog):
             'training_folder': training_folder,
             'input_image_file': input_image_file,
         }
+        self.input_image_file = input_image_file
 
         # Execution
         executor = InferenceExecutor(data)
@@ -74,12 +97,26 @@ class InferenceWindow(WorkerDialog):
     def finish_inference(self):
         data = self.data
         logger.debug(data)
+        self.confidence_group.show()
         self.progress_bar.setValue(4)
-        data = Map(data)
+        self.update_results()
+
+    def reset_image(self):
+        config = get_config()
+        pixmap = QtGui.QPixmap(self.input_image_file)
+        w, h = self.get_scaled_size(pixmap.width(), pixmap.height(), config['image_max_size'])
+        scaled_pixmap = pixmap.scaled(w, h)
+        self.painter.drawPixmap(0, 0, scaled_pixmap)
+
+    def update_results(self):
+        data = Map(self.data)
+        min_score = self.score_slider.value() / 100.0
+        self.score_value.setText('{}%'.format(self.score_slider.value()))
+        self.reset_image()
         for i in range(len(data.bbox[0])):
             label = int(data.classid[0][i][0])
             score = data.score[0][i][0]
-            if label > -1 and score > 0.5:
+            if label > -1 and score > min_score:
                 label_name = _('unknown')
                 if label < len(data.labels):
                     label_name = str(data.labels[label])

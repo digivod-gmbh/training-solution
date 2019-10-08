@@ -1,10 +1,11 @@
+import os
 import json
 import warnings
 import numpy as np
 import mxnet as mx
 from mxnet import gluon
 from gluoncv.data.transforms import image as timage
-from gluoncv.utils import viz
+from gluoncv.utils import viz, export_block
 
 from labelme.logger import logger
 from labelme.extensions.thread import WorkerExecutor
@@ -75,6 +76,9 @@ class Network(WorkerExecutor):
         logger.debug('Use context: {}'.format(ctx))
         return ctx
 
+    def saveTraining(self, network_name):
+        export_block(os.path.join(self.output_folder, network_name), self.net, preprocess=True, layout='HWC')
+
     def inference(self, input_image_file, labels, architecture_file, weights_file, args = None):
         default_args = {
             'threshold': 0.5,
@@ -109,6 +113,11 @@ class Network(WorkerExecutor):
             cid, score, bbox = net(x)
 
             self.thread.data.emit({
+                'files': {
+                    'input_image_file': input_image_file,
+                    'architecture_file': architecture_file,
+                    'weights_file': weights_file,
+                },
                 'imgsize': [image.shape[0], image.shape[1]],
                 'classid': cid.asnumpy().tolist(),
                 'score': score.asnumpy().tolist(),

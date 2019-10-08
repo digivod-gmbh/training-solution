@@ -79,15 +79,22 @@ class FormatVoc(DatasetFormat):
         return dataset
 
     def _loadDataset(self):
+
+        def grayscale2rgb(img, label):
+            # Convert grayscale image to rgb
+            if len(img.shape) == 2 or img.shape[2] == 1:
+                img = np.stack((img,)*3, axis=-1)
+            return img, label
+
         if self.dataset is None:
             root_folder = self.input_folder_or_file
             if self.all_image_sets:
-                self.dataset = VOCDetectionCustom(self.input_folder_or_file, splits=FormatVoc._splits['train'].values(), transform=None, index_map=None, preload_label=True)
+                self.dataset = VOCDetectionCustom(self.input_folder_or_file, splits=FormatVoc._splits['train'].values(), transform=grayscale2rgb, index_map=None, preload_label=True)
             else:
                 root_folder = self._getRootFolderFromFile(self.input_folder_or_file)
                 split_file = os.path.basename(self.input_folder_or_file)
                 splits = [os.path.splitext(split_file)[0]]
-                self.dataset = VOCDetectionCustom(root_folder, splits=splits, transform=None, index_map=None, preload_label=True)
+                self.dataset = VOCDetectionCustom(root_folder, splits=splits, transform=grayscale2rgb, index_map=None, preload_label=True)
         return self.dataset
 
     def importFolder(self):
@@ -112,8 +119,11 @@ class FormatVoc(DatasetFormat):
                 lines = [l.strip().split() for l in f.readlines()]
                 for l in lines:
                     try:
-                        num = int(l[1])
-                        if num > -1:
+                        if len(l) > 1:
+                            num = int(l[1])
+                            if num > -1:
+                                annotation_files.append(str(l[0] + '.xml'))
+                        else:
                             annotation_files.append(str(l[0] + '.xml'))
                     except:
                         pass
@@ -131,6 +141,16 @@ class FormatVoc(DatasetFormat):
             # Copy image
             src_image = os.path.join(input_folder, FormatVoc._directories['images'], filename)
             dst_image = os.path.join(output_folder, filename)
+
+            # If src_image does not exist, check with arbitrary extension
+            if not os.path.isfile(src_image):
+                files = glob.glob('{}.*'.format(os.path.splitext(src_image)[0]))
+                if len(files) > 0:
+                    ext = os.path.splitext(files[0])[-1]
+                    filename = '{}{}'.format(filename, ext)
+                    src_image = os.path.join(input_folder, FormatVoc._directories['images'], filename)
+                    dst_image = os.path.join(output_folder, filename)
+
             if not os.path.exists(dst_image):
                 shutil.copyfile(src_image, dst_image)
 
@@ -150,15 +170,16 @@ class FormatVoc(DatasetFormat):
             for idx2, obj in enumerate(objects):
                 bbox = obj.find('bndbox')
                 points = [
-                    [int(bbox.find('xmin').text), int(bbox.find('ymin').text)],
-                    [int(bbox.find('xmax').text), int(bbox.find('ymax').text)],
+                    [int(float(bbox.find('xmin').text)), int(float(bbox.find('ymin').text))],
+                    [int(float(bbox.find('xmax').text)), int(float(bbox.find('ymax').text))],
                 ]
                 label_name = obj.find('name').text
                 self.intermediate.addSample(dst_image, image_size, label_name, points, 'rectangle')
-
-                percentage = idx2 / len(objects) * 90 * idx1 / len(annotation_files)
-                self.thread.update.emit(_('Loading dataset ...'), 10 + percentage, -1)
                 self.checkAborted()
+
+            percentage = 90 * idx1 / len(annotation_files)
+            self.thread.update.emit(_('Loading dataset ...'), 10 + percentage, -1)
+            self.checkAborted()
 
     def export(self):
         if self.intermediate is None:
@@ -226,6 +247,10 @@ class FormatVoc(DatasetFormat):
             samples_count = len(samples) if len(samples) > 0 else -1
             with open(out_split_file, 'a') as f:
                 f.write(base + ' ' + str(samples_count) + '\n')
+
+            # Convert grayscale image to rgb
+            if len(img.shape) == 2:
+                img = np.stack((img,)*3, axis=-1)
 
             maker = lxml.builder.ElementMaker()
             xml = maker.annotation(

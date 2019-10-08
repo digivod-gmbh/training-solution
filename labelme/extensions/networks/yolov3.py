@@ -17,7 +17,7 @@ from gluoncv.data.transforms.presets.yolo import YOLO3DefaultValTransform
 from gluoncv.data.dataloader import RandomTransformDataLoader
 from gluoncv.utils.metrics.voc_detection import VOC07MApMetric
 from gluoncv.utils.metrics.coco_detection import COCODetectionMetric
-from gluoncv.utils import LRScheduler, LRSequential, export_block
+from gluoncv.utils import LRScheduler, LRSequential
 from gluoncv.data.transforms import image as timage
 from gluoncv.utils import download, viz
 
@@ -47,19 +47,20 @@ class NetworkYoloV3(Network):
 
     def training(self):
         self.prepare()
-        self.thread.update.emit(_('Start training ...'), -1, -1)
-        self.train()
 
-        # export
-        training_name = '{}_{}'.format(self.args.training_name, self.net_name)
-        export_block(os.path.join(self.output_folder, NetworkYoloV3._network), self.net, preprocess=True, layout='HWC')
-
-        # save
+        # save config
         from labelme.config import Training
         config_file = os.path.join(self.output_folder, Training.config('config_file'))
         files = list(NetworkYoloV3._files.values())
-        #self.args.dataset_folder
         self.saveConfig(config_file, NetworkYoloV3._network, files, '', self.labels, self.args)
+
+        self.thread.update.emit(_('Start training ...'), -1, -1)
+        self.train()
+
+        # export trained weights
+        self.saveTraining(NetworkYoloV3._network)
+        #training_name = '{}_{}'.format(self.args.training_name, self.net_name)
+        #export_block(os.path.join(self.output_folder, NetworkYoloV3._network), self.net, preprocess=True, layout='HWC')
 
         self.thread.update.emit(_('Finished training'), -1, -1)
 
@@ -282,10 +283,26 @@ class NetworkYoloV3(Network):
 
         self.checkAborted()
 
+        start_time = time.time()
+
         for epoch in range(self.args.start_epoch, self.args.epochs):
 
             self.thread.update.emit(_('Start training on epoch {} ...').format(epoch + 1), None, -1)
-            self.checkAborted()
+            if self.isAborted():
+                self.saveTraining(NetworkYoloV3._network)
+                self.checkAborted()
+
+            self.thread.data.emit({
+                'progress': {
+                    'epoch': epoch + 1,
+                    'epoch_max': self.args.epochs,
+                    'batch': 1,
+                    'batch_max': num_batches,
+                    'speed': 0,
+                    'metric': {}
+                }
+            })
+            
             epoch_count += 1
 
             if self.args.mixup:
@@ -333,15 +350,32 @@ class NetworkYoloV3(Network):
                     name2, loss2 = center_metrics.get()
                     name3, loss3 = scale_metrics.get()
                     name4, loss4 = cls_metrics.get()
-                    logger.info('[Epoch {}][Batch {}/{}], LR: {:.2E}, Speed: {:.3f} samples/sec, {}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}'.format(
-                        epoch, i + 1, num_batches, trainer.learning_rate, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4))
+                    logger.info('[Epoch {}/{}][Batch {}/{}], LR: {:.2E}, Speed: {:.3f} samples/sec, {}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}'.format(
+                        epoch + 1, self.args.epochs, i + 1, num_batches, trainer.learning_rate, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4))
 
+                    speed = batch_size / (time.time() - btic)
+                    self.thread.data.emit({
+                        'progress': {
+                            'epoch': epoch + 1,
+                            'epoch_max': self.args.epochs,
+                            'batch': i + 1,
+                            'batch_max': num_batches,
+                            'speed': batch_size / (time.time() - btic),
+                            'metric': {
+                                name1: loss1,
+                                name2: loss2,
+                                name3: loss3,
+                                name4: loss4,
+                            }
+                        }
+                    })
                     self.thread.update.emit(_('Training ...\nEpoch {}, Batch {}/{}, Speed: {:.3f} samples/sec\n{}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}')
                         .format(epoch + 1, i + 1, num_batches, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4), None, -1)
-
                 
                 self.thread.update.emit(None, -1, -1)
-                self.checkAborted()
+                if self.isAborted():
+                    self.saveTraining(NetworkYoloV3._network)
+                    self.checkAborted()
 
                 btic = time.time()
     
@@ -358,11 +392,20 @@ class NetworkYoloV3(Network):
                 val_msg = '\n'.join(['{}={}'.format(k, v) for k, v in zip(map_name, mean_ap)])
                 logger.info('[Epoch {}] Validation: \n{}'.format(epoch, val_msg))
                 current_map = float(mean_ap[-1])
+                val_data = {
+                    'validation': {}
+                }
+                for i, name in enumerate(map_name[:]):
+                    val_data['validation'][name] = mean_ap[i]
+                self.thread.data.emit(val_data)
             else:
                 current_map = 0.
             self.save_params(best_map, current_map, epoch, self.args.save_interval, os.path.join(self.output_folder, self.args.save_prefix))
-            if current_map > best_map[0]:
-                best_map[0] = current_map
 
-        param_file = '{}.params'.format(self.args.training_name)
-        self.net.save_parameters(os.path.join(self.output_folder, param_file))
+            # if current_map > best_map[0]:
+            #     best_map[0] = current_map
+            #     param_file = '{}.params'.format(self.args.training_name)
+            #     self.net.save_parameters(os.path.join(self.output_folder, param_file))
+
+        end_time = time.time()
+

@@ -35,7 +35,7 @@ install_requires = [
     'PyYAML',
     'qtpy',
     'mxnet==1.5.0',
-	'mxnet-cu100mkl==1.5.0',
+	'mxnet-cu100==1.5.0',
     'gluoncv==0.4.0.post0',
 	#'gluoncv==0.5.0', # still buggy in voc_detection.py
     'pycocotools==2.0.0',

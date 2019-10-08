@@ -40,6 +40,8 @@ class SettingsWindow(QtWidgets.QDialog):
         project_folder_group_layout.addWidget(project_browse_btn)
         layout.addWidget(project_folder_group)
 
+        layout.addStretch()
+
         button_box = QtWidgets.QDialogButtonBox()
         save_btn = button_box.addButton(_('Save'), QtWidgets.QDialogButtonBox.AcceptRole)
         save_btn.clicked.connect(self.save_btn_clicked)

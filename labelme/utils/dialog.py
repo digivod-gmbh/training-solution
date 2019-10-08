@@ -53,7 +53,8 @@ class WorkerDialog(QtWidgets.QDialog):
 
     def on_abort(self):
         logger.debug('on_abort')
-        self.progress.setLabelText(_('Cancelling ...'))
+        if isinstance(self.progress, QtWidgets.QProgressDialog):
+            self.progress.setLabelText(_('Cancelling ...'))
         self.progress.setMaximum(0)
         self.current_worker_object.abort()
         worker = Application.getWorker(self.current_worker_idx)
@@ -110,8 +111,8 @@ class WorkerDialog(QtWidgets.QDialog):
         if isinstance(self.progress, QtWidgets.QProgressDialog):
             if self.progress.wasCanceled():
                 return
-        if message:
-            self.progress.setLabelText(message)
+            if message:
+                self.progress.setLabelText(message)
         if value is not None:
             self.progress.setValue(value)
         if value == -1:
@@ -127,6 +128,11 @@ class WorkerDialog(QtWidgets.QDialog):
     def on_data(self, data):
         logger.debug('on_data')
         self.data = data
+
+    def closeEvent(self, event):
+        if self.current_worker_object is not None:
+            self.on_abort()
+        event.accept()
 
     def init_progress(self, maximum=100):
         if not self.custom_progress:

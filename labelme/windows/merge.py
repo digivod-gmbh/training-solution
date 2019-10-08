@@ -53,6 +53,8 @@ class MergeWindow(QtWidgets.QDialog):
         export_file_group_layout.addWidget(export_browse_btn)
         layout.addWidget(export_file_group)
 
+        layout.addStretch()
+
         button_box = QtWidgets.QDialogButtonBox()
         merge_btn = button_box.addButton(_('Merge'), QtWidgets.QDialogButtonBox.AcceptRole)
         merge_btn.clicked.connect(self.merge_btn_clicked)

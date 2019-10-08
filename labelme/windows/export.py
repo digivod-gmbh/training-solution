@@ -112,6 +112,8 @@ class ExportWindow(WorkerDialog):
         validation_group_layout.addWidget(validation_label, 0, 1)
         layout.addWidget(validation_group)
 
+        layout.addStretch()
+
         button_box = QtWidgets.QDialogButtonBox()
         export_btn = button_box.addButton(_('Export'), QtWidgets.QDialogButtonBox.AcceptRole)
         export_btn.clicked.connect(self.export_btn_clicked)
