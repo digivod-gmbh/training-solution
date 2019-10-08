@@ -130,9 +130,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.label_dock.setObjectName(u'Label List')
         self.label_dock.setWidget(self.uniqLabelList)
 
+        self.searchTimer = QtCore.QTimer()
+        self.searchTimer.timeout.connect(self.fileSearchChanged)
         self.fileSearch = QtWidgets.QLineEdit()
         self.fileSearch.setPlaceholderText(_('Search Filename'))
-        self.fileSearch.textChanged.connect(self.fileSearchChanged)
+        self.fileSearch.textChanged.connect(self.fileSearchTimeout)
         self.fileListWidget = QtWidgets.QListWidget()
         self.fileListWidget.itemSelectionChanged.connect(
             self.fileSelectionChanged
@@ -943,6 +945,11 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.uniqLabelList.findItems(text, Qt.MatchExactly):
             self.uniqLabelList.addItem(text)
             self.uniqLabelList.sortItems()
+
+    def fileSearchTimeout(self):
+        self.searchTimer.stop()   
+        self.searchTimer.setSingleShot(True)
+        self.searchTimer.start(self._config['search_delay_time'])
 
     def fileSearchChanged(self):
         self.importDirImages(

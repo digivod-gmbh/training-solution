@@ -12,6 +12,7 @@ project_dataset_folder: datasets
 project_training_folder: trainings
 project_import_folder: imports
 image_max_size: 800
+search_delay_time: 500
 
 # training
 training_defaults:

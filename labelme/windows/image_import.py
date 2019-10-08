@@ -55,9 +55,12 @@ class ImageImportWindow(WorkerDialog):
     def start_import(self, data):
         self.load = data['load']
 
-        self.progress_bar.setRange(0, 100)
-        self.progress_bar.setValue(0)
-        self.show()
+        if self.load:
+            self.progress_bar.setRange(0, 100)
+            self.progress_bar.setValue(0)
+            self.show()
+
+        self.parent.status(_('Loading images ...'))
 
         # Execution
         executor = ImageImportExecutor(data)
@@ -90,7 +93,7 @@ class ImageImportExecutor(WorkerExecutor):
 
         for i, filename in enumerate(data.images):
 
-            self.thread.update.emit(_('Importing image {}/{}').format(i+1, num_images), i, num_images)
+            self.thread.update.emit(None, i, num_images)
             
             if pattern and pattern not in filename:
                 continue
