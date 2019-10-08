@@ -35,6 +35,7 @@ from labelme.windows import ValidationWindow
 from labelme.windows import MergeWindow
 from labelme.windows import ImportWindow
 from labelme.windows import SettingsWindow
+from labelme.windows import ImageImportWindow
 
 
 # FIXME
@@ -1718,22 +1719,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lastOpenDir = dirpath
         self.filename = None
         self.fileListWidget.clear()
-        for filename in self.scanAllImages(dirpath):
-            if pattern and pattern not in filename:
-                continue
-            label_file = osp.splitext(filename)[0] + '.json'
-            if self.output_dir:
-                label_file_without_path = osp.basename(label_file)
-                label_file = osp.normpath(osp.join(self.output_dir, label_file_without_path))
-            item = QtWidgets.QListWidgetItem(filename)
-            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-            if QtCore.QFile.exists(label_file) and \
-                    LabelFile.is_label_file(label_file):
-                item.setCheckState(Qt.Checked)
-            else:
-                item.setCheckState(Qt.Unchecked)
-            self.fileListWidget.addItem(item)
-        self.openNextImg(load=load)
+
+        # Also clear label lists
+        self.uniqLabelList.clear()
+        self.labelList.clear()
+
+        allImages = self.scanAllImages(dirpath)
+
+        data = {
+            'images': allImages,
+            'output_dir': self.output_dir,
+            'pattern': pattern,
+            'load': load,
+        }
+        importWindow = ImageImportWindow(self)
+        importWindow.start_import(data)
 
     def scanAllImages(self, folderPath):
         extensions = ['.%s' % fmt.data().decode("ascii").lower()

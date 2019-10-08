@@ -6,3 +6,4 @@ from .training import *
 from .validation import *
 from .inference import *
 from .settings import *
+from .image_import import *
