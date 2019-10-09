@@ -109,10 +109,12 @@ class ImageImportExecutor(WorkerExecutor):
                 item.setCheckState(Qt.Unchecked)
 
             shapes = []
-            labelFile = LabelFile(label_file)
-            for label, points, line_color, fill_color, shape_type, flags in labelFile.shapes:
-                shape = Shape(label=label, shape_type=shape_type)
-                shapes.append(shape)
+
+            if os.path.isfile(label_file):
+                labelFile = LabelFile(label_file)
+                for label, points, line_color, fill_color, shape_type, flags in labelFile.shapes:
+                    shape = Shape(label=label, shape_type=shape_type)
+                    shapes.append(shape)
 
             self.thread.data.emit({
                 'item': item,
