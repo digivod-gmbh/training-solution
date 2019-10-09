@@ -110,3 +110,14 @@ def masks_to_bboxes(masks):
         bboxes.append((y1, x1, y2, x2))
     bboxes = np.asarray(bboxes, dtype=np.float32)
     return bboxes
+
+
+def polygon_to_bbox(points):
+    minx, miny = math.inf, math.inf
+    maxx, maxy = -math.inf, -math.inf
+    for point in points:
+        minx = min(minx, point[0])
+        miny = min(miny, point[1])
+        maxx = max(maxx, point[0])
+        maxy = max(maxy, point[1])
+    return (minx, miny, maxx, maxy)

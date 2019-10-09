@@ -133,17 +133,18 @@ class FormatCoco(DatasetFormat):
             points = []
             for i in range(0, len(segmentations)-1, 2):
                 points.append([segmentations[i], segmentations[i+1]])
-            if self.isBBox(points):
-                points = self.bboxToPolygon(points)
-            self.intermediate.addSample(image_path, image_size, label_name, points, 'polygon')
+            if self.isPolygon(points):
+                if self.isBBox(points):
+                    points = self.bboxToPolygon(points)
+                self.intermediate.addSample(image_path, image_size, label_name, points, 'polygon')
+            else:
+                bbox = annotation['bbox']
+                points = [bbox[0], bbox[1], bbox[0]+bbox[2], bbox[1]+bbox[3]]
+                self.intermediate.addSample(image_path, image_size, label_name, points, 'rectangle')
 
             percentage = idx / len(data['annotations']) * 40
             self.thread.update.emit(_('Loading dataset ...'), 50 + percentage, -1)
             self.checkAborted()
-
-            #bbox = annotation['segmentation']['bbox']
-            #points = [bbox[0], bbox[1], bbox[0]+bbox[2], bbox[1]+bbox[3]]
-            #self.intermediate.addSample(image_path, image_size, label_name, points, 'rectangle')
 
     def export(self):
         if self.intermediate is None:
@@ -313,6 +314,20 @@ class FormatCoco(DatasetFormat):
             ],
         )
         return data
+
+    def isPolygon(self, points):
+        if len(points) == 4:
+            # Rectangle
+            isRectangle = True
+            for i in range(4):
+                # Do x and y coordinates match the next or previous point? Yes > rectangle, No > polygon
+                if (not (points[i][0] == points[(i+1)%4][0] or points[i][0] == points[(i+3)%4][0] and   # X
+                    points[i][1] == points[(i+1)%4][1] or points[i][1] == points[(i+3)%4][1])):         # Y
+                    isRectangle = False
+                    break
+            return not isRectangle
+        # Polygon
+        return True
 
     def isBBox(self, bbox):
         return len(bbox) == 2 and len(bbox[0]) == 2 and len(bbox[1]) == 2

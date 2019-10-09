@@ -11,6 +11,7 @@ from .format import DatasetFormat
 from .intermediate import IntermediateFormat
 from labelme.config.export import Export
 from labelme.logger import logger
+from labelme.utils import polygon_to_bbox
 
 
 class FormatVoc(DatasetFormat):
@@ -276,13 +277,17 @@ class FormatVoc(DatasetFormat):
                 label = sample.label
                 shape_type = sample.shape_type
 
-                if shape_type != 'rectangle':
-                    continue
-
                 class_name = label
                 class_id = class_names.index(class_name)
 
-                (xmin, ymin), (xmax, ymax) = points
+                # VOC can only handle bounding boxes
+                # Therefore polygons are converted to rectangles
+                if shape_type == 'rectangle':
+                    (xmin, ymin), (xmax, ymax) = points
+                elif shape_type == 'polygon':
+                    xmin, ymin, xmax, ymax = polygon_to_bbox(points)
+                else:
+                    continue
                 bboxes.append([xmin, ymin, xmax, ymax])
                 labels.append(class_id)
 
