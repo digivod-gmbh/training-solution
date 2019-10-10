@@ -53,7 +53,7 @@ from labelme.utils import StatisticsModel
 
 class MainWindow(QtWidgets.QMainWindow):
 
-    FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = 0, 1, 2
+    FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM, ZOOM_ORIG = 0, 1, 2, 3
 
     def __init__(
         self,
@@ -422,10 +422,10 @@ class MainWindow(QtWidgets.QMainWindow):
         zoomOut = action(_('&Zoom Out'), functools.partial(self.addZoom, 0.9),
                          shortcuts['zoom_out'], 'zoom-out',
                          'Decrease zoom level', enabled=False)
-        zoomOrg = action(_('&Original size'),
-                         functools.partial(self.setZoom, 100),
+        zoomOrg = action(_('&Original size'), self.setZoomOrig,
                          shortcuts['zoom_to_original'], 'zoom',
-                         _('Zoom to original size'), enabled=False)
+                         _('Zoom to original size'), checkable=True,
+                         enabled=False)
         fitWindow = action(_('&Fit Window'), self.setFitWindow,
                            shortcuts['fit_window'], 'fit-window',
                            _('Zoom follows window size'), checkable=True,
@@ -438,10 +438,12 @@ class MainWindow(QtWidgets.QMainWindow):
         zoomActions = (self.zoomWidget, zoomIn, zoomOut, zoomOrg,
                        fitWindow, fitWidth)
         self.zoomMode = self.FIT_WINDOW
+        self.initialZoomMode = self.FIT_WINDOW
         fitWindow.setChecked(Qt.Checked)
         self.scalers = {
             self.FIT_WINDOW: self.scaleFitWindow,
             self.FIT_WIDTH: self.scaleFitWidth,
+            self.ZOOM_ORIG: lambda: 1,
             # Set to one to scale to 100% when loading files.
             self.MANUAL_ZOOM: lambda: 1,
         }
@@ -642,7 +644,8 @@ class MainWindow(QtWidgets.QMainWindow):
             zoom,
             zoomOut,
             fitWindow,
-            fitWidth,
+            #fitWidth,
+            zoomOrg,
         )
 
         self.statusBar().showMessage(_('%s started.') % __appname__)
@@ -994,7 +997,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.importDirImages(
             self.lastOpenDir,
             pattern=self.fileSearch.text(),
-            load=False,
+            load=True,
             filters=filters,
         )
 
@@ -1227,6 +1230,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def setZoom(self, value):
         self.actions.fitWidth.setChecked(False)
         self.actions.fitWindow.setChecked(False)
+        self.actions.zoomOrg.setChecked(False)
         self.zoomMode = self.MANUAL_ZOOM
         self.zoomWidget.setValue(value)
 
@@ -1255,13 +1259,25 @@ class MainWindow(QtWidgets.QMainWindow):
     def setFitWindow(self, value=True):
         if value:
             self.actions.fitWidth.setChecked(False)
+            self.actions.zoomOrg.setChecked(False)
+        self.initialZoomMode = self.FIT_WINDOW if value else self.MANUAL_ZOOM
         self.zoomMode = self.FIT_WINDOW if value else self.MANUAL_ZOOM
         self.adjustScale()
 
     def setFitWidth(self, value=True):
         if value:
             self.actions.fitWindow.setChecked(False)
+            self.actions.zoomOrg.setChecked(False)
+        self.initialZoomMode = self.FIT_WIDTH if value else self.MANUAL_ZOOM
         self.zoomMode = self.FIT_WIDTH if value else self.MANUAL_ZOOM
+        self.adjustScale()
+
+    def setZoomOrig(self, value=True):
+        if value:
+            self.actions.fitWidth.setChecked(False)
+            self.actions.fitWindow.setChecked(False)
+        self.initialZoomMode = self.ZOOM_ORIG if value else self.MANUAL_ZOOM
+        self.zoomMode = self.ZOOM_ORIG if value else self.MANUAL_ZOOM
         self.adjustScale()
 
     def togglePolygons(self, value):
@@ -1367,7 +1383,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.update()
 
     def adjustScale(self, initial=False):
-        value = self.scalers[self.FIT_WINDOW if initial else self.zoomMode]()
+        if initial:
+            if self.initialZoomMode == self.ZOOM_ORIG:
+                self.actions.zoomOrg.setChecked(True)
+            elif self.initialZoomMode == self.FIT_WINDOW:
+                self.actions.fitWindow.setChecked(True)
+            elif self.initialZoomMode == self.FIT_WIDTH:
+                self.actions.fitWidth.setChecked(True)
+        value = self.scalers[self.initialZoomMode if initial else self.zoomMode]()
         self.zoomWidget.setValue(int(100 * value))
 
     def scaleFitWindow(self):
