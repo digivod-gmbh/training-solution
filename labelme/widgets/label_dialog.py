@@ -114,6 +114,14 @@ class LabelDialog(QtWidgets.QDialog):
         if self._sort_labels:
             self.labelList.sortItems()
 
+    def setLabelHistory(self, labels):
+        labels = set(labels)
+        self.labelList.clear()
+        for label in labels:
+            self.labelList.addItem(label)
+        if self._sort_labels:
+            self.labelList.sortItems()
+
     def labelSelected(self, item):
         self.edit.setText(item.text())
 

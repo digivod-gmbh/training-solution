@@ -114,6 +114,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statistics_widget = QtWidgets.QTableWidget()
         self.statistics_dock.setWidget(self.statistics_widget)
         self.statistics_model = StatisticsModel(self.statistics_widget)
+        self.updateLabelHistory()
 
         self.labelList.itemActivated.connect(self.labelSelectionChanged)
         self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
@@ -1850,4 +1851,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelFilter.addItem(_('- all labels -'), StatisticsModel.STATISTICS_FILTER_ALL)
         for label in labels:
             self.labelFilter.addItem(label, label)
+
+    def updateLabelHistory(self):
+        labels = self.statistics_model.getLabels()
+        self.labelDialog.setLabelHistory(labels)
 

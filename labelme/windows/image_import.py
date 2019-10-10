@@ -67,6 +67,7 @@ class ImageImportWindow(WorkerDialog):
 
     def finish_import(self):
         if self.initial:
+            self.parent.updateLabelHistory()
             labels = self.parent.statistics_model.getLabels()
             self.parent.labelFilter.clear()
             self.parent.labelFilter.addItem(_('- all labels -'), StatisticsModel.STATISTICS_FILTER_ALL)
