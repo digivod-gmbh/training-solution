@@ -147,7 +147,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.hasLabelFilter.addItem(_('Labeled'), StatisticsModel.STATISTICS_FILTER_LABELED)
         self.hasLabelFilter.addItem(_('Unlabeled'), StatisticsModel.STATISTICS_FILTER_UNLABELED)
         self.labelFilter = QtWidgets.QComboBox()
-        self.labelFilter.addItem(_('- all labels -'), StatisticsModel.STATISTICS_FILTER_ALL)
+        self.updateFilterLabels()
         self.searchResetBtn = QtWidgets.QToolButton()
         self.searchResetBtn.setText(_('Reset'))
         self.searchResetBtn.setFixedSize(80, 22)
@@ -598,10 +598,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 None,
                 zoomIn,
                 zoomOut,
-                zoomOrg,
                 None,
+                zoomOrg,
                 fitWindow,
-                fitWidth,
+                #fitWidth,
                 None,
             ),
         )
@@ -672,7 +672,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fit_window = False
 
         if filename is not None and osp.isdir(filename):
-            self.importDirImages(filename, load=False)
+            self.importDirImages(filename, load=False, intial=True)
         else:
             self.filename = filename
 
@@ -837,10 +837,18 @@ class MainWindow(QtWidgets.QMainWindow):
     # Callbacks
 
     def undoShapeEdit(self):
-        self.canvas.restoreShape()
+        undone, restored = self.canvas.restoreShape()
         self.labelList.clear()
         self.loadShapes(self.canvas.shapes)
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
+        if len(undone) > len(restored):
+            last = undone[-1]
+            is_last_label = len(restored) == 0
+            self.statistics_model.remLabel(last.label, is_last_label)
+        elif len(undone) < len(restored):
+            last = restored[-1]
+            is_first_label = len(undone) == 0
+            self.statistics_model.addLabel(last.label, is_first_label)
 
     def tutorial(self):
         mb = QtWidgets.QMessageBox
@@ -1036,7 +1044,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.shapeLineColor.setEnabled(n_selected)
         self.actions.shapeFillColor.setEnabled(n_selected)
 
-    def addLabel(self, shape):
+    def addLabel(self, shape, created=False):
         item = QtWidgets.QListWidgetItem(shape.label)
         item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
         item.setCheckState(Qt.Checked)
@@ -1046,6 +1054,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.uniqLabelList.addItem(shape.label)
             self.uniqLabelList.sortItems()
         self.labelDialog.addLabelHistory(item.text())
+
+        if created:
+            is_first_label = self.labelList.count() == 1
+            self.statistics_model.addLabel(shape.label, is_first_label)
+
         for action in self.actions.onShapesPresent:
             action.setEnabled(True)
 
@@ -1053,6 +1066,8 @@ class MainWindow(QtWidgets.QMainWindow):
         for shape in shapes:
             item = self.labelList.get_item_from_shape(shape)
             self.labelList.takeItem(self.labelList.row(item))
+            is_last_label = self.labelList.count() == 0
+            self.statistics_model.remLabel(shape.label, is_last_label)
 
     def loadShapes(self, shapes, replace=True):
         self._noSelectionSlot = True
@@ -1155,7 +1170,7 @@ class MainWindow(QtWidgets.QMainWindow):
         added_shapes = self.canvas.copySelectedShapes()
         self.labelList.clearSelection()
         for shape in added_shapes:
-            self.addLabel(shape)
+            self.addLabel(shape, created=True)
         self.setDirty()
 
     def labelSelectionChanged(self):
@@ -1213,7 +1228,7 @@ class MainWindow(QtWidgets.QMainWindow):
             text = ''
         if text:
             self.labelList.clearSelection()
-            self.addLabel(self.canvas.setLastLabel(text, flags))
+            self.addLabel(self.canvas.setLastLabel(text, flags), created=True)
             self.actions.editMode.setEnabled(True)
             self.actions.undoLastPoint.setEnabled(False)
             self.actions.undo.setEnabled(True)
@@ -1718,7 +1733,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.endMove(copy=True)
         self.labelList.clearSelection()
         for shape in self.canvas.selectedShapes:
-            self.addLabel(shape)
+            self.addLabel(shape, created=True)
         self.setDirty()
 
     def moveShape(self):
@@ -1740,7 +1755,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self, _('%s - Open Directory') % __appname__, defaultOpenDirPath,
             QtWidgets.QFileDialog.ShowDirsOnly |
             QtWidgets.QFileDialog.DontResolveSymlinks))
-        self.importDirImages(targetDirPath)
+        self.importDirImages(targetDirPath, initial=True)
 
     def settingsDialog(self, prevent_close=False):
         self.settingsWindow = SettingsWindow(self, prevent_close)
@@ -1774,7 +1789,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lst.append(item.text())
         return lst
 
-    def importDirImages(self, dirpath, pattern=None, load=True, filters={}):
+    def importDirImages(self, dirpath, pattern=None, load=True, filters={}, initial=False):
         self.actions.openNextImg.setEnabled(True)
         self.actions.openPrevImg.setEnabled(True)
 
@@ -1798,6 +1813,7 @@ class MainWindow(QtWidgets.QMainWindow):
             'pattern': pattern,
             'load': load,
             'filters': filters,
+            'initial': initial,
         }
         importWindow = ImageImportWindow(self)
         importWindow.start_import(data)
@@ -1827,4 +1843,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.hasLabelFilter.setCurrentIndex(0)
         self.fileSearch.setText('')
         self.fileSearchChanged()
+
+    def updateFilterLabels(self):
+        labels = self.statistics_model.getLabels()
+        self.labelFilter.clear()
+        self.labelFilter.addItem(_('- all labels -'), StatisticsModel.STATISTICS_FILTER_ALL)
+        for label in labels:
+            self.labelFilter.addItem(label, label)
 

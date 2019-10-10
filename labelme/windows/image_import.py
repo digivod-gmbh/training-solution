@@ -51,6 +51,7 @@ class ImageImportWindow(WorkerDialog):
 
     def start_import(self, data):
         self.load = data['load']
+        self.initial = data['initial']
 
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
@@ -65,7 +66,7 @@ class ImageImportWindow(WorkerDialog):
         self.run_thread(executor, self.finish_import, custom_progress=self.progress_bar)
 
     def finish_import(self):
-        if self.load:
+        if self.initial:
             labels = self.parent.statistics_model.getLabels()
             self.parent.labelFilter.clear()
             self.parent.labelFilter.addItem(_('- all labels -'), StatisticsModel.STATISTICS_FILTER_ALL)
@@ -137,10 +138,7 @@ class ImageImportExecutor(WorkerExecutor):
             # ListItem
             item = QtWidgets.QListWidgetItem(filename)
             item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-            if QtCore.QFile.exists(label_file) and LabelFile.is_label_file(label_file):
-                item.setCheckState(Qt.Checked)
-            else:
-                item.setCheckState(Qt.Unchecked)
+            item.setCheckState(Qt.Unchecked)
 
             self.checkAborted()
 
@@ -172,9 +170,10 @@ class ImageImportExecutor(WorkerExecutor):
             image_count += 1
             items.append(item)
             if has_labels:
+                item.setCheckState(Qt.Checked)
                 all_shapes.append(shapes)
 
-            if i % data['update_interval'] == 0:
+            if image_count % data['update_interval'] == 0:
                 self.thread.data.emit({
                     'items': items,
                     'num_images': image_count,

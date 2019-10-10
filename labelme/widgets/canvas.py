@@ -107,14 +107,15 @@ class Canvas(QtWidgets.QWidget):
 
     def restoreShape(self):
         if not self.isShapeRestorable:
-            return
-        self.shapesBackups.pop()  # latest
+            return ([], [])
+        latest = self.shapesBackups.pop()  # latest
         shapesBackup = self.shapesBackups.pop()
         self.shapes = shapesBackup
         self.selectedShapes = []
         for shape in self.shapes:
             shape.selected = False
         self.repaint()
+        return (latest, shapesBackup)
 
     def enterEvent(self, ev):
         self.overrideCursor(self._cursor)
