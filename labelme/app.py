@@ -242,8 +242,8 @@ class MainWindow(QtWidgets.QMainWindow):
                          shortcuts['import'], 'import', _(u'Import'), enabled=True)
         export = action(_('&Export'), self.exportDialog,
                          shortcuts['export'], 'export', _(u'Export'), enabled=True)
-        merge = action(_('&Merge'), self.mergeDialog,
-                         shortcuts['merge'], 'merge', _(u'Merge'), enabled=True)
+        # merge = action(_('&Merge'), self.mergeDialog,
+        #                  shortcuts['merge'], 'merge', _(u'Merge'), enabled=True)
         training = action(_('&Training'), self.trainingDialog,
                          shortcuts['training'], 'training', _(u'Training'), enabled=True)
         validation = action(_('&Validation'), self.validationDialog,
@@ -497,7 +497,7 @@ class MainWindow(QtWidgets.QMainWindow):
             zoomActions=zoomActions,
             openNextImg=openNextImg, openPrevImg=openPrevImg,
             settings=settings,
-            import_=import_, export=export, merge=merge, 
+            import_=import_, export=export, #merge=merge, 
             training=training, validation=validation,
             fileMenuActions=(open_, opendir, save, saveAs, close, quit),
             tool=(),
@@ -570,7 +570,7 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(self.menus.project, (
             import_,
             export,
-            merge,
+            #merge,
             training,
             validation,
             None,
@@ -627,7 +627,7 @@ class MainWindow(QtWidgets.QMainWindow):
             None,
             import_,
             export,
-            merge,
+            #merge,
             training,
             validation,
             None,
@@ -1731,15 +1731,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.exportWindow = ExportWindow(self)
         self.exportWindow.show()
 
-    def mergeDialog(self):
-
-        # TODO: Remove warning
-        mb = QtWidgets.QMessageBox
-        mb.warning(self, _('Merge'), _('Merging is not implemented yet'))
-        return
-
-        self.mergeWindow = MergeWindow(self)
-        self.mergeWindow.show()
+    # def mergeDialog(self):
+    #     self.mergeWindow = MergeWindow(self)
+    #     self.mergeWindow.show()
 
     def trainingDialog(self):
         self.trainingWindow = TrainingWindow(self)
