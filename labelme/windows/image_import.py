@@ -171,7 +171,8 @@ class ImageImportExecutor(WorkerExecutor):
 
             image_count += 1
             items.append(item)
-            all_shapes.append(shapes)
+            if has_labels:
+                all_shapes.append(shapes)
 
             if i % data['update_interval'] == 0:
                 self.thread.data.emit({
