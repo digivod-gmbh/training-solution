@@ -34,3 +34,4 @@ from .threads import *
 from .application import Application
 from .map import *
 from .dialog import *
+from .statistics import *

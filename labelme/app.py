@@ -37,6 +37,8 @@ from labelme.windows import ImportWindow
 from labelme.windows import SettingsWindow
 from labelme.windows import ImageImportWindow
 
+from labelme.utils import StatisticsModel
+
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -106,6 +108,13 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.flag_dock.setWidget(self.flag_widget)
         # self.flag_widget.itemChanged.connect(self.setDirty)
 
+        # Statistics
+        self.statistics_dock = QtWidgets.QDockWidget(_('Statistics'), self)
+        self.statistics_dock.setObjectName('Statistics')
+        self.statistics_widget = QtWidgets.QTableWidget()
+        self.statistics_dock.setWidget(self.statistics_widget)
+        self.statistics_model = StatisticsModel(self.statistics_widget)
+
         self.labelList.itemActivated.connect(self.labelSelectionChanged)
         self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
         self.labelList.itemDoubleClicked.connect(self.editLabel)
@@ -121,6 +130,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.uniqLabelList = EscapableQListWidget()
         self.uniqLabelList.setToolTip(
             _("Select label to start annotating for it. "
+            "Double-click to filter by label. "
             "Press 'Esc' to deselect.")
         )
         if self._config['labels']:
@@ -129,20 +139,45 @@ class MainWindow(QtWidgets.QMainWindow):
         self.label_dock = QtWidgets.QDockWidget(_(u'Label List'), self)
         self.label_dock.setObjectName(u'Label List')
         self.label_dock.setWidget(self.uniqLabelList)
+        self.uniqLabelList.doubleClicked.connect(self.doubleClickUniqLabelList)
 
-        self.searchTimer = QtCore.QTimer()
-        self.searchTimer.timeout.connect(self.fileSearchChanged)
+        searchLabel = QtWidgets.QLabel('  ' + _('Search: '))
+        self.hasLabelFilter = QtWidgets.QComboBox()
+        self.hasLabelFilter.addItem(_('- all images -'), StatisticsModel.STATISTICS_FILTER_ALL)
+        self.hasLabelFilter.addItem(_('Labeled'), StatisticsModel.STATISTICS_FILTER_LABELED)
+        self.hasLabelFilter.addItem(_('Unlabeled'), StatisticsModel.STATISTICS_FILTER_UNLABELED)
+        self.labelFilter = QtWidgets.QComboBox()
+        self.labelFilter.addItem(_('- all labels -'), StatisticsModel.STATISTICS_FILTER_ALL)
+        self.searchResetBtn = QtWidgets.QToolButton()
+        self.searchResetBtn.setText(_('Reset'))
+        self.searchResetBtn.setFixedSize(80, 22)
+        self.searchResetBtn.clicked.connect(self.searchResetBtnClicked)
+        filterLayout = QtWidgets.QHBoxLayout()
+        filterLayout.addWidget(self.hasLabelFilter)
+        filterLayout.addWidget(self.labelFilter)
+        filterLayout.addWidget(self.searchResetBtn)
+        filterLayout.setContentsMargins(4, 4, 0, 0)
+
         self.fileSearch = QtWidgets.QLineEdit()
         self.fileSearch.setPlaceholderText(_('Search Filename'))
-        self.fileSearch.textChanged.connect(self.fileSearchTimeout)
         self.fileListWidget = QtWidgets.QListWidget()
-        self.fileListWidget.itemSelectionChanged.connect(
-            self.fileSelectionChanged
-        )
+        self.fileListWidget.itemSelectionChanged.connect(self.fileSelectionChanged)
+        self.searchBtn = QtWidgets.QToolButton()
+        self.searchBtn.setText(_('Search'))
+        self.searchBtn.setFixedSize(80, 22)
+        self.searchBtn.clicked.connect(self.fileSearchChanged)
+        self.fileSearch.returnPressed.connect(self.searchBtn.click)
+        searchLayout = QtWidgets.QHBoxLayout()
+        searchLayout.addWidget(self.fileSearch)
+        searchLayout.addWidget(self.searchBtn)
+        searchLayout.setContentsMargins(4, 4, 0, 4)
+
         fileListLayout = QtWidgets.QVBoxLayout()
         fileListLayout.setContentsMargins(0, 0, 0, 0)
         fileListLayout.setSpacing(0)
-        fileListLayout.addWidget(self.fileSearch)
+        fileListLayout.addWidget(searchLabel)
+        fileListLayout.addLayout(filterLayout)
+        fileListLayout.addLayout(searchLayout)
         fileListLayout.addWidget(self.fileListWidget)
         self.file_dock = QtWidgets.QDockWidget(_(u'File List'), self)
         self.file_dock.setObjectName(u'Files')
@@ -175,7 +210,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(scrollArea)
 
         features = QtWidgets.QDockWidget.DockWidgetFeatures()
-        for dock in ['label_dock', 'shape_dock', 'file_dock']: # flag_dock removed
+        for dock in ['label_dock', 'shape_dock', 'file_dock', 'statistics_dock']: # flag_dock removed
             if self._config[dock]['closable']:
                 features = features | QtWidgets.QDockWidget.DockWidgetClosable
             if self._config[dock]['floatable']:
@@ -187,6 +222,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 getattr(self, dock).setVisible(False)
 
         #self.addDockWidget(Qt.RightDockWidgetArea, self.flag_dock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.statistics_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.label_dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.shape_dock)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.file_dock)
@@ -467,7 +503,7 @@ class MainWindow(QtWidgets.QMainWindow):
             tool=(),
             editMenu=(edit, copy, delete, None, undo, undoLastPoint,
                       None, addPointToEdge,
-                      None, toggle_keep_prev_mode, None, settings), # None, color1, color2,
+                      None, toggle_keep_prev_mode), # None, color1, color2,
             # menu shown at right click
             menu=(
                 createMode,
@@ -532,13 +568,13 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
         )
         utils.addActions(self.menus.project, (
-            settings,
-            None,
             import_,
             export,
             merge,
             training,
             validation,
+            None,
+            settings,
             ))
         utils.addActions(self.menus.help, (
             help,
@@ -548,6 +584,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.menus.view,
             (
                 #self.flag_dock.toggleViewAction(),
+                self.statistics_dock.toggleViewAction(),
                 self.label_dock.toggleViewAction(),
                 self.shape_dock.toggleViewAction(),
                 self.file_dock.toggleViewAction(),
@@ -946,16 +983,19 @@ class MainWindow(QtWidgets.QMainWindow):
             self.uniqLabelList.addItem(text)
             self.uniqLabelList.sortItems()
 
-    def fileSearchTimeout(self):
-        self.searchTimer.stop()   
-        self.searchTimer.setSingleShot(True)
-        self.searchTimer.start(self._config['search_delay_time'])
-
     def fileSearchChanged(self):
+        filters = {}
+        idx = self.labelFilter.currentIndex()
+        label = str(self.labelFilter.itemData(idx))
+        filters['label'] = label
+        idx = self.hasLabelFilter.currentIndex()
+        has_label = str(self.hasLabelFilter.itemData(idx))
+        filters['has_label'] = has_label
         self.importDirImages(
             self.lastOpenDir,
             pattern=self.fileSearch.text(),
             load=False,
+            filters=filters,
         )
 
     def fileSelectionChanged(self):
@@ -983,7 +1023,8 @@ class MainWindow(QtWidgets.QMainWindow):
         for shape in self.canvas.selectedShapes:
             shape.selected = True
             item = self.labelList.get_item_from_shape(shape)
-            item.setSelected(True)
+            if item:
+                item.setSelected(True)
         self._noSelectionSlot = False
         n_selected = len(selected_shapes)
         self.actions.delete.setEnabled(n_selected)
@@ -1716,7 +1757,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lst.append(item.text())
         return lst
 
-    def importDirImages(self, dirpath, pattern=None, load=True):
+    def importDirImages(self, dirpath, pattern=None, load=True, filters={}):
         self.actions.openNextImg.setEnabled(True)
         self.actions.openPrevImg.setEnabled(True)
 
@@ -1725,11 +1766,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.lastOpenDir = dirpath
         self.filename = None
-        self.fileListWidget.clear()
 
-        # Also clear label lists
+        # Clear all lists/widgets
+        self.fileListWidget.clear()
         self.uniqLabelList.clear()
         self.labelList.clear()
+        self.statistics_model.reset()
 
         allImages = self.scanAllImages(dirpath)
 
@@ -1738,6 +1780,7 @@ class MainWindow(QtWidgets.QMainWindow):
             'output_dir': self.output_dir,
             'pattern': pattern,
             'load': load,
+            'filters': filters,
         }
         importWindow = ImageImportWindow(self)
         importWindow.start_import(data)
@@ -1754,3 +1797,17 @@ class MainWindow(QtWidgets.QMainWindow):
                     images.append(relativePath)
         images.sort(key=lambda x: x.lower())
         return images
+
+    def doubleClickUniqLabelList(self):
+        item = self.uniqLabelList.currentItem()
+        label = item.text()
+        idx = self.labelFilter.findText(label, Qt.MatchExactly)
+        self.labelFilter.setCurrentIndex(idx)
+        self.fileSearchChanged()
+
+    def searchResetBtnClicked(self):
+        self.labelFilter.setCurrentIndex(0)
+        self.hasLabelFilter.setCurrentIndex(0)
+        self.fileSearch.setText('')
+        self.fileSearchChanged()
+

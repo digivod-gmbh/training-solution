@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import yaml
+import locale
 
 from qtpy import QtWidgets
 from qtpy import QtGui
@@ -170,6 +171,7 @@ def main():
         lang.install()
     else:
         gettext.install('labelme')
+    locale.setlocale(locale.LC_ALL, config['language'])
 
     if not config['labels'] and config['validate_label']:
         logger.error('--labels must be specified with --validatelabel or '

@@ -12,7 +12,7 @@ project_dataset_folder: datasets
 project_training_folder: trainings
 project_import_folder: imports
 image_max_size: 800
-search_delay_time: 500
+statistics_update_interval: 100
 
 # training
 training_defaults:
@@ -45,6 +45,11 @@ shape_dock:
   movable: true
   floatable: true
 file_dock:
+  show: true
+  closable: true
+  movable: true
+  floatable: true
+statistics_dock:
   show: true
   closable: true
   movable: true
