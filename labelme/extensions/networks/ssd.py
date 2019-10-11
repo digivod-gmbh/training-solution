@@ -157,9 +157,11 @@ class NetworkSSD512(Network):
             train_dataset.transform(SSDDefaultTrainTransform(width, height, anchors)),
             batch_size, True, batchify_fn=batchify_fn, last_batch='rollover', num_workers=num_workers)
         val_batchify_fn = Tuple(Stack(), Pad(pad_val=-1))
-        val_loader = gluon.data.DataLoader(
-            val_dataset.transform(SSDDefaultValTransform(width, height)),
-            batch_size, False, batchify_fn=val_batchify_fn, last_batch='keep', num_workers=num_workers)
+        val_loader = None
+        if val_dataset is not None:
+            val_loader = gluon.data.DataLoader(
+                val_dataset.transform(SSDDefaultValTransform(width, height)),
+                batch_size, False, batchify_fn=val_batchify_fn, last_batch='keep', num_workers=num_workers)
         return train_loader, val_loader
     
     def validate(self, nms_thresh=0.45, nms_topk=400):
