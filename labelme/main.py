@@ -187,6 +187,10 @@ def main():
         else:
             output_dir = output
 
+    # MXNet environment variables
+    os.environ['MXNET_GPU_MEM_POOL_TYPE'] = 'Unpooled'
+    os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
+
     # Enable high dpi for 4k monitors
     os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
 
