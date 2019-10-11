@@ -2,10 +2,13 @@ import os
 import json
 import warnings
 import numpy as np
+
 import mxnet as mx
 from mxnet import gluon
 from gluoncv.data.transforms import image as timage
 from gluoncv.utils import viz, export_block
+from gluoncv.utils.metrics.voc_detection import VOC07MApMetric, VOCMApMetric
+from gluoncv.utils.metrics.coco_detection import COCODetectionMetric
 
 from labelme.logger import logger
 from labelme.extensions.thread import WorkerExecutor
@@ -47,13 +50,6 @@ class Network(WorkerExecutor):
     def setOutputFolder(self, output_folder):
         self.output_folder = output_folder
 
-    # def setLabelFile(self, label_file):
-    #     self.label_file = label_file
-
-    # def readLabelFile(self, label_file):
-    #     with open(label_file) as f:
-    #         return f.read().split('\n')
-
     def setLabels(self, labels):
         self.labels = labels
 
@@ -75,6 +71,16 @@ class Network(WorkerExecutor):
             logger.warning('Unable to use GPU. Using CPU instead')
         logger.debug('Use context: {}'.format(ctx))
         return ctx
+
+    def getValidationMetric(self, classes):
+        # Metrics:
+        # - VOC07MApMetric
+        # - VOCMApMetric
+        # - COCODetectionMetric
+        val_metric = VOC07MApMetric(iou_thresh=0.5, class_names=classes)
+        #val_metric = VOCMApMetric(iou_thresh=0.5, class_names=classes)
+        #val_metric = COCODetectionMetric(iou_thresh=0.5, class_names=classes)
+        return val_metric
 
     def saveTraining(self, network_name):
         export_block(os.path.join(self.output_folder, network_name), self.net, preprocess=True, layout='HWC')

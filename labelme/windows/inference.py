@@ -124,7 +124,7 @@ class InferenceWindow(WorkerDialog):
                 yr = self.pixmap.height() / data.imgsize[1]
                 x, y = data.bbox[0][i][0] * xr, data.bbox[0][i][1] * yr
                 w, h = data.bbox[0][i][2] * xr - x, data.bbox[0][i][3] * yr - y
-                logger.debug('Draw bbox ({}, {}, {}, {}) for label {} ({})'.format(int(x), int(y), int(w), int(h), label_name, label))
+                #logger.debug('Draw bbox ({}, {}, {}, {}) for label {} ({})'.format(int(x), int(y), int(w), int(h), label_name, label))
                 self.painter.scale(1, 1)
                 self.painter.drawRect(x, y, w, h)
                 p1 = QtCore.QPointF(x + 4, y + 12)

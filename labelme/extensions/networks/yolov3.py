@@ -3,23 +3,20 @@ import sys
 import time
 import warnings
 import numpy as np
+
 import mxnet as mx
 from mxnet import nd
 from mxnet import gluon
 from mxnet import autograd
 import gluoncv as gcv
-from gluoncv import data as gdata
+from mxnet.gluon import data as gdata
 from gluoncv import utils as gutils
 from gluoncv.model_zoo import get_model
 from gluoncv.data.batchify import Tuple, Stack, Pad
-from gluoncv.data.transforms.presets.yolo import YOLO3DefaultTrainTransform
-from gluoncv.data.transforms.presets.yolo import YOLO3DefaultValTransform
+from gluoncv.data.transforms.presets.yolo import YOLO3DefaultTrainTransform, YOLO3DefaultValTransform
 from gluoncv.data.dataloader import RandomTransformDataLoader
-from gluoncv.utils.metrics.voc_detection import VOC07MApMetric
-from gluoncv.utils.metrics.coco_detection import COCODetectionMetric
 from gluoncv.utils import LRScheduler, LRSequential
 from gluoncv.data.transforms import image as timage
-from gluoncv.utils import download, viz
 
 from labelme.utils.map import Map
 from labelme.logger import logger
@@ -76,7 +73,7 @@ class NetworkYoloV3(Network):
             'resume': '',
             'start_epoch': 0,
             'num_workers': 0,
-            'lr': 0.0001,
+            'learning_rate': 0.0001,
             'lr_mode': 'step',
             'lr_decay': 0.1,
             'lr_decay_period': 0,
@@ -122,7 +119,6 @@ class NetworkYoloV3(Network):
         num_sync_bn_devices = len(self.ctx) if self.args.syncbn else -1
         
         classes = self.train_dataset.getLabels()
-        #classes = self.readLabelFile(self.label_file)
         self.labels = classes
 
         self.net = get_model(self.net_name, pretrained=False, ctx=self.ctx)
@@ -131,17 +127,14 @@ class NetworkYoloV3(Network):
 
         if self.args.resume.strip():
             self.net.load_parameters(self.args.resume.strip())
-            async_net.load_parameters(self.args.resume.strip())
         else:
             model_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../../networks/models'))
             weights_file = os.path.join(model_path, self.model_file_name)
             self.net.load_parameters(weights_file, ctx=self.ctx)
             self.net.reset_class(classes)
-            async_net = self.net
             with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
+                warnings.simplefilter('always')
                 self.net.initialize()
-                async_net.initialize()
     
         self.thread.update.emit(_('Loading dataset ...'), -1, -1)
 
@@ -156,13 +149,7 @@ class NetworkYoloV3(Network):
             val_dataset = self.val_dataset.getDatasetForTraining()
         classes = self.train_dataset.getLabels()
 
-        # Metrics:
-        # - VOC07MApMetric
-        # - VOCMApMetric
-        # - COCODetectionMetric
-        val_metric = VOC07MApMetric(iou_thresh=0.5, class_names=classes)
-        #val_metric = VOCMApMetric(iou_thresh=0.5, class_names=classes)
-        #val_metric = COCODetectionMetric(iou_thresh=0.5, class_names=classes)
+        val_metric = self.getValidationMetric(classes)
         
         if self.args.num_samples < 0:
             self.args.num_samples = len(train_dataset)
@@ -173,16 +160,15 @@ class NetworkYoloV3(Network):
         return train_dataset, val_dataset, val_metric
     
     def get_dataloader(self, net, train_dataset, val_dataset, data_shape, batch_size, num_workers):
-        """Get dataloader."""
         width, height = data_shape, data_shape
         batchify_fn = Tuple(*([Stack() for _ in range(6)] + [Pad(axis=0, pad_val=-1) for _ in range(1)]))  # stack image, all targets generated
         if self.args.no_random_shape:
-            logger.debug("no random shape")
+            logger.debug('no random shape')
             train_loader = gluon.data.DataLoader(
                 train_dataset.transform(YOLO3DefaultTrainTransform(width, height, net, mixup=self.args.mixup)),
                 batch_size, True, batchify_fn=batchify_fn, last_batch='rollover', num_workers=num_workers)
         else:
-            logger.debug("with random shape")
+            logger.debug('with random shape')
             transform_fns = [YOLO3DefaultTrainTransform(x * 32, x * 32, net, mixup=self.args.mixup) for x in range(10, 20)]
             train_loader = RandomTransformDataLoader(
                 transform_fns, train_dataset, batch_size=batch_size, interval=10, last_batch='rollover',
@@ -204,11 +190,10 @@ class NetworkYoloV3(Network):
         if save_interval and epoch % save_interval == 0:
             self.net.save_parameters('{:s}_{:04d}_{:.4f}.params'.format(prefix, epoch, current_map))
     
-    def validate(self):
-        """Test on validation dataset."""
+    def validate(self, nms_thresh=0.45, nms_topk=400):
         self.eval_metric.reset()
         # set nms threshold and topk constraint
-        self.net.set_nms(nms_thresh=0.45, nms_topk=400)
+        self.net.set_nms(nms_thresh=nms_thresh, nms_topk=nms_topk)
         mx.nd.waitall()
         self.net.hybridize()
         for batch in self.val_data:
@@ -236,8 +221,9 @@ class NetworkYoloV3(Network):
         return self.eval_metric.get()
     
     def train(self):
-        """Training pipeline"""
         self.net.collect_params().reset_ctx(self.ctx)
+        num_batches = self.args.num_samples // self.args.batch_size
+
         if self.args.no_wd:
             for k, v in self.net.collect_params('.*beta|.*gamma|.*bias').items():
                 v.wd_mult = 0.0
@@ -250,11 +236,10 @@ class NetworkYoloV3(Network):
         else:
             lr_decay_epoch = [int(i) for i in self.args.lr_decay_epoch.split(',')]
         lr_decay_epoch = [e - self.args.warmup_epochs for e in lr_decay_epoch]
-        num_batches = self.args.num_samples // self.args.batch_size
         lr_scheduler = LRSequential([
-            LRScheduler('linear', base_lr=0, target_lr=self.args.lr,
+            LRScheduler('linear', base_lr=0, target_lr=self.args.learning_rate,
                         nepochs=self.args.warmup_epochs, iters_per_epoch=num_batches),
-            LRScheduler(self.args.lr_mode, base_lr=self.args.lr,
+            LRScheduler(self.args.lr_mode, base_lr=self.args.learning_rate,
                         nepochs=self.args.epochs - self.args.warmup_epochs,
                         iters_per_epoch=num_batches,
                         step_epoch=lr_decay_epoch,
@@ -345,6 +330,7 @@ class NetworkYoloV3(Network):
                 center_metrics.update(0, center_losses)
                 scale_metrics.update(0, scale_losses)
                 cls_metrics.update(0, cls_losses)
+
                 if self.args.log_interval and not (i + 1) % self.args.log_interval:
                     name1, loss1 = obj_metrics.get()
                     name2, loss2 = center_metrics.get()

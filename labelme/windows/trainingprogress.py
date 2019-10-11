@@ -122,12 +122,15 @@ class TrainingProgressWindow(WorkerDialog):
         self.close()
     
     def closeEvent(self, event):
-        mb = QtWidgets.QMessageBox()
-        clicked_btn = mb.warning(self, _('Training'), _('Are you sure to cancel to current training session? The last completed epoch will be saved. Remember: Shorter training time leeds to worse results.'), QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        if clicked_btn == QtWidgets.QMessageBox.Yes:
-            super().closeEvent(event)
+        if self.current_worker_idx is not None:
+            mb = QtWidgets.QMessageBox()
+            clicked_btn = mb.warning(self, _('Training'), _('Are you sure to cancel to current training session? The last completed epoch will be saved. Remember: Shorter training time leeds to worse results.'), QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+            if clicked_btn == QtWidgets.QMessageBox.Yes:
+                super().closeEvent(event)
+            else:
+                event.ignore()
         else:
-            event.ignore()
+            event.accept()
 
     def on_data(self, data):
         self.data = data

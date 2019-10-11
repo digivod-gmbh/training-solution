@@ -2,7 +2,7 @@ import json
 
 from labelme.logger import logger
 from labelme.utils.map import Map
-from labelme.extensions.networks import NetworkYoloV3
+from labelme.extensions.networks import NetworkYoloV3, NetworkSSD512
 
 class Training():
 
@@ -11,14 +11,18 @@ class Training():
         config = {
             'config_file': 'config.json',
             'networks': {
-                'yolov3_darknet': _('YoloV3 (Darknet53)'),
-                'yolov3_mobilenet': _('YoloV3 (Mobilenet1.0)'),
-                #'ssd512': _('SSD512'),
+                'yolov3_darknet53': _('YoloV3 (Darknet53)'),
+                'yolov3_mobilenet10': _('YoloV3 (Mobilenet1.0)'),
+                'ssd512_resnet50': _('SSD512 (Resnet50)'),
+                'ssd512_mobilenet10': _('SSD512 (Mobilenet1.0)'),
+                'ssd512_vgg16': _('SSD512 (VGG16)'),
             },
             'objects': {
-                'yolov3_darknet': lambda: NetworkYoloV3(architecture='darknet53'),
-                'yolov3_mobilenet': lambda: NetworkYoloV3(architecture='mobilenet1.0'),
-                #'ssd512': lambda: NetworkSSD(architecture='resnet50'),
+                'yolov3_darknet53': lambda: NetworkYoloV3(architecture='darknet53'),
+                'yolov3_mobilenet10': lambda: NetworkYoloV3(architecture='mobilenet1.0'),
+                'ssd512_resnet50': lambda: NetworkSSD512(architecture='resnet50'),
+                'ssd512_mobilenet10': lambda: NetworkSSD512(architecture='mobilenet1.0'),
+                'ssd512_vgg16': lambda: NetworkSSD512(architecture='vgg16_atrous'),
             }
         }
         if key is not None:
