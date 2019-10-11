@@ -117,17 +117,20 @@ class FormatVoc(DatasetFormat):
             annotation_files = os.listdir(annotations_dir)
         else:
             with open(input_folder_or_file, 'r') as f:
-                lines = [l.strip().split() for l in f.readlines()]
+                lines = [l.strip() for l in f.readlines()]
                 for l in lines:
-                    try:
-                        if len(l) > 1:
-                            num = int(l[1])
-                            if num > -1:
-                                annotation_files.append(str(l[0] + '.xml'))
-                        else:
-                            annotation_files.append(str(l[0] + '.xml'))
-                    except:
-                        pass
+                    annotation_files.append(str(l + '.xml'))
+                # lines = [l.strip().split() for l in f.readlines()]
+                # for l in lines:
+                #     try:
+                #         if len(l) > 1:
+                #             num = int(l[1])
+                #             if num > -1:
+                #                 annotation_files.append(str(l[0] + '.xml'))
+                #         else:
+                #             annotation_files.append(str(l[0] + '.xml'))
+                #     except:
+                #         pass
 
         self.thread.update.emit(_('Loading dataset ...'), 10, -1)
         self.checkAborted()
@@ -247,7 +250,8 @@ class FormatVoc(DatasetFormat):
 
             samples_count = len(samples) if len(samples) > 0 else -1
             with open(out_split_file, 'a') as f:
-                f.write(base + ' ' + str(samples_count) + '\n')
+                f.write(base + '\n')
+                #f.write(base + ' ' + str(samples_count) + '\n')
 
             # Convert grayscale image to rgb
             if len(img.shape) == 2:
@@ -346,5 +350,6 @@ class VOCDetectionCustom(data.VOCDetection):
         for name in splits:
             lf = os.path.join(self._root, 'ImageSets', 'Main', name + '.txt')
             with open(lf, 'r') as f:
-                ids += [(self._root, line.strip().split(' ')[0]) for line in f.readlines()]
+                ids += [(self._root, line.strip()) for line in f.readlines()]
+                #ids += [(self._root, line.strip().split(' ')[0]) for line in f.readlines()]
         return ids
