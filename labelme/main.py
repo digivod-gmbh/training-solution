@@ -192,6 +192,8 @@ def main():
 
     app = QtWidgets.QApplication(sys.argv)
     app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+    if hasattr(QtWidgets.QStyleFactory, 'AA_UseHighDpiPixmaps'):
+        app.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon('digivod'))
     win = MainWindow(
