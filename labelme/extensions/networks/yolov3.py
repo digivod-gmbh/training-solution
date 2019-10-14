@@ -44,7 +44,7 @@ class NetworkYoloV3(Network):
 
     def getGpuSizes(self):
         # (base size, additional size per batch item)
-        return (2000, 800)
+        return (2200, 810)
 
     def training(self):
         self.prepare()
