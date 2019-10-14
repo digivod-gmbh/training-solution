@@ -118,17 +118,7 @@ class WorkerDialog(QtWidgets.QDialog):
 
     def on_confirm(self, title, message, kind=None):
         clicked_btn = False
-        result = confirm(title, message, kind)
-        # mb = QtWidgets.QMessageBox
-        # if kind == MessageType.Warning:
-        #     clicked_btn = mb.warning(self, title, message, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        # elif kind == MessageType.Error:
-        #     clicked_btn = mb.critical(self, title, message, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        # elif kind == MessageType.Question:
-        #     clicked_btn = mb.question(self, title, message, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        # else:
-        #     clicked_btn = mb.information(self, title, message, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        # result = clicked_btn == QtWidgets.QMessageBox.Yes
+        result = confirm(self, title, message, kind)
         self.worker_executor.confirmResult(result)
 
     def on_progress(self, message=None, value=None, maximum=None):
