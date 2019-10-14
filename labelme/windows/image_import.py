@@ -128,7 +128,7 @@ class ImageImportExecutor(WorkerExecutor):
             self.checkAborted()
 
             # Search pattern
-            if pattern and re.search(pattern, filename, re.IGNORECASE) == None:
+            if pattern and pattern.lower() not in filename.lower(): # re.search(pattern, filename, re.IGNORECASE) == None:
                 continue
 
             label_file = os.path.splitext(filename)[0] + '.json'
