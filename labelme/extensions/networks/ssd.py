@@ -20,7 +20,7 @@ from gluoncv.data.transforms import image as timage
 
 from labelme.utils.map import Map
 from labelme.logger import logger
-from labelme.extensions.networks import Network
+from labelme.extensions.networks import Network, NetworkMonitor
 
 
 class NetworkSSD512(Network):
@@ -67,13 +67,13 @@ class NetworkSSD512(Network):
         config_file = os.path.join(self.output_folder, Training.config('config_file'))
         files = list(NetworkSSD512._files.values())
         self.saveConfig(config_file, NetworkSSD512._network, files, '', self.labels, self.args)
-        self.saveTraining(NetworkSSD512._network)
+        self.saveTraining(NetworkSSD512._network, 0)
 
         self.thread.update.emit(_('Start training ...'), -1, -1)
-        self.train()
+        last_epoch = self.train()
 
         # export trained weights
-        self.saveTraining(NetworkSSD512._network)
+        self.saveTraining(NetworkSSD512._network, last_epoch)
 
         self.thread.update.emit(_('Finished training'), -1, -1)
 
@@ -100,6 +100,7 @@ class NetworkSSD512(Network):
             'val_interval': 1,
             'seed': 42,
             'num_samples': -1,
+            'early_stop_epochs': 0,
         }
         self.args = default_args.copy()
         self.args.update(args)
@@ -220,6 +221,15 @@ class NetworkSSD512(Network):
             self.net.save_parameters('{:s}_{:04d}_{:.4f}.params'.format(prefix, epoch, current_map))
 
     def train(self):
+        if self.args.early_stop_epochs > 0:
+            self.monitor = NetworkMonitor(self.args.early_stop_epochs)
+
+        self.thread.data.emit({
+            'validation': {
+                _('Waiting for first validation ...'): '',
+            },
+        })
+
         self.net.collect_params().reset_ctx(self.ctx)
         num_batches = self.args.num_samples // self.args.batch_size
 
@@ -243,7 +253,7 @@ class NetworkSSD512(Network):
 
             self.thread.update.emit(_('Start training on epoch {} ...').format(epoch + 1), None, -1)
             if self.isAborted():
-                self.saveTraining(NetworkSSD512._network)
+                self.saveTraining(NetworkSSD512._network, epoch-1)
                 self.checkAborted()
 
             self.thread.data.emit({
@@ -253,9 +263,6 @@ class NetworkSSD512(Network):
                     'batch': 1,
                     'batch_max': num_batches,
                     'speed': 0,
-                },
-                'validation': {
-                    _('Waiting for epoch to finish...'): '',
                 },
             })
 
@@ -319,7 +326,7 @@ class NetworkSSD512(Network):
 
                 self.thread.update.emit(None, -1, -1)
                 if self.isAborted():
-                    self.saveTraining(NetworkSSD512._network)
+                    self.saveTraining(NetworkSSD512._network, epoch)
                     self.checkAborted()
 
                 btic = time.time()
@@ -327,7 +334,7 @@ class NetworkSSD512(Network):
             name1, loss1 = ce_metric.get()
             name2, loss2 = smoothl1_metric.get()
             logger.info('[Epoch {}] Training cost: {:.3f}, {}={:.3f}, {}={:.3f}'.format(
-                epoch, (time.time()-tic), name1, loss1, name2, loss2))
+                epoch + 1, (time.time()-tic), name1, loss1, name2, loss2))
             if self.val_data and not (epoch + 1) % self.args.val_interval:
                 logger.debug('validate: {}'.format(epoch + 1))
 
@@ -343,7 +350,7 @@ class NetworkSSD512(Network):
                 # consider reduce the frequency of validation to save time
                 map_name, mean_ap = self.validate()
                 val_msg = '\n'.join(['{}={}'.format(k, v) for k, v in zip(map_name, mean_ap)])
-                logger.info('[Epoch {}] Validation: \n{}'.format(epoch, val_msg))
+                logger.info('[Epoch {}] Validation: \n{}'.format(epoch + 1, val_msg))
                 current_map = float(mean_ap[-1])
                 val_data = {
                     'validation': {}
@@ -351,8 +358,14 @@ class NetworkSSD512(Network):
                 for i, name in enumerate(map_name[:]):
                     val_data['validation'][name] = mean_ap[i]
                 self.thread.data.emit(val_data)
+
+                # Early Stopping
+                self.monitor.update(epoch, mean_ap[-1])
+                if self.monitor.shouldStopEarly():
+                    return epoch
             else:
                 current_map = 0.
+
             self.save_params(best_map, current_map, epoch, self.args.save_interval, os.path.join(self.output_folder, self.args.save_prefix))
 
-        end_time = time.time()
+        return epoch

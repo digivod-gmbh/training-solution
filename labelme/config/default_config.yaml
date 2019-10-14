@@ -16,10 +16,11 @@ statistics_update_interval: 100
 
 # training
 training_defaults:
-  epochs: 10
-  batch_size: 8
+  epochs: 100
+  batch_size: 16
   learning_rate: 0.0001
   dataset_format: coco
+  early_stop_epochs: 5
 
 flags: null
 label_flags: null

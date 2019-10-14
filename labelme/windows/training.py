@@ -148,18 +148,18 @@ class TrainingWindow(WorkerDialog):
 
         args_epochs_label = QtWidgets.QLabel(_('Epochs'))
         self.args_epochs = QtWidgets.QSpinBox()
-        self.args_epochs.setValue(training_defaults['epochs'])
         self.args_epochs.setMinimum(1)
-        self.args_epochs.setMaximum(100)
+        self.args_epochs.setMaximum(500)
+        self.args_epochs.setValue(training_defaults['epochs'])
 
         network = self.get_current_network()
         default_batch_size = self.get_default_batch_size(network)
 
         args_batch_size_label = QtWidgets.QLabel(_('Batch size'))
         self.args_batch_size = QtWidgets.QSpinBox()
-        self.args_batch_size.setValue(default_batch_size)
         self.args_batch_size.setMinimum(1)
         self.args_batch_size.setMaximum(100)
+        self.args_batch_size.setValue(default_batch_size)
 
         args_learning_rate_label = QtWidgets.QLabel(_('Learning rate'))
         self.args_learning_rate = QtWidgets.QDoubleSpinBox()
@@ -168,6 +168,12 @@ class TrainingWindow(WorkerDialog):
         self.args_learning_rate.setSingleStep(1e-7)
         self.args_learning_rate.setDecimals(7)
         self.args_learning_rate.setValue(training_defaults['learning_rate'])
+
+        args_early_stop_epochs_label = QtWidgets.QLabel(_('Early stop epochs'))
+        self.args_early_stop_epochs = QtWidgets.QSpinBox()
+        self.args_early_stop_epochs.setMinimum(0)
+        self.args_early_stop_epochs.setMaximum(100)
+        self.args_early_stop_epochs.setValue(training_defaults['early_stop_epochs'])
 
         args_gpus_label = QtWidgets.QLabel(_('GPUs'))
         no_gpus_available_label = QtWidgets.QLabel(_('No GPUs available'))
@@ -188,15 +194,17 @@ class TrainingWindow(WorkerDialog):
         settings_group_layout.addWidget(self.args_batch_size, 1, 1)
         settings_group_layout.addWidget(args_learning_rate_label, 2, 0)
         settings_group_layout.addWidget(self.args_learning_rate, 2, 1)
+        settings_group_layout.addWidget(args_early_stop_epochs_label, 3, 0)
+        settings_group_layout.addWidget(self.args_early_stop_epochs, 3, 1)
 
-        settings_group_layout.addWidget(args_gpus_label, 3, 0)
+        settings_group_layout.addWidget(args_gpus_label, 4, 0)
         if len(self.gpu_checkboxes) > 0:
-            row = 3
+            row = 4
             for i, checkbox in enumerate(self.gpu_checkboxes):
                 settings_group_layout.addWidget(checkbox, row, 1)
                 row += 1
         else:
-            settings_group_layout.addWidget(no_gpus_available_label, 3, 1)
+            settings_group_layout.addWidget(no_gpus_available_label, 4, 1)
         layout.addWidget(settings_group)
         layout.addStretch()
 
@@ -397,6 +405,7 @@ class TrainingWindow(WorkerDialog):
             'args_epochs': self.args_epochs.value(),
             'args_batch_size': self.args_batch_size.value(),
             'args_learning_rate': self.args_learning_rate.value(),
+            'args_early_stop_epochs': self.args_early_stop_epochs.value(),
         }
 
         # Preprocess data
@@ -409,6 +418,7 @@ class TrainingWindow(WorkerDialog):
             output_folder = export_data['output_folder']
             train_file = dataset_format.getOutputFileName('train')
             train_dataset = os.path.join(output_folder, train_file)
+            data['train_dataset'] = train_dataset
             validation_ratio = export_data['validation_ratio']
             if validation_ratio > 0:
                 val_file = dataset_format.getOutputFileName('val')
@@ -416,6 +426,7 @@ class TrainingWindow(WorkerDialog):
             else:
                 # Validation dataset is optional
                 val_dataset = False
+            data['val_dataset'] = val_dataset
 
         else:
             train_dataset = data['train_dataset']
@@ -441,6 +452,10 @@ class TrainingWindow(WorkerDialog):
                 # Validation dataset is optional
                 val_dataset = False
             data['val_dataset'] = val_dataset
+
+        if val_dataset and val_dataset == train_dataset:
+            mb.warning(self, _('Training'), _('Training and validation dataset are equal. Please use different datasets, as validation results are useless otherwise.'))
+            return
 
         output_folder = os.path.normpath(data['output_folder'])
         training_name = data['training_name']

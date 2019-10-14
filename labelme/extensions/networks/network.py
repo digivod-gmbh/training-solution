@@ -19,6 +19,7 @@ class Network(WorkerExecutor):
 
     def __init__(self):
         super().__init__()
+        self.monitor = NetworkMonitor()
 
     def training(self):
         raise NotImplementedError('Method training() needs to be implemented in subclasses')
@@ -88,8 +89,8 @@ class Network(WorkerExecutor):
         #val_metric = COCODetectionMetric(iou_thresh=0.5, class_names=classes)
         return val_metric
 
-    def saveTraining(self, network_name):
-        export_block(os.path.join(self.output_folder, network_name), self.net, preprocess=True, layout='HWC')
+    def saveTraining(self, network_name, epoch=0):
+        export_block(os.path.join(self.output_folder, network_name), self.net, epoch=epoch, preprocess=True, layout='HWC')
 
     def inference(self, input_image_file, labels, architecture_file, weights_file, args = None):
         default_args = {
@@ -146,3 +147,29 @@ class Network(WorkerExecutor):
 
             #ax = viz.plot_bbox(image, bbox[0], score[0], cid[0], class_names=class_names, thresh=args.threshold)
             #plt.show()
+
+
+class NetworkMonitor:
+
+    def __init__(self, stop_epochs = 3, stop_threshold = 5):
+        self.curent_epoch = 0
+        self.best_epoch = -1
+        self.best_validation_value = 0
+        self.stop_epochs = stop_epochs
+        self.stop_threshold = stop_threshold
+        self.stop_epoch_count = 0
+
+    def shouldStopEarly(self):
+        return self.stop_epoch_count >= self.stop_epochs
+
+    def update(self, epoch, validation_value):
+        self.current_epoch = epoch
+        if validation_value >= self.best_validation_value:
+            self.best_validation_value = validation_value
+            self.best_epoch = epoch
+            self.stop_epoch_count = 0
+        else:
+            # Loss of validation in percent (0-100)
+            validation_loss = (self.best_validation_value - validation_value) / self.best_validation_value * 100
+            if validation_loss >= self.stop_threshold:
+                self.stop_epoch_count += 1

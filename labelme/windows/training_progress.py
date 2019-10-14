@@ -277,74 +277,6 @@ class TrainingExecutor(WorkerExecutor):
         except:
             pass
 
-        # create_dataset = self.data['create_dataset']
-        # if create_dataset:
-        #     export_data = self.data['dataset_export_data']
-        #     format_name = export_data['format']
-        #     dataset_format = Export.config('objects')[format_name]()
-        #     output_folder = export_data['output_folder']
-        #     train_file = dataset_format.getOutputFileName('train')
-        #     train_dataset = os.path.join(output_folder, train_file)
-        #     validation_ratio = export_data['validation_ratio']
-        #     if validation_ratio > 0:
-        #         val_file = dataset_format.getOutputFileName('val')
-        #         val_dataset = os.path.join(output_folder, val_file)
-        #     else:
-        #         # Validation dataset is optional
-        #         val_dataset = False
-
-        # else:
-        #     train_dataset = self.data['train_dataset']
-        #     is_train_dataset_valid = True
-        #     if not train_dataset:
-        #         is_train_dataset_valid = False
-        #     train_dataset = os.path.normpath(train_dataset)
-        #     if not (os.path.isdir(train_dataset) or os.path.isfile(train_dataset)):
-        #         is_train_dataset_valid = False
-        #     if not is_train_dataset_valid:
-        #         self.thread.message.emit(_('Training'), _('Please select a valid training dataset'), MessageType.Warning)
-        #         self.abort()
-        #         return
-
-        #     val_dataset = self.data['val_dataset']
-        #     is_val_dataset_valid = True
-        #     if not val_dataset:
-        #         is_val_dataset_valid = False
-        #     val_dataset = os.path.normpath(val_dataset)
-        #     if not (os.path.isdir(val_dataset) or os.path.isfile(val_dataset)):
-        #         is_val_dataset_valid = False
-        #     if not is_val_dataset_valid:
-        #         # Validation dataset is optional
-        #         val_dataset = False
-
-        # output_folder = os.path.normpath(self.data['output_folder'])
-        # training_name = self.data['training_name']
-        # training_name = re.sub(r'[^a-zA-Z0-9 _-]+', '', training_name)
-
-        # if not training_name:
-        #     self.thread.message.emit(_('Training'), _('Please enter a valid training name'), MessageType.Warning)
-        #     self.abort()
-        #     return
-        
-        # output_folder = os.path.join(output_folder, training_name)
-        # if not os.path.isdir(output_folder):
-        #     os.makedirs(output_folder)
-        # elif len(os.listdir(output_folder)) > 0:
-        #     msg = _('The selected output directory "{}" is not empty. All containing files will be deleted. Are you sure to continue?').format(output_folder)
-        #     if self.doConfirm(_('Training'), msg, MessageType.Warning):
-        #         deltree(output_folder)
-        #         time.sleep(0.5) # wait for deletion to be finished
-        #         if not os.path.exists(output_folder):
-        #             os.makedirs(output_folder)
-        #     else:
-        #         self.abort()
-        #         return
-
-        # if not os.path.isdir(output_folder):
-        #     self.thread.message.emit(_('Training'), _('The selected output directory "{}" could not be created').format(output_folder), MessageType.Warning)
-        #     self.abort()
-        #     return
-
         network = self.data['network']
         networks = Training.config('networks')
         func_name = None
@@ -387,6 +319,7 @@ class TrainingExecutor(WorkerExecutor):
             'learning_rate': float(self.data['args_learning_rate']),
             'gpus': gpus,
             'epochs': epochs,
+            'early_stop_epochs': int(self.data['args_early_stop_epochs']),
         })
 
         self.thread.update.emit(_('Loading data ...'), 0, epochs * num_batches + 5)
