@@ -5,6 +5,7 @@ import termcolor
 from . import __appname__
 
 import os
+import datetime
 
 
 COLORS = {
@@ -14,11 +15,13 @@ COLORS = {
     'CRITICAL': 'red',
     'ERROR': 'red',
 }
+DEFAULT_LOG_PATH = os.path.expanduser('~/.digivod/training_solution_{}.log'.format(datetime.date.today().strftime('%Y_%m_%d')))
+DEFAULT_LOG_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
 class ColoredFormatter(logging.Formatter):
 
-    date_format = '%Y-%m-%d %H:%M:%S'
+    date_format = DEFAULT_LOG_DATE_FORMAT
 
     def __init__(self, msg, use_color=True):
         logging.Formatter.__init__(self, msg, ColoredFormatter.date_format)
@@ -43,8 +46,7 @@ class ColoredLogger(logging.Logger):
         logging.Logger.__init__(self, name, logging.INFO)
 
         # Write log to file
-        home = os.path.expanduser('~/.digivod/')
-        log_file_path = os.path.join(home, 'training_solution.log')
+        log_file_path = DEFAULT_LOG_PATH
         log_dir = os.path.dirname(log_file_path)
         if log_dir and not os.path.exists(log_dir):
             os.makedirs(log_dir)
