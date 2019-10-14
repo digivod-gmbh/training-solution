@@ -217,7 +217,7 @@ class FormatImageRecord(DatasetFormat):
         self.checkAborted()
 
         # group samples by image
-        samples_per_image = self.intermediate.getSamplesPerImage()
+        samples_per_image = self.intermediate.getSamplesPerImage(samples)
 
         with open(lst_file, 'w+') as f:
             idx = 0
