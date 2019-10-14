@@ -164,7 +164,7 @@ class NetworkMonitor:
 
     def update(self, epoch, validation_value):
         self.current_epoch = epoch
-        if validation_value >= self.best_validation_value:
+        if validation_value > self.best_validation_value:
             self.best_validation_value = validation_value
             self.best_epoch = epoch
             self.stop_epoch_count = 0
