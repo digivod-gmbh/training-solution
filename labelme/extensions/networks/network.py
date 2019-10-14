@@ -23,6 +23,9 @@ class Network(WorkerExecutor):
     def training(self):
         raise NotImplementedError('Method training() needs to be implemented in subclasses')
 
+    def getGpuSizes(self):
+        raise NotImplementedError('Method getGpuSizes() needs to be implemented in subclasses')
+
     def saveConfig(self, config_file, network, files, dataset, labels, args):
         data = {
             'network': network,

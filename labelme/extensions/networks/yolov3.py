@@ -42,22 +42,25 @@ class NetworkYoloV3(Network):
         else:
             raise Exception('Unknown architecture {}'.format(architecture))
 
+    def getGpuSizes(self):
+        # (base size, additional size per batch item)
+        return (2000, 800)
+
     def training(self):
         self.prepare()
 
-        # save config
+        # save config & architecture before training
         from labelme.config import Training
         config_file = os.path.join(self.output_folder, Training.config('config_file'))
         files = list(NetworkYoloV3._files.values())
         self.saveConfig(config_file, NetworkYoloV3._network, files, '', self.labels, self.args)
+        self.saveTraining(NetworkYoloV3._network)
 
         self.thread.update.emit(_('Start training ...'), -1, -1)
         self.train()
 
-        # export trained weights
+        # saved trained weights after training
         self.saveTraining(NetworkYoloV3._network)
-        #training_name = '{}_{}'.format(self.args.training_name, self.net_name)
-        #export_block(os.path.join(self.output_folder, NetworkYoloV3._network), self.net, preprocess=True, layout='HWC')
 
         self.thread.update.emit(_('Finished training'), -1, -1)
 
@@ -388,10 +391,4 @@ class NetworkYoloV3(Network):
                 current_map = 0.
             self.save_params(best_map, current_map, epoch, self.args.save_interval, os.path.join(self.output_folder, self.args.save_prefix))
 
-            # if current_map > best_map[0]:
-            #     best_map[0] = current_map
-            #     param_file = '{}.params'.format(self.args.training_name)
-            #     self.net.save_parameters(os.path.join(self.output_folder, param_file))
-
         end_time = time.time()
-

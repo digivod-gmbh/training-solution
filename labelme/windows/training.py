@@ -8,6 +8,7 @@ import os
 import re
 import mxnet as mx
 import json
+import math
 
 from labelme.logger import logger
 from labelme.utils import deltree, WorkerDialog, QHLine
@@ -36,6 +37,7 @@ class TrainingWindow(WorkerDialog):
         self.networks = QtWidgets.QComboBox()
         for key, val in Training.config('networks').items():
             self.networks.addItem(val)
+        self.networks.currentIndexChanged.connect(self.networkSelectionChanged)
 
         network_group = QtWidgets.QGroupBox()
         network_group.setTitle(_('Network'))
@@ -149,9 +151,11 @@ class TrainingWindow(WorkerDialog):
         self.args_epochs.setMinimum(1)
         self.args_epochs.setMaximum(100)
 
+        default_batch_size = self.get_default_batch_size()
+
         args_batch_size_label = QtWidgets.QLabel(_('Batch size'))
         self.args_batch_size = QtWidgets.QSpinBox()
-        self.args_batch_size.setValue(training_defaults['batch_size'])
+        self.args_batch_size.setValue(default_batch_size)
         self.args_batch_size.setMinimum(1)
         self.args_batch_size.setMaximum(100)
 
@@ -222,6 +226,38 @@ class TrainingWindow(WorkerDialog):
             logger.debug('Selected dataset format: {}'.format(self.selected_format))
         else:
             logger.debug('Dataset format not found: {}'.format(value))
+
+    def networkSelectionChanged(self):
+        default_batch_size = self.get_default_batch_size()
+        self.args_batch_size.setValue(default_batch_size)
+
+    def get_default_batch_size(self):
+        try:
+            selected_network = self.networks.currentText()
+            networks = Training.config('networks')
+            func_name = None
+            for key in networks:
+                if selected_network in networks[key]:
+                    func_name = key
+            if func_name is not None:
+                network = Training.config('objects')[func_name]()
+                network_size_base, network_size_per_batch = network.getGpuSizes()
+
+                import GPUtil
+                gpus = GPUtil.getGPUs()
+                gpu = gpus[0]
+
+                # Estimate best possible batch size
+                # Always take 1GB off to have memory left for peaks
+                batch_size = int(math.floor((gpu.memoryFree - network_size_base) / network_size_per_batch))
+                estimated_memory = gpu.memoryUsed + network_size_base + batch_size * network_size_per_batch
+                logger.debug('Estimating batch size: GPU {} (ID:{}) uses {}MB of {}MB. With {} ({}MB, {}MB) the estimated GPU usage is {}MB at a batch size of {}'
+                .format(gpu.name, gpu.id, gpu.memoryUsed, gpu.memoryTotal, selected_network, network_size_base, network_size_per_batch, estimated_memory, batch_size))
+
+                return batch_size
+
+        except Exception as e:
+            logger.error(e)
 
     def cancel_btn_clicked(self):
         self.close()

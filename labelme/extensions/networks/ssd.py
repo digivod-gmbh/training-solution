@@ -45,14 +45,19 @@ class NetworkSSD512(Network):
         else:
             raise Exception('Unknown architecture {}'.format(architecture))
 
+    def getGpuSizes(self):
+        # (base size, additional size per batch item)
+        return (2000, 800)
+
     def training(self):
         self.prepare()
 
-        # save config
+        # save config & architecture before training
         from labelme.config import Training
         config_file = os.path.join(self.output_folder, Training.config('config_file'))
         files = list(NetworkSSD512._files.values())
         self.saveConfig(config_file, NetworkSSD512._network, files, '', self.labels, self.args)
+        self.saveTraining(NetworkSSD512._network)
 
         self.thread.update.emit(_('Start training ...'), -1, -1)
         self.train()
