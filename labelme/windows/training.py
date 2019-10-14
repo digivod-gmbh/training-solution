@@ -37,7 +37,7 @@ class TrainingWindow(WorkerDialog):
         self.networks = QtWidgets.QComboBox()
         for key, val in Training.config('networks').items():
             self.networks.addItem(val)
-        self.networks.currentIndexChanged.connect(self.networkSelectionChanged)
+        self.networks.currentIndexChanged.connect(self.network_selection_changed)
 
         network_group = QtWidgets.QGroupBox()
         network_group.setTitle(_('Network'))
@@ -151,7 +151,8 @@ class TrainingWindow(WorkerDialog):
         self.args_epochs.setMinimum(1)
         self.args_epochs.setMaximum(100)
 
-        default_batch_size = self.get_default_batch_size()
+        network = self.get_current_network()
+        default_batch_size = self.get_default_batch_size(network)
 
         args_batch_size_label = QtWidgets.QLabel(_('Batch size'))
         self.args_batch_size = QtWidgets.QSpinBox()
@@ -227,11 +228,14 @@ class TrainingWindow(WorkerDialog):
         else:
             logger.debug('Dataset format not found: {}'.format(value))
 
-    def networkSelectionChanged(self):
-        default_batch_size = self.get_default_batch_size()
+    def network_selection_changed(self):
+        network = self.get_current_network()
+        default_batch_size = self.get_default_batch_size(network)
         self.args_batch_size.setValue(default_batch_size)
+        learning_rate = self.get_default_learning_rate(network)
+        self.args_learning_rate.setValue(learning_rate)
 
-    def get_default_batch_size(self):
+    def get_current_network(self):
         try:
             selected_network = self.networks.currentText()
             networks = Training.config('networks')
@@ -241,20 +245,32 @@ class TrainingWindow(WorkerDialog):
                     func_name = key
             if func_name is not None:
                 network = Training.config('objects')[func_name]()
-                network_size_base, network_size_per_batch = network.getGpuSizes()
+                return network
+        except Exception as e:
+            logger.error(e)
+            return None
 
-                import GPUtil
-                gpus = GPUtil.getGPUs()
-                gpu = gpus[0]
+    def get_default_learning_rate(self, network):
+        learning_rate = network.getDefaultLearningRate()
+        return learning_rate
 
-                # Estimate best possible batch size
-                # Always take 1GB off to have memory left for peaks
-                batch_size = int(math.floor((gpu.memoryFree - network_size_base) / network_size_per_batch))
-                estimated_memory = gpu.memoryUsed + network_size_base + batch_size * network_size_per_batch
-                logger.debug('Estimating batch size: GPU {} (ID:{}) uses {}MB of {}MB. With {} ({}MB, {}MB) the estimated GPU usage is {}MB at a batch size of {}'
-                .format(gpu.name, gpu.id, gpu.memoryUsed, gpu.memoryTotal, selected_network, network_size_base, network_size_per_batch, estimated_memory, batch_size))
+    def get_default_batch_size(self, network):
+        try:
+            selected_network = self.networks.currentText()
+            network_size_base, network_size_per_batch = network.getGpuSizes()
 
-                return batch_size
+            import GPUtil
+            gpus = GPUtil.getGPUs()
+            gpu = gpus[0]
+
+            # Estimate best possible batch size
+            # Always take 1GB off to have memory left for peaks
+            batch_size = int(math.floor((gpu.memoryFree - network_size_base) / network_size_per_batch))
+            estimated_memory = gpu.memoryUsed + network_size_base + batch_size * network_size_per_batch
+            logger.debug('Estimating batch size: GPU {} (ID:{}) uses {}MB of {}MB. With {} ({}MB, {}MB) the estimated GPU usage is {}MB at a batch size of {}'
+            .format(gpu.name, gpu.id, gpu.memoryUsed, gpu.memoryTotal, selected_network, network_size_base, network_size_per_batch, estimated_memory, batch_size))
+
+            return batch_size
 
         except Exception as e:
             logger.error(e)
@@ -387,9 +403,6 @@ class TrainingWindow(WorkerDialog):
         trainingWin.show()
         trainingWin.start_training(data)
         self.close()
-
-        #executor = TrainingExecutor(data)
-        #self.run_thread(executor, self.finish_training, custom_progress=self.progress_bar)
 
     def finish_training(self):
         mb = QtWidgets.QMessageBox()

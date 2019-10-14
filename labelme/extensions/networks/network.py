@@ -26,6 +26,9 @@ class Network(WorkerExecutor):
     def getGpuSizes(self):
         raise NotImplementedError('Method getGpuSizes() needs to be implemented in subclasses')
 
+    def getDefaultLearningRate(self):
+        raise NotImplementedError('Method getDefaultLearningRate() needs to be implemented in subclasses')
+
     def saveConfig(self, config_file, network, files, dataset, labels, args):
         data = {
             'network': network,

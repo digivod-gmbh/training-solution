@@ -33,6 +33,7 @@ class NetworkSSD512(Network):
 
     def __init__(self, architecture='resnet50'):
         super().__init__()
+        self.architecture_name = architecture
         if architecture == 'resnet50':
             self.net_name = 'ssd_512_resnet50_v1_coco'
             self.model_file_name = 'ssd_512_resnet50_v1_coco-c4835162.params'
@@ -47,7 +48,16 @@ class NetworkSSD512(Network):
 
     def getGpuSizes(self):
         # (base size, additional size per batch item)
-        return (2000, 800)
+        if self.architecture_name == 'resnet50':
+            return (1400, 890)
+        elif self.architecture_name == 'mobilenet1.0':
+            return (1000, 490)
+        elif self.architecture_name == 'vgg16_atrous':
+            return (1200, 860)
+        raise Exception('Unknown architecture {}'.format(self.architecture_name))
+
+    def getDefaultLearningRate(self):
+        return 0.001
 
     def training(self):
         self.prepare()
@@ -243,8 +253,10 @@ class NetworkSSD512(Network):
                     'batch': 1,
                     'batch_max': num_batches,
                     'speed': 0,
-                    'metric': {}
-                }
+                },
+                'validation': {
+                    _('Waiting for epoch to finish...'): '',
+                },
             })
 
             if self.args.mixup:
@@ -300,7 +312,7 @@ class NetworkSSD512(Network):
                                 name1: loss1,
                                 name2: loss2,
                             }
-                        }
+                        },
                     })
                     self.thread.update.emit(_('Training ...\nEpoch {}, Batch {}/{}, Speed: {:.3f} samples/sec\n{}={:.3f}, {}={:.3f}')
                         .format(epoch + 1, i + 1, num_batches, batch_size/(time.time()-btic), name1, loss1, name2, loss2), None, -1)
@@ -318,6 +330,16 @@ class NetworkSSD512(Network):
                 epoch, (time.time()-tic), name1, loss1, name2, loss2))
             if self.val_data and not (epoch + 1) % self.args.val_interval:
                 logger.debug('validate: {}'.format(epoch + 1))
+
+                self.thread.data.emit({
+                    'validation': {
+                        _('Validating...'): '',
+                    },
+                    'progress': {
+                        'speed': 0,
+                    }
+                })
+
                 # consider reduce the frequency of validation to save time
                 map_name, mean_ap = self.validate()
                 val_msg = '\n'.join(['{}={}'.format(k, v) for k, v in zip(map_name, mean_ap)])

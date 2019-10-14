@@ -33,6 +33,7 @@ class NetworkYoloV3(Network):
 
     def __init__(self, architecture='darknet53'):
         super().__init__()
+        self.architecture_name = architecture
         if architecture == 'darknet53':
             self.net_name = 'yolo3_darknet53_coco'
             self.model_file_name = 'yolo3_darknet53_coco-09767802.params'
@@ -44,7 +45,14 @@ class NetworkYoloV3(Network):
 
     def getGpuSizes(self):
         # (base size, additional size per batch item)
-        return (2200, 810)
+        if self.architecture_name == 'darknet53':
+            return (2400, 840)
+        elif self.architecture_name == 'mobilenet1.0':
+            return (1200, 450)
+        raise Exception('Unknown architecture {}'.format(self.architecture_name))
+
+    def getDefaultLearningRate(self):
+        return 0.00025
 
     def training(self):
         self.prepare()
@@ -274,7 +282,7 @@ class NetworkYoloV3(Network):
         start_time = time.time()
 
         for epoch in range(self.args.start_epoch, self.args.epochs):
-
+            
             self.thread.update.emit(_('Start training on epoch {} ...').format(epoch + 1), None, -1)
             if self.isAborted():
                 self.saveTraining(NetworkYoloV3._network)
@@ -287,8 +295,10 @@ class NetworkYoloV3(Network):
                     'batch': 1,
                     'batch_max': num_batches,
                     'speed': 0,
-                    'metric': {}
-                }
+                },
+                'validation': {
+                    _('Waiting for epoch to finish...'): '',
+                },
             })
             
             epoch_count += 1
@@ -356,7 +366,7 @@ class NetworkYoloV3(Network):
                                 name3: loss3,
                                 name4: loss4,
                             }
-                        }
+                        },
                     })
                     self.thread.update.emit(_('Training ...\nEpoch {}, Batch {}/{}, Speed: {:.3f} samples/sec\n{}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}')
                         .format(epoch + 1, i + 1, num_batches, batch_size/(time.time()-btic), name1, loss1, name2, loss2, name3, loss3, name4, loss4), None, -1)
@@ -376,6 +386,16 @@ class NetworkYoloV3(Network):
                 epoch, (time.time()-tic), name1, loss1, name2, loss2, name3, loss3, name4, loss4))
             if self.val_data and not (epoch + 1) % self.args.val_interval:
                 logger.debug('validate: {}'.format(epoch + 1))
+
+                self.thread.data.emit({
+                    'validation': {
+                        _('Validating...'): '',
+                    },
+                    'progress': {
+                        'speed': 0,
+                    }
+                })
+
                 # consider reduce the frequency of validation to save time
                 map_name, mean_ap = self.validate()
                 val_msg = '\n'.join(['{}={}'.format(k, v) for k, v in zip(map_name, mean_ap)])

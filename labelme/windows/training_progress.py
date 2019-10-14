@@ -27,6 +27,8 @@ class TrainingProgressWindow(WorkerDialog):
         self.set_default_window_flags(self)
         self.setWindowModality(Qt.ApplicationModal)
 
+        self.training_has_started = False
+
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
 
@@ -78,6 +80,7 @@ class TrainingProgressWindow(WorkerDialog):
         details_group_layout.addWidget(self.finished_value, 4, 2, 1, 3)
         layout.addWidget(details_group)
 
+        self.metric_labels = []
         self.metric_values = []
         self.metric_group = QtWidgets.QGroupBox()
         self.metric_group.setTitle(_('Metric'))
@@ -85,6 +88,7 @@ class TrainingProgressWindow(WorkerDialog):
         self.metric_group.setLayout(self.metric_group_layout)
         layout.addWidget(self.metric_group)
 
+        self.validation_labels = []
         self.validation_values = []
         self.validation_group = QtWidgets.QGroupBox()
         self.validation_group.setTitle(_('Last validation'))
@@ -137,51 +141,92 @@ class TrainingProgressWindow(WorkerDialog):
         data = Map(data)
         try:
             if 'validation' in data:
-                if len(self.validation_values) == 0:
-                    row = 0
-                    for item in data.validation.items():
+                num_new_items = len(data.validation.items())
+                num_old_items = len(self.validation_values)
+
+                row = 0
+                for item in data.validation.items():
+                    if row >= num_old_items:
                         label = QtWidgets.QLabel(str(item[0]))
                         value = QtWidgets.QLabel('-')
                         value.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-                        self.validation_values.append(value)
                         self.validation_group_layout.addWidget(label, row, 0)
                         self.validation_group_layout.addWidget(value, row, 1)
-                        row += 1
-                row = 0
-                for item in data.validation.items():
-                    self.validation_values[row].setText('{:.4f}'.format(item[1]))
+                        self.validation_labels.append(label)
+                        self.validation_values.append(value)
+                    self.validation_labels[row].setText(str(item[0]))
+                    if isinstance(item[1], (int, float)):
+                        self.validation_values[row].setText('{:.4f}'.format(item[1]))
+                    else:
+                        self.validation_values[row].setText(str(item[1]))
                     row += 1
+
+                if num_old_items > num_new_items:
+                    for i in range(num_new_items, num_old_items):
+                        self.validation_labels[i].setText('')
+                        self.validation_values[i].setText('')
+                        self.validation_group_layout.removeWidget(self.validation_labels[i])
+                        self.validation_group_layout.removeWidget(self.validation_values[i])
+                    for i in range(num_old_items, num_new_items, -1):
+                        del self.validation_labels[i - 1]
+                        del self.validation_values[i - 1]
 
             if 'progress' in data:
                 progress = Map(data.progress)
-                self.epoch_value.setText(str(progress.epoch))
-                self.epoch_max_value.setText(str(progress.epoch_max))
-                self.batch_value.setText(str(progress.batch))
-                self.batch_max_value.setText(str(progress.batch_max))
-                self.speed_value.setText('{:.2f} {}'.format(progress.speed, _('samples/sec')))
-                if len(self.metric_values) == 0:
+                if 'epoch' in progress:
+                    self.epoch_value.setText(str(progress.epoch))
+                if 'epoch_max' in progress:
+                    self.epoch_max_value.setText(str(progress.epoch_max))
+                if 'batch' in progress:
+                    self.batch_value.setText(str(progress.batch))
+                if 'batch_max' in progress:
+                    self.batch_max_value.setText(str(progress.batch_max))
+                if 'speed' in progress:
+                    self.speed_value.setText('{:.2f} {}'.format(progress.speed, _('samples/sec')))
+                
+                if not self.training_has_started:
+                    self.start_time = time.time()
+                    self.training_has_started = True
+
+                if 'metric' in progress:
+                    num_new_items = len(progress.metric.items())
+                    num_old_items = len(self.metric_values)
+
                     row = 0
                     for item in progress.metric.items():
-                        label = QtWidgets.QLabel(str(item[0]))
-                        value = QtWidgets.QLabel('-')
-                        value.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-                        self.metric_values.append(value)
-                        self.metric_group_layout.addWidget(label, row, 0)
-                        self.metric_group_layout.addWidget(value, row, 1)
+                        if row >= num_old_items:
+                            label = QtWidgets.QLabel(str(item[0]))
+                            value = QtWidgets.QLabel('-')
+                            value.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+                            self.metric_group_layout.addWidget(label, row, 0)
+                            self.metric_group_layout.addWidget(value, row, 1)
+                            self.metric_labels.append(label)
+                            self.metric_values.append(value)
+                        self.metric_labels[row].setText(str(item[0]))
+                        if isinstance(item[1], (int, float)):
+                            self.metric_values[row].setText('{:.4f}'.format(item[1]))
+                        else:
+                            self.metric_values[row].setText(str(item[1]))
                         row += 1
-                    self.start_time = time.time()
-                row = 0
-                for item in progress.metric.items():
-                    self.metric_values[row].setText('{:.4f}'.format(item[1]))
-                    row += 1
+
+                    if num_old_items > num_new_items:
+                        for i in range(num_new_items, num_old_items):
+                            self.metric_labels[i].setText('')
+                            self.metric_values[i].setText('')
+                            self.metric_group_layout.removeWidget(self.metric_labels[i])
+                            self.metric_group_layout.removeWidget(self.metric_values[i])
+                        for i in range(num_old_items, num_new_items, -1):
+                            del self.metric_labels[i - 1]
+                            del self.metric_values[i - 1]
 
                 # Estimate finish time
                 if self.start_time is not False:
-                    percentage = ((progress.epoch - 1) / progress.epoch_max) + (progress.batch / progress.batch_max / progress.epoch_max)
-                    current_time = time.time()
-                    duration = current_time - self.start_time
-                    seconds_left = (duration / percentage) - duration
-                    self.finished_value.setText(self.format_duration(seconds_left))
+                    if 'epoch' in progress and 'epoch_max' in progress and 'batch' in progress and 'batch_max' in progress:
+                        percentage = ((progress.epoch - 1) / progress.epoch_max) + (progress.batch / progress.batch_max / progress.epoch_max)
+                        current_time = time.time()
+                        duration = current_time - self.start_time
+                        seconds_left = (duration / percentage) - duration
+                        self.finished_value.setText(self.format_duration(seconds_left))
 
         except Exception as e:
             logger.error(e)
@@ -203,6 +248,12 @@ class TrainingProgressWindow(WorkerDialog):
 
         mb = QtWidgets.QMessageBox()
         mb.information(self, _('Training'), _('Network has been trained successfully'))
+        self.reset_thread()
+        self.close()
+
+    def on_error(self, e):
+        super().on_error(e)
+        self.reset_thread()
         self.close()
 
 
