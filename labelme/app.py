@@ -17,7 +17,7 @@ from . import utils
 from labelme.config import get_config
 from labelme.label_file import LabelFile
 from labelme.label_file import LabelFileError
-from labelme.logger import logger
+from labelme.logger import logger, DEFAULT_LOG_PATH
 from labelme.shape import DEFAULT_FILL_COLOR
 from labelme.shape import DEFAULT_LINE_COLOR
 from labelme.shape import Shape
@@ -401,6 +401,9 @@ class MainWindow(QtWidgets.QMainWindow):
         about = action(_('&About'), self.about,
                       tip=_('Show about page'))
 
+        openLogs = action(_('&Logs'), self.openLogs,
+                      tip=_('Open log folder'))
+
         zoom = QtWidgets.QWidgetAction(self)
         zoom.setDefaultWidget(self.zoomWidget)
         self.zoomWidget.setWhatsThis(
@@ -581,6 +584,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ))
         utils.addActions(self.menus.help, (
             help,
+            openLogs,
             about,
             ))
         utils.addActions(
@@ -860,6 +864,10 @@ class MainWindow(QtWidgets.QMainWindow):
         mb = QtWidgets.QMessageBox
         msg = '<h1>{}</h1>An easy-to-use tool for training of object detection networks<br><br><i>This software uses icons from <a href="https://icons8.com/">icons8</a></i>'.format(__appname__)
         mb.about(self, 'About', msg)
+
+    def openLogs(self):
+        logs_dir = os.path.dirname(DEFAULT_LOG_PATH)
+        os.startfile(logs_dir)
 
     def toggleDrawingSensitive(self, drawing=True):
         """Toggle drawing sensitive.
