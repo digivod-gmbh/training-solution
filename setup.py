@@ -40,6 +40,7 @@ install_requires = [
 	#'gluoncv==0.5.0', # still buggy in voc_detection.py
     'pycocotools==2.0.0',
     'opencv-python==4.1.0.25',
+    'gpuinfo==1.0.0a5',
     'lxml==4.3.4',
     'termcolor',
 ]
