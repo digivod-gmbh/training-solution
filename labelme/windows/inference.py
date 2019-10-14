@@ -120,8 +120,8 @@ class InferenceWindow(WorkerDialog):
                 label_name = _('unknown')
                 if label < len(data.labels):
                     label_name = str(data.labels[label])
-                xr = self.pixmap.width() / data.imgsize[0]
-                yr = self.pixmap.height() / data.imgsize[1]
+                xr = self.pixmap.width() / data.imgsize[1]
+                yr = self.pixmap.height() / data.imgsize[0]
                 x, y = data.bbox[0][i][0] * xr, data.bbox[0][i][1] * yr
                 w, h = data.bbox[0][i][2] * xr - x, data.bbox[0][i][3] * yr - y
                 #logger.debug('Draw bbox ({}, {}, {}, {}) for label {} ({})'.format(int(x), int(y), int(w), int(h), label_name, label))
