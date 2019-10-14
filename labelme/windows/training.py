@@ -9,9 +9,10 @@ import re
 import mxnet as mx
 import json
 import math
+import time
 
 from labelme.logger import logger
-from labelme.utils import deltree, WorkerDialog, QHLine
+from labelme.utils import deltree, WorkerDialog, QHLine, confirm
 from labelme.utils.map import Map
 from labelme.extensions.thread import WorkerExecutor
 from labelme.extensions.formats import *
@@ -397,6 +398,77 @@ class TrainingWindow(WorkerDialog):
             'args_batch_size': self.args_batch_size.value(),
             'args_learning_rate': self.args_learning_rate.value(),
         }
+
+        # Preprocess data
+        mb = QtWidgets.QMessageBox()
+        create_dataset = data['create_dataset']
+        if create_dataset:
+            export_data = data['dataset_export_data']
+            format_name = export_data['format']
+            dataset_format = Export.config('objects')[format_name]()
+            output_folder = export_data['output_folder']
+            train_file = dataset_format.getOutputFileName('train')
+            train_dataset = os.path.join(output_folder, train_file)
+            validation_ratio = export_data['validation_ratio']
+            if validation_ratio > 0:
+                val_file = dataset_format.getOutputFileName('val')
+                val_dataset = os.path.join(output_folder, val_file)
+            else:
+                # Validation dataset is optional
+                val_dataset = False
+
+        else:
+            train_dataset = data['train_dataset']
+            is_train_dataset_valid = True
+            if not train_dataset:
+                is_train_dataset_valid = False
+            train_dataset = os.path.normpath(train_dataset)
+            if not (os.path.isdir(train_dataset) or os.path.isfile(train_dataset)):
+                is_train_dataset_valid = False
+            if not is_train_dataset_valid:
+                mb.warning(self, _('Training'), _('Please select a valid training dataset'))
+                return
+            data['train_dataset'] = train_dataset
+
+            val_dataset = data['val_dataset']
+            is_val_dataset_valid = True
+            if not val_dataset:
+                is_val_dataset_valid = False
+            val_dataset = os.path.normpath(val_dataset)
+            if not (os.path.isdir(val_dataset) or os.path.isfile(val_dataset)):
+                is_val_dataset_valid = False
+            if not is_val_dataset_valid:
+                # Validation dataset is optional
+                val_dataset = False
+            data['val_dataset'] = val_dataset
+
+        output_folder = os.path.normpath(data['output_folder'])
+        training_name = data['training_name']
+        training_name = re.sub(r'[^a-zA-Z0-9 _-]+', '', training_name)
+        data['training_name'] = training_name
+
+        if not training_name:
+            mb.warning(self, _('Training'), _('Please enter a valid training name'))
+            return
+        
+        output_folder = os.path.join(output_folder, training_name)
+        data['output_folder'] = output_folder
+        if not os.path.isdir(output_folder):
+            os.makedirs(output_folder)
+        elif len(os.listdir(output_folder)) > 0:
+            msg = _('The selected output directory "{}" is not empty. All containing files will be deleted. Are you sure to continue?').format(output_folder)
+            result = confirm(self, _('Training'), msg, MessageType.Warning)
+            if result:
+                deltree(output_folder)
+                time.sleep(0.5) # wait for deletion to be finished
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+            else:
+                return
+
+        if not os.path.isdir(output_folder):
+            mb.warning(self, _('Training'), _('The selected output directory "{}" could not be created').format(output_folder))
+            return
 
         # Open new window for training progress
         trainingWin = TrainingProgressWindow(self)

@@ -8,6 +8,29 @@ from labelme.config import MessageType
 from labelme.extensions.thread import WorkerExecutor
 
 
+def confirm(parent, title, message, kind):
+    box = QtWidgets.QMessageBox(parent)
+    if kind == MessageType.Warning:
+        box.setIcon(QtWidgets.QMessageBox.Warning)
+    elif kind == MessageType.Error:
+        box.setIcon(QtWidgets.QMessageBox.Critical)
+    elif kind == MessageType.Question:
+        box.setIcon(QtWidgets.QMessageBox.Question)
+    else:
+        box.setIcon(QtWidgets.QMessageBox.Information)
+    box.setWindowTitle(title)
+    box.setText(message)
+    box.setStandardButtons(QtWidgets.QMessageBox.Yes|QtWidgets.QMessageBox.No)
+    buttonYes = box.button(QtWidgets.QMessageBox.Yes)
+    buttonYes.setText(_('Yes'))
+    buttonNo = box.button(QtWidgets.QMessageBox.No)
+    buttonNo.setText(_('No'))
+    box.exec_()
+    if box.clickedButton() == buttonYes:
+        return True
+    return False
+
+
 class WorkerDialog(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
@@ -95,16 +118,17 @@ class WorkerDialog(QtWidgets.QDialog):
 
     def on_confirm(self, title, message, kind=None):
         clicked_btn = False
-        mb = QtWidgets.QMessageBox
-        if kind == MessageType.Warning:
-            clicked_btn = mb.warning(self, title, message, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        elif kind == MessageType.Error:
-            clicked_btn = mb.critical(self, title, message, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        elif kind == MessageType.Question:
-            clicked_btn = mb.question(self, title, message, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        else:
-            clicked_btn = mb.information(self, title, message, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        result = clicked_btn == QtWidgets.QMessageBox.Yes
+        result = confirm(title, message, kind)
+        # mb = QtWidgets.QMessageBox
+        # if kind == MessageType.Warning:
+        #     clicked_btn = mb.warning(self, title, message, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        # elif kind == MessageType.Error:
+        #     clicked_btn = mb.critical(self, title, message, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        # elif kind == MessageType.Question:
+        #     clicked_btn = mb.question(self, title, message, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        # else:
+        #     clicked_btn = mb.information(self, title, message, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        # result = clicked_btn == QtWidgets.QMessageBox.Yes
         self.worker_executor.confirmResult(result)
 
     def on_progress(self, message=None, value=None, maximum=None):
