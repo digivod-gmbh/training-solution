@@ -240,15 +240,15 @@ class MainWindow(QtWidgets.QMainWindow):
         settings = action(_('&Settings'), self.settingsDialog,
                          shortcuts['settings'], 'settings', _(u'Settings'), enabled=True)
         import_ = action(_('&Import'), self.importDialog,
-                         shortcuts['import'], 'import', _(u'Import'), enabled=True)
+                         shortcuts['import'], 'import', _(u'Import images'), enabled=True)
         export = action(_('&Export'), self.exportDialog,
-                         shortcuts['export'], 'export', _(u'Export'), enabled=True)
+                         shortcuts['export'], 'export', _(u'Export images'), enabled=True)
         # merge = action(_('&Merge'), self.mergeDialog,
-        #                  shortcuts['merge'], 'merge', _(u'Merge'), enabled=True)
+        #                  shortcuts['merge'], 'merge', _(u'Merge datasets'), enabled=True)
         training = action(_('&Training'), self.trainingDialog,
-                         shortcuts['training'], 'training', _(u'Training'), enabled=True)
+                         shortcuts['training'], 'training', _(u'Train a network'), enabled=True)
         validation = action(_('&Validation'), self.validationDialog,
-                         shortcuts['validation'], 'validation', _(u'Validation'), enabled=True)
+                         shortcuts['validation'], 'validation', _(u'Validate training results'), enabled=True)
         openNextImg = action(
             _('&Next Image'),
             self.openNextImg,
