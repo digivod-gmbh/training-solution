@@ -30,6 +30,17 @@ class Network(WorkerExecutor):
     def getDefaultLearningRate(self):
         raise NotImplementedError('Method getDefaultLearningRate() needs to be implemented in subclasses')
 
+    def updateConfig(self, config_file, **kwargs):
+        logger.debug('Update training config with data: {}'.format(kwargs))
+        data = {}
+        with open(config_file, 'r') as f:
+            data = json.load(f)
+        for key in kwargs.keys():
+            data[key] = kwargs[key]
+        with open(config_file, 'w+') as f:
+            json.dump(data, f, indent=2)
+        logger.debug('Updated training config in file: {}'.format(config_file))
+
     def saveConfig(self, config_file, network, files, dataset, labels, args):
         data = {
             'network': network,
