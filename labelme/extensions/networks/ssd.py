@@ -49,11 +49,11 @@ class NetworkSSD512(Network):
     def getGpuSizes(self):
         # (base size, additional size per batch item)
         if self.architecture_name == 'resnet50':
-            return (1400, 890)
+            return (1500, 910)
         elif self.architecture_name == 'mobilenet1.0':
-            return (1000, 490)
+            return (1100, 510)
         elif self.architecture_name == 'vgg16_atrous':
-            return (1200, 860)
+            return (1300, 880)
         raise Exception('Unknown architecture {}'.format(self.architecture_name))
 
     def getDefaultLearningRate(self):

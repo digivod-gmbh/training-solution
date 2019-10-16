@@ -169,7 +169,7 @@ class Network(WorkerExecutor):
         super().__exit__(exc_type, exc_value, traceback)
         if self.ctx:
             for context in self.ctx:
-                context.empty_cache()        
+                context.empty_cache()
 
 
 class NetworkMonitor:
