@@ -862,7 +862,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def about(self):
         mb = QtWidgets.QMessageBox
-        msg = '<h1>{}</h1>An easy-to-use tool for training of object detection networks<br><br><i>This software uses icons from <a href="https://icons8.com/">icons8</a></i>'.format(__appname__)
+        title = __appname__
+        line1 = _('An easy-to-use tool for training of object detection networks')
+        icon_attribution = _('This software uses icons from {}').format('<a href="https://icons8.com/">icons8</a>')
+        msg = '<h1>{}</h1>{}<br><br><i>{}</i>'.format(title, line1, icon_attribution)
         mb.about(self, 'About', msg)
 
     def openLogs(self):
