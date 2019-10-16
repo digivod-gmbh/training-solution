@@ -19,6 +19,7 @@ class Worker(QtCore.QThread):
 
     def finish(self, args=None):
         logger.debug('Worker thread finished')
+        self.deleteLater()
 
     def success(self, args=None):
         logger.debug('Worker thread requested success ...')

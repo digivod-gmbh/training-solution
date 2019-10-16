@@ -286,7 +286,6 @@ class TrainingExecutor(WorkerExecutor):
             self.thread.message.emit(_('Training'), _('Network {} could not be found').format(network_key), MessageType.Error)
             self.abort()
             return
-        network = Training.config('objects')[network_key]()
 
         # Training settings
         gpus = []
@@ -326,17 +325,18 @@ class TrainingExecutor(WorkerExecutor):
 
         self.thread.update.emit(_('Loading data ...'), 0, epochs * num_batches + 5)
 
-        network.setAbortable(self.abortable)
-        network.setThread(self.thread)
-        network.setArgs(args)
-        network.setOutputFolder(self.data['output_folder'])
-        network.setTrainDataset(train_dataset_obj, dataset_format)
-        network.setLabels(labels)
+        with Training.config('objects')[network_key]() as network:
+            network.setAbortable(self.abortable)
+            network.setThread(self.thread)
+            network.setArgs(args)
+            network.setOutputFolder(self.data['output_folder'])
+            network.setTrainDataset(train_dataset_obj, dataset_format)
+            network.setLabels(labels)
 
-        if self.data['val_dataset']:
-            network.setValDataset(val_dataset_obj)
+            if self.data['val_dataset']:
+                network.setValDataset(val_dataset_obj)
 
-        self.checkAborted()
+            self.checkAborted()
 
-        network.training()
+            network.training()
 

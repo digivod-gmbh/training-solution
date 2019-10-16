@@ -165,6 +165,12 @@ class Network(WorkerExecutor):
             #ax = viz.plot_bbox(image, bbox[0], score[0], cid[0], class_names=class_names, thresh=args.threshold)
             #plt.show()
 
+    def __exit__(self, exc_type, exc_value, traceback):
+        super().__exit__(exc_type, exc_value, traceback)
+        if self.ctx:
+            for context in self.ctx:
+                context.empty_cache()        
+
 
 class NetworkMonitor:
 

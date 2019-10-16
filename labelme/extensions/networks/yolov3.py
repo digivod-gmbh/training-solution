@@ -66,6 +66,7 @@ class NetworkYoloV3(Network):
 
         self.thread.update.emit(_('Start training ...'), -1, -1)
         last_epoch = self.train()
+
         modified_weights_file = NetworkYoloV3._files['weights'].replace('0000', '{:04d}'.format(last_epoch))
         files = [NetworkYoloV3._files['architecture'], modified_weights_file]
         self.updateConfig(config_file, files=files)

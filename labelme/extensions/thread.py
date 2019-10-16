@@ -25,6 +25,13 @@ class WorkerExecutor():
         self.wait_for_confirm = False
         self.confirm_value = None
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        import gc
+        gc.collect()
+
     def run(self):
         raise NotImplementedError('Method run() must be implemented in subclass')
 
