@@ -188,14 +188,12 @@ def main():
             output_dir = output
 
     # MXNet environment variables
-    mxnet_home_path = os.path.normpath(current_path + '/../networks/')
-    os.environ['MXNET_GPU_MEM_POOL_TYPE'] = 'Unpooled'
-    logger.debug('Set environment variable MXNET_GPU_MEM_POOL_TYPE to {}'.format(os.environ['MXNET_GPU_MEM_POOL_TYPE']))
-    os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
-    logger.debug('Set environment variable MXNET_CUDNN_AUTOTUNE_DEFAULT to {}'.format(os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT']))
-    os.environ['MXNET_HOME'] = mxnet_home_path
-    logger.debug('Set environment variable MXNET_HOME to {}'.format(os.environ['MXNET_HOME']))
-    
+    if 'MXNET_GPU_MEM_POOL_TYPE' in os.environ:
+        logger.debug('Environment variable MXNET_GPU_MEM_POOL_TYPE = {}'.format(os.environ['MXNET_GPU_MEM_POOL_TYPE']))
+    if 'MXNET_CUDNN_AUTOTUNE_DEFAULT' in os.environ:
+        logger.debug('Environment variable MXNET_CUDNN_AUTOTUNE_DEFAULT = {}'.format(os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT']))
+    if 'MXNET_HOME' in os.environ:
+        logger.debug('Environment variable MXNET_HOME = {}'.format(os.environ['MXNET_HOME']))
 
     # Enable high dpi for 4k monitors
     os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'

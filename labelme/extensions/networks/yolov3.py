@@ -46,13 +46,13 @@ class NetworkYoloV3(Network):
     def getGpuSizes(self):
         # (base size, additional size per batch item)
         if self.architecture_name == 'darknet53':
-            return (2500, 860)
+            return (2500, 1000)
         elif self.architecture_name == 'mobilenet1.0':
-            return (1300, 470)
+            return (1300, 600)
         raise Exception('Unknown architecture {}'.format(self.architecture_name))
 
     def getDefaultLearningRate(self):
-        return 0.00025
+        return 0.0002
 
     def training(self):
         self.prepare()
