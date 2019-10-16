@@ -77,7 +77,7 @@ class FormatImageRecord(DatasetFormat):
                         labels.append(label_idx)
                         self.num_samples = self.num_samples + 1
                 except Exception as e:
-                    logger.error(e)
+                    logger.error(traceback.format_exc())
             record.close()
 
         return list(labels)
@@ -158,7 +158,7 @@ class FormatImageRecord(DatasetFormat):
                     self.checkAborted()
 
             except Exception as e:
-                logger.error(e)
+                logger.error(traceback.format_exc())
                 raise Exception(e)
 
         record.close()

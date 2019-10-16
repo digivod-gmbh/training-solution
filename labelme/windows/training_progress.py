@@ -2,6 +2,7 @@ import os
 import re
 import time
 import math
+import traceback
 
 from qtpy import QtCore
 from qtpy.QtCore import Qt
@@ -229,7 +230,7 @@ class TrainingProgressWindow(WorkerDialog):
                         self.finished_value.setText(self.format_duration(seconds_left))
 
         except Exception as e:
-            logger.error(e)
+            logger.error(traceback.format_exc())
 
     def start_training(self, data):
         config = get_config()
@@ -237,13 +238,16 @@ class TrainingProgressWindow(WorkerDialog):
         self.progress_bar.setRange(0, 4)
         self.progress_bar.setValue(0)
 
+        if not data['val_dataset']:
+            self.validation_group.hide()
+
         # Execution
         executor = TrainingExecutor(data)
         self.run_thread(executor, self.finish_training, custom_progress=self.progress_bar)
 
     def finish_training(self):
         data = self.data
-        logger.debug(data)
+        logger.debug('finish_training: {}'.format(data))
         self.progress_bar.setValue(4)
 
         mb = QtWidgets.QMessageBox()
@@ -277,17 +281,12 @@ class TrainingExecutor(WorkerExecutor):
         except:
             pass
 
-        network = self.data['network']
-        networks = Training.config('networks')
-        func_name = None
-        for key in networks:
-            if network in networks[key]:
-                func_name = key
-        
-        if func_name is None:
-            self.thread.message.emit(_('Training'), _('Network {} could not be found').format(network), MessageType.Error)
+        network_key = self.data['network']
+        if network_key not in Training.config('objects'):
+            self.thread.message.emit(_('Training'), _('Network {} could not be found').format(network_key), MessageType.Error)
             self.abort()
             return
+        network = Training.config('objects')[network_key]()
 
         # Training settings
         gpus = []
@@ -312,6 +311,7 @@ class TrainingExecutor(WorkerExecutor):
         num_batches = int(math.ceil(num_train_samples / batch_size))
         
         args = Map({
+            'network': self.data['network'],
             'train_dataset': self.data['train_dataset'],
             'validate_dataset': self.data['val_dataset'],
             'training_name': self.data['training_name'],
@@ -320,16 +320,17 @@ class TrainingExecutor(WorkerExecutor):
             'gpus': gpus,
             'epochs': epochs,
             'early_stop_epochs': int(self.data['args_early_stop_epochs']),
+            'start_epoch': self.data['start_epoch'],
+            'resume': self.data['resume_training'],
         })
 
         self.thread.update.emit(_('Loading data ...'), 0, epochs * num_batches + 5)
 
-        network = Training.config('objects')[func_name]()
         network.setAbortable(self.abortable)
         network.setThread(self.thread)
         network.setArgs(args)
         network.setOutputFolder(self.data['output_folder'])
-        network.setTrainDataset(train_dataset_obj)
+        network.setTrainDataset(train_dataset_obj, dataset_format)
         network.setLabels(labels)
 
         if self.data['val_dataset']:

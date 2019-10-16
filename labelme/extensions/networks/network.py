@@ -2,6 +2,7 @@ import os
 import json
 import warnings
 import numpy as np
+import traceback
 
 import mxnet as mx
 from mxnet import gluon
@@ -20,6 +21,7 @@ class Network(WorkerExecutor):
     def __init__(self):
         super().__init__()
         self.monitor = NetworkMonitor()
+        self.dataset_format = None
 
     def training(self):
         raise NotImplementedError('Method training() needs to be implemented in subclasses')
@@ -41,12 +43,15 @@ class Network(WorkerExecutor):
             json.dump(data, f, indent=2)
         logger.debug('Updated training config in file: {}'.format(config_file))
 
-    def saveConfig(self, config_file, network, files, dataset, labels, args):
+    def saveConfig(self, config_file, files):
+        args = self.args.copy()
+        del args['network']
+        del args['resume']
         data = {
-            'network': network,
+            'network': self.args.network,
             'files': files,
-            'dataset': dataset,
-            'labels': labels,
+            'dataset': self.dataset_format,
+            'labels': self.labels,
             'args': args,
         }
         logger.debug('Create training config: {}'.format(data))
@@ -71,8 +76,9 @@ class Network(WorkerExecutor):
     def setLabels(self, labels):
         self.labels = labels
 
-    def setTrainDataset(self, dataset):
+    def setTrainDataset(self, dataset, dataset_format):
         self.train_dataset = dataset
+        self.dataset_format = dataset_format
 
     def setValDataset(self, dataset):
         self.val_dataset = dataset
@@ -85,7 +91,7 @@ class Network(WorkerExecutor):
             tmp = mx.nd.array([1, 2, 3], ctx=ctx[0])
         except mx.MXNetError as e:
             ctx = [mx.cpu()]
-            logger.error(e)
+            logger.error(traceback.format_exc())
             logger.warning('Unable to use GPU. Using CPU instead')
         logger.debug('Use context: {}'.format(ctx))
         return ctx

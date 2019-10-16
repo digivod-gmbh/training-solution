@@ -71,7 +71,7 @@ class ValidationWindow(WorkerDialog):
         project_folder = self.parent.settings.value('settings/project/folder', '')
         logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
         training_folder = os.path.join(project_folder, self.parent._config['project_training_folder'])
-        training_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select training file'), training_folder)
+        training_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select training directory'), training_folder)
         if training_folder:
             training_folder = os.path.normpath(training_folder)
             self.training_folder.setText(training_folder)
@@ -88,7 +88,7 @@ class ValidationWindow(WorkerDialog):
         training_folder = self.training_folder.text()
         if not training_folder or not os.path.isdir(training_folder):
             mb = QtWidgets.QMessageBox
-            mb.warning(self, _('Validation'), _('Please select a valid training folder'))
+            mb.warning(self, _('Validation'), _('Please select a valid training directory'))
             return
 
         inference_window = InferenceWindow(self)

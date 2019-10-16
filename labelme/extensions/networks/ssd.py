@@ -66,7 +66,7 @@ class NetworkSSD512(Network):
         from labelme.config import Training
         config_file = os.path.join(self.output_folder, Training.config('config_file'))
         files = list(NetworkSSD512._files.values())
-        self.saveConfig(config_file, NetworkSSD512._network, files, '', self.labels, self.args)
+        self.saveConfig(config_file, files)
         self.saveTraining(NetworkSSD512._network, 0)
 
         self.thread.update.emit(_('Start training ...'), -1, -1)
@@ -129,7 +129,11 @@ class NetworkSSD512(Network):
         self.thread.update.emit(_('Loading weights ...'), -1, -1)
 
         if self.args.resume.strip():
-            self.net.load_parameters(self.args.resume.strip())
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                self.net.initialize(ctx=self.ctx)
+            self.net.reset_class(classes)
+            self.net.load_parameters(self.args.resume.strip(), ctx=self.ctx)
         else:
             model_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../../networks/models'))
             weights_file = os.path.join(model_path, self.model_file_name)
@@ -367,5 +371,9 @@ class NetworkSSD512(Network):
                 current_map = 0.
 
             self.save_params(best_map, current_map, epoch, self.args.save_interval, os.path.join(self.output_folder, self.args.save_prefix))
+
+            from labelme.config import Training
+            config_file = os.path.join(self.output_folder, Training.config('config_file'))
+            self.updateConfig(config_file, last_epoch=epoch)
 
         return epoch
