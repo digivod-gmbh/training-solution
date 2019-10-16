@@ -433,6 +433,6 @@ class NetworkYoloV3(Network):
 
             from labelme.config import Training
             config_file = os.path.join(self.output_folder, Training.config('config_file'))
-            self.updateConfig(config_file, last_epoch=epoch)
+            self.updateConfig(config_file, last_epoch=epoch+1)
 
         return epoch

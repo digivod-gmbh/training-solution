@@ -564,6 +564,7 @@ class TrainingWindow(WorkerDialog):
         epochs = self.args_epochs.value()
 
         resume_training_file = ''
+        resume_epoch = 0
         if self.resume_training_checkbox.isChecked():
             idx = self.resume_file.currentIndex()
             resume_training_file, resume_epoch = self.resume_file.itemData(idx)
@@ -651,7 +652,7 @@ class TrainingWindow(WorkerDialog):
         if not os.path.isdir(output_folder):
             os.makedirs(output_folder)
         elif len(os.listdir(output_folder)) > 0 and resume_training_file:
-            mb.warning(_('Training'), _('The selected output directory "{}" is not empty. Please select a different directory.').format(output_folder))
+            mb.warning(self, _('Training'), _('The selected output directory "{}" is not empty. Please select a different directory.').format(output_folder))
             return
         elif len(os.listdir(output_folder)) > 0 and not resume_training_file:
             msg = _('The selected output directory "{}" is not empty. All containing files will be deleted. Are you sure to continue?').format(output_folder)
