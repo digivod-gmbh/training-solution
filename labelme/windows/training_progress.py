@@ -18,6 +18,7 @@ from labelme.utils import deltree, WorkerDialog, confirm
 from labelme.config import MessageType
 from labelme.config import get_config
 from labelme.config.export import Export
+from labelme.widgets import PlotWidget
 
 
 class TrainingProgressWindow(WorkerDialog):
@@ -97,8 +98,13 @@ class TrainingProgressWindow(WorkerDialog):
         self.validation_group.setLayout(self.validation_group_layout)
         layout.addWidget(self.validation_group)
 
-        self.image_label = QtWidgets.QLabel()
-        layout.addWidget(self.image_label)
+        self.plot_widget = PlotWidget(self, 
+            left_label=_('Accuracy'),
+            bottom_label=_('Epoch'),
+            x_range=10,
+            y_range=1,
+        )
+        layout.addWidget(self.plot_widget)
 
         self.progress_bar = QtWidgets.QProgressBar()
         layout.addWidget(self.progress_bar)
@@ -172,6 +178,11 @@ class TrainingProgressWindow(WorkerDialog):
                         del self.validation_labels[i - 1]
                         del self.validation_values[i - 1]
 
+                key = list(data.validation.keys())[-1]
+                val = data.validation[key]
+                if isinstance(val, (int, float)):
+                    self.plot_widget.update(val)
+
             if 'progress' in data:
                 progress = Map(data.progress)
                 if 'epoch' in progress:
@@ -219,6 +230,11 @@ class TrainingProgressWindow(WorkerDialog):
                         for i in range(num_old_items, num_new_items, -1):
                             del self.metric_labels[i - 1]
                             del self.metric_values[i - 1]
+
+                    key = list(progress.metric.keys())[2]
+                    val = progress.metric[key]
+                    if isinstance(val, (int, float)):
+                        self.plot_widget.update(val)
 
                 # Estimate finish time
                 if self.start_time is not False:
