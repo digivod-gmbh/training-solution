@@ -10,4 +10,8 @@ pip install -e ./dependencies/pycocotools/PythonAPI/
 REM install TrainingSolution
 pip install -e .
 
+setx MXNET_GPU_MEM_POOL_TYPE "Naive"
+setx MXNET_CUDNN_AUTOTUNE_DEFAULT "0"
+setx MXNET_HOME "%~dp0%networks\\"
+
 pause
