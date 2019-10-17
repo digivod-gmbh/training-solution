@@ -19,6 +19,59 @@ from labelme.config import MessageType
 from labelme.config import get_config
 from labelme.config.export import Export
 
+import matplotlib
+from labelme import QT4, QT5
+if QT5:
+    from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+    matplotlib.use('Qt5Agg')
+elif QT4:
+    from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+    matplotlib.use('Qt4Agg')
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+
+
+class PlotWidget(FigureCanvas):
+    def __init__(self, parent=None, width=1, height=1, dpi=90):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        self.figure = fig
+
+        FigureCanvas.__init__(self, fig)
+        self.setParent(parent)
+        self.setMinimumSize(300, 200)
+        self.output_folder = False
+
+        FigureCanvas.setSizePolicy(self, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        FigureCanvas.updateGeometry(self)
+
+        self.compute_initial_figure()
+
+    def compute_initial_figure(self):
+        self.update_figure([0], xlabel='X', ylabel='Y')
+        self.hide()
+
+    def update_figure(self, data, xlabel=None, ylabel=None):
+        y = data
+        x = list(range(1, len(y) + 1))
+        self.axes.cla()
+        self.axes.grid()
+        self.axes.plot(x, y, 'bo')
+        self.axes.plot(x, y, 'b')
+        self.axes.set_xticks(range(min(x), max(x)+1))
+        self.axes.set(xlabel=xlabel, ylabel=ylabel)
+        self.figure.tight_layout()
+        self.draw()
+        self.show()
+
+    def set_output_folder(self, output_folder):
+        self.output_folder = output_folder
+
+    def save_figure(self, image_name):
+        if os.path.isdir(self.output_folder):
+            image_path = os.path.join(self.output_folder, image_name)
+            self.figure.savefig(image_path)
+
 
 class TrainingProgressWindow(WorkerDialog):
 
@@ -89,6 +142,10 @@ class TrainingProgressWindow(WorkerDialog):
         self.metric_group.setLayout(self.metric_group_layout)
         layout.addWidget(self.metric_group)
 
+        self.plot_data = []
+        self.plot_widget = PlotWidget()
+        layout.addWidget(self.plot_widget)
+
         self.validation_labels = []
         self.validation_values = []
         self.validation_group = QtWidgets.QGroupBox()
@@ -96,9 +153,6 @@ class TrainingProgressWindow(WorkerDialog):
         self.validation_group_layout = QtWidgets.QGridLayout()
         self.validation_group.setLayout(self.validation_group_layout)
         layout.addWidget(self.validation_group)
-
-        self.image_label = QtWidgets.QLabel()
-        layout.addWidget(self.image_label)
 
         self.progress_bar = QtWidgets.QProgressBar()
         layout.addWidget(self.progress_bar)
@@ -110,7 +164,7 @@ class TrainingProgressWindow(WorkerDialog):
         cancel_btn.clicked.connect(self.cancel_btn_clicked)
         layout.addWidget(button_box)
 
-        self.resize(300, 300)
+        self.resize(400, 600)
 
     def timer_tick(self):
         if self.start_time is not False:
@@ -171,6 +225,13 @@ class TrainingProgressWindow(WorkerDialog):
                     for i in range(num_old_items, num_new_items, -1):
                         del self.validation_labels[i - 1]
                         del self.validation_values[i - 1]
+
+                data = list(data.validation.items())[-1]
+                if isinstance(data[1], (int, float)):
+                    self.plot_data.append(data[1])
+                    self.plot_widget.update_figure(self.plot_data, xlabel=_('Epoch'), ylabel=data[0])
+                    epoch = len(self.plot_data)
+                    self.plot_widget.save_figure('validation_{}.png'.format(epoch))
 
             if 'progress' in data:
                 progress = Map(data.progress)
@@ -240,6 +301,9 @@ class TrainingProgressWindow(WorkerDialog):
 
         if not data['val_dataset']:
             self.validation_group.hide()
+
+        # Output folder for plot images
+        self.plot_widget.set_output_folder(data['output_folder'])
 
         # Execution
         executor = TrainingExecutor(data)
