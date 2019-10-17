@@ -32,7 +32,7 @@ class Network(WorkerExecutor):
         super().__init__()
         self.monitor = NetworkMonitor()
         self.dataset_format = None
-
+        self.integration_network_name = 'custom'
         self.net_name = None
         self.model_file_name = None
         self.network = 'network'
@@ -150,7 +150,6 @@ class Network(WorkerExecutor):
 
     def checkTrainingAborted(self, epoch):
         if self.isAborted():
-            self.saveTraining(self.network, epoch)
             self.checkAborted()
 
     def beforeTrain(self):
@@ -159,7 +158,6 @@ class Network(WorkerExecutor):
         config_file = os.path.join(self.output_folder, Training.config('config_file'))
         files = list(self.files.values())
         self.saveConfig(config_file, files)
-        self.saveTraining(self.network, 0)
 
         if self.args.early_stop_epochs > 0:
             self.monitor = NetworkMonitor(self.args.early_stop_epochs)
@@ -175,7 +173,7 @@ class Network(WorkerExecutor):
         logger.info('Start training from [Epoch {}]'.format(self.args.start_epoch))
 
     def afterTrain(self, last_full_epoch):
-        self.saveTraining(self.network, last_full_epoch)
+        pass
 
     def beforeEpoch(self, epoch, num_batches):
         self.thread.update.emit(_('Start training on epoch {} ...').format(epoch + 1), None, -1)
@@ -267,13 +265,16 @@ class Network(WorkerExecutor):
     def saveParams(self, best_map, current_map, epoch):
         current_map = float(current_map)
         prefix = os.path.join(self.output_folder, self.args.save_prefix)
-        if current_map > best_map[0]:
+        if current_map >= best_map[0]:
             best_map[0] = current_map
-            self.net.save_parameters('{:s}_best.params'.format(prefix, epoch, current_map))
+            # Save custom-0000.params and custom-symbol.json for Investigator integration
+            self.saveTraining(self.integration_network_name, 0)
+            #self.net.save_parameters('{:s}_best.params'.format(prefix, epoch, current_map))
             with open(prefix + '_best_map.log', 'a') as f:
                 f.write('{:04d}:\t{:.4f}\n'.format(epoch, current_map))
         if self.args.save_interval and epoch % self.args.save_interval == 0:
-            self.net.save_parameters('{:s}_{:04d}_{:.4f}.params'.format(prefix, epoch, current_map))
+            self.saveTraining('{:s}_{:04d}_{:.4f}'.format(prefix, epoch, current_map), epoch)
+            #self.net.save_parameters('{:s}_{:04d}_{:.4f}.params'.format(prefix, epoch, current_map))
 
     def validate(self, waitall=False, static_shape=False):
         self.eval_metric.reset()
@@ -382,7 +383,7 @@ class Network(WorkerExecutor):
         from labelme.config import Training
         config_file = os.path.join(self.output_folder, Training.config('config_file'))
         # Export weights to .params file
-        export_block(os.path.join(self.output_folder, network_name), self.net, epoch=epoch, preprocess=True, layout='HWC')
+        export_block(os.path.join(self.output_folder, network_name), self.net, epoch=epoch, preprocess=True, layout='HWC', ctx=self.ctx[0])
         # Update config with last epoch
         modified_weights_file = self.files['weights'].replace('0000', '{:04d}'.format(epoch))
         files = [self.files['architecture'], modified_weights_file]

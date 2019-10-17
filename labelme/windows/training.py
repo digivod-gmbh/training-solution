@@ -565,7 +565,7 @@ class TrainingWindow(WorkerDialog):
 
         resume_training_file = ''
         resume_epoch = 0
-        if self.resume_training_checkbox.isChecked():
+        if self.resume_training_checkbox.isChecked() and self.resume_file.count() > 0:
             idx = self.resume_file.currentIndex()
             resume_training_file, resume_epoch = self.resume_file.itemData(idx)
             epochs += resume_epoch
