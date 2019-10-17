@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import math
 import warnings
 import numpy as np
 import traceback
@@ -47,17 +48,17 @@ class Network(WorkerExecutor):
             self.args.val_interval = sys.maxsize
         self.labels = self.train_dataset.getLabels()
 
-        self.thread.update.emit(_('Loading model ...'), -1, -1)
+        self.thread.update.emit(_('Loading model ...'), None, -1)
         self.loadModel()
 
-        self.thread.update.emit(_('Loading dataset ...'), -1, -1)
+        self.thread.update.emit(_('Loading dataset ...'), None, -1)
         self.loadDataset()
 
-        self.thread.update.emit(_('Start training ...'), -1, -1)
+        self.thread.update.emit(_('Start training ...'), None, -1)
         self.beforeTrain()
         last_full_epoch = self.trainBase()
         self.afterTrain(last_full_epoch)
-        self.thread.update.emit(_('Finished training'), -1, -1)
+        self.thread.update.emit(_('Finished training'), None, -1)
 
     def getDefaultArgs(self):
         default_args = {
@@ -95,9 +96,6 @@ class Network(WorkerExecutor):
         self.args.update(args)
         self.args = Map(self.args)
         logger.debug(self.args)
-
-    # def setArgs(self, args):
-    #     self.args = args
 
     def loadDataset(self):
         train_dataset = self.train_dataset.getDatasetForTraining()
@@ -167,13 +165,15 @@ class Network(WorkerExecutor):
                 _('Waiting for first validation ...'): '',
             },
         })
-        self.thread.update.emit(_('Start training ...'), 1, self.args.epochs + 2)
+
+        # Set maximum progress to 100%
+        self.thread.update.emit(_('Start training ...'), 0, 100)
 
         self.checkAborted()
         logger.info('Start training from [Epoch {}]'.format(self.args.start_epoch))
 
     def afterTrain(self, last_full_epoch):
-        pass
+        self.thread.update.emit(_('Finished training ...'), 100, -1)
 
     def beforeEpoch(self, epoch, num_batches):
         self.thread.update.emit(_('Start training on epoch {} ...').format(epoch + 1), None, -1)
@@ -192,7 +192,7 @@ class Network(WorkerExecutor):
         from labelme.config import Training
         config_file = os.path.join(self.output_folder, Training.config('config_file'))
         self.updateConfig(config_file, last_epoch=epoch+1)
-        self.thread.update.emit(_('Finished training on epoch {}').format(epoch + 1), epoch + 2, -1)
+        self.thread.update.emit(_('Finished training on epoch {}').format(epoch + 1), None, -1)
         self.checkTrainingAborted(epoch)
 
     def beforeBatch(self, batch_idx, epoch, num_batches):
@@ -226,7 +226,10 @@ class Network(WorkerExecutor):
                     'metric': progress_metrics
                 },
             })
-            self.thread.update.emit(update_msg, None, -1)
+            
+            percent = math.ceil((epoch / self.args.epochs + batch_idx / num_batches / self.args.epochs) * 100)
+            self.thread.update.emit(update_msg, percent, -1)
+
         self.checkTrainingAborted(epoch)
 
     def validateEpoch(self, epoch, epoch_time, validate_params):
