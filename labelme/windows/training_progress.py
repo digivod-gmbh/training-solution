@@ -339,4 +339,3 @@ class TrainingExecutor(WorkerExecutor):
             self.checkAborted()
 
             network.training()
-
