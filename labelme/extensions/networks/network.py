@@ -86,7 +86,6 @@ class Network(WorkerExecutor):
             'mixup': False,
             'no_mixup_epochs': 20,
             'early_stop_epochs': 0,
-            'pretrained': 0,
         }
         return default_args
 
@@ -151,7 +150,7 @@ class Network(WorkerExecutor):
 
     def checkTrainingAborted(self, epoch):
         if self.isAborted():
-            self.saveTraining(self.network, epoch-1)
+            self.saveTraining(self.network, epoch)
             self.checkAborted()
 
     def beforeTrain(self):
@@ -176,13 +175,6 @@ class Network(WorkerExecutor):
         logger.info('Start training from [Epoch {}]'.format(self.args.start_epoch))
 
     def afterTrain(self, last_full_epoch):
-        from labelme.config import Training
-        config_file = os.path.join(self.output_folder, Training.config('config_file'))
-        # Update config with last epoch
-        modified_weights_file = self.files['weights'].replace('0000', '{:04d}'.format(last_full_epoch))
-        files = [self.files['architecture'], modified_weights_file]
-        self.updateConfig(config_file, files=files)
-        # Export trained weights
         self.saveTraining(self.network, last_full_epoch)
 
     def beforeEpoch(self, epoch, num_batches):
@@ -203,7 +195,7 @@ class Network(WorkerExecutor):
         config_file = os.path.join(self.output_folder, Training.config('config_file'))
         self.updateConfig(config_file, last_epoch=epoch+1)
         self.thread.update.emit(_('Finished training on epoch {}').format(epoch + 1), epoch + 2, -1)
-        self.checkTrainingAborted(epoch + 1)
+        self.checkTrainingAborted(epoch)
 
     def beforeBatch(self, batch_idx, epoch, num_batches):
         self.checkTrainingAborted(epoch)
@@ -240,7 +232,7 @@ class Network(WorkerExecutor):
         self.checkTrainingAborted(epoch)
 
     def validateEpoch(self, epoch, epoch_time, validate_params):
-        self.checkTrainingAborted(epoch + 1)
+        self.checkTrainingAborted(epoch)
         if self.val_data and not (epoch + 1) % self.args.val_interval:
             logger.debug('validate: {}'.format(epoch + 1))
             self.thread.data.emit({
@@ -387,7 +379,14 @@ class Network(WorkerExecutor):
         return ctx
 
     def saveTraining(self, network_name, epoch=0):
+        from labelme.config import Training
+        config_file = os.path.join(self.output_folder, Training.config('config_file'))
+        # Export weights to .params file
         export_block(os.path.join(self.output_folder, network_name), self.net, epoch=epoch, preprocess=True, layout='HWC')
+        # Update config with last epoch
+        modified_weights_file = self.files['weights'].replace('0000', '{:04d}'.format(epoch))
+        files = [self.files['architecture'], modified_weights_file]
+        self.updateConfig(config_file, files=files)
 
     def inference(self, input_image_file, labels, architecture_file, weights_file, args = None):
         default_args = {

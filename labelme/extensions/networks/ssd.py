@@ -154,6 +154,6 @@ class NetworkSSD512(Network):
             current_mAP = self.validateEpoch(epoch, epoch_time=(time.time()-tic), validate_params={'static_shape': True})
             self.saveParams(best_map, current_mAP, epoch)
 
-            self.afterEpoch(epoch=epoch+1)
+            self.afterEpoch(epoch)
 
         return epoch
