@@ -3,6 +3,7 @@ import os
 import os.path as osp
 import re
 import webbrowser
+import GPUtil
 
 from qtpy import QtCore
 from qtpy.QtCore import Qt
@@ -721,6 +722,13 @@ class MainWindow(QtWidgets.QMainWindow):
         # if self.firstStart:
         #    QWhatsThis.enterWhatsThisMode()
 
+        self.intervalEvent(self.logGpuUsage, interval=10000)
+
+    def logGpuUsage(self):
+        gpus = GPUtil.getGPUs()
+        for gpu in gpus:
+            logger.debug('[GPU] {}: Memory {}MB/{}MB ({:05.2f}%), Usage {:05.2f}%, Driver {}'.format(gpu.name, gpu.memoryUsed, gpu.memoryTotal, gpu.memoryUtil*100, gpu.load*100, gpu.driver))
+
     def check_startup(self):
         # Check settings
         saved_project_folder = self.settings.value('settings/project/folder', '')
@@ -813,6 +821,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def queueEvent(self, function):
         QtCore.QTimer.singleShot(0, function)
+
+    def intervalEvent(self, function, interval=10000):
+        interval_timer = QtCore.QTimer(self)
+        interval_timer.timeout.connect(function)
+        interval_timer.start(interval)
 
     def status(self, message, delay=5000):
         self.statusBar().showMessage(message, delay)
