@@ -40,6 +40,9 @@ from labelme.windows import ImageImportWindow
 
 from labelme.utils import StatisticsModel
 
+from labelme.config import MessageType
+from labelme.utils import confirm
+
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -722,7 +725,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # if self.firstStart:
         #    QWhatsThis.enterWhatsThisMode()
 
-        self.intervalEvent(self.logGpuUsage, interval=10000)
+        self.intervalEvent(self.logGpuUsage, interval=30000)
 
     def logGpuUsage(self):
         gpus = GPUtil.getGPUs()
@@ -1728,8 +1731,7 @@ class MainWindow(QtWidgets.QMainWindow):
         yes, no = QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No
         msg = _('You are about to permanently delete {} polygons, ' \
               'proceed anyway?').format(len(self.canvas.selectedShapes))
-        if yes == QtWidgets.QMessageBox.warning(self, _('Attention'), msg,
-                                                yes | no):
+        if confirm(self, _('Attention'), msg, MessageType.Warning):
             self.remLabels(self.canvas.deleteSelected())
             self.setDirty()
             if self.noShapes():

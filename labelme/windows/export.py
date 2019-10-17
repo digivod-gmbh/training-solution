@@ -105,7 +105,7 @@ class ExportWindow(WorkerDialog):
         validation_label = QtWidgets.QLabel(_('% of dataset'))
 
         validation_group = QtWidgets.QGroupBox()
-        validation_group.setTitle(_('Validation'))
+        validation_group.setTitle(_('Validation ratio'))
         validation_group_layout = QtWidgets.QGridLayout()
         validation_group.setLayout(validation_group_layout)
         validation_group_layout.addWidget(self.validation, 0, 0)
