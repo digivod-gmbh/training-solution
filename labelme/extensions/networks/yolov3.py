@@ -45,7 +45,7 @@ class NetworkYoloV3(Network):
     def getGpuSizes(self):
         # (base size, additional size per batch item)
         if self.architecture_name == 'darknet53':
-            return (2500, 1000)
+            return (2000, 1050)
         elif self.architecture_name == 'mobilenet1.0':
             return (1300, 600)
         raise Exception('Unknown architecture {}'.format(self.architecture_name))

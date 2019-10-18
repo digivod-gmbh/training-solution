@@ -48,7 +48,7 @@ class NetworkSSD512(Network):
     def getGpuSizes(self):
         # (base size, additional size per batch item)
         if self.architecture_name == 'resnet50':
-            return (1500, 1000)
+            return (1500, 1050)
         elif self.architecture_name == 'mobilenet1.0':
             return (1100, 600)
         elif self.architecture_name == 'vgg16_atrous':
