@@ -195,13 +195,16 @@ def main():
     if 'MXNET_HOME' in os.environ:
         logger.debug('Environment variable MXNET_HOME = {}'.format(os.environ['MXNET_HOME']))
 
-    # Enable high dpi for 4k monitors
-    os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
+    # # Qt environment variable
+    # if 'QT_AUTO_SCREEN_SCALE_FACTOR' in os.environ:
+    #     logger.debug('Environment variable QT_AUTO_SCREEN_SCALE_FACTOR = {}'.format(os.environ['QT_AUTO_SCREEN_SCALE_FACTOR']))
 
-    app = QtWidgets.QApplication(sys.argv)
-    app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+    # Enable high dpi for 4k monitors
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     if hasattr(QtWidgets.QStyleFactory, 'AA_UseHighDpiPixmaps'):
-        app.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
+        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
+    
+    app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon('digivod'))
     win = MainWindow(
