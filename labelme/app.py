@@ -402,10 +402,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # help = action(_('&Tutorial'), self.tutorial, icon='help',
         #               tip=_('Show tutorial page'))
 
-        about = action(_('&About'), self.about,
+        about = action(_('&About'), self.about, icon='digivod',
                       tip=_('Show about page'))
 
-        openLogs = action(_('&Logs'), self.openLogs,
+        openLogs = action(_('&Logs'), self.openLogs, icon='logs',
                       tip=_('Open log folder'))
 
         zoom = QtWidgets.QWidgetAction(self)
