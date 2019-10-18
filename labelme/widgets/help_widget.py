@@ -33,7 +33,7 @@ class HelpWidget(QtWidgets.QWidget):
     def get_help_button(self, parent=None):
         help_button = QtWidgets.QPushButton()
         help_button.setParent(parent)
-        help_button.setIcon(newIcon('question_small'))
+        help_button.setIcon(newIcon('question'))
         help_button.clicked.connect(self.on_click)
         help_button.setStyleSheet('border:0;background:transparent;padding:0;margin:0 0 6px 0')
         help_button.resize(32, 32)

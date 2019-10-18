@@ -15,14 +15,14 @@ class Export():
         config = {
             'labels_file': 'labels.txt',
             'formats': {
-                'imagerecord': _('ImageRecord'),
                 'coco': _('COCO'),
                 'voc': _('VOC'),
+                'imagerecord': _('ImageRecord'),
             },
             'extensions': {
-                'imagerecord': '*.rec',
                 'coco': '*.json',
                 'voc': '*.txt',
+                'imagerecord': '*.rec',
                 # False for directory
             },
             'objects': {

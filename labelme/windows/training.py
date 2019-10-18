@@ -140,13 +140,13 @@ class TrainingWindow(WorkerDialog):
 
         image_list = self.parent.imageList
         show_dataset_create = len(image_list) > 0
-        self.create_dataset_checkbox = QtWidgets.QCheckBox(_('Create dataset from opened images'))
-        self.create_dataset_checkbox.setChecked(show_dataset_create)
+        self.create_dataset_checkbox = HelpCheckbox('Training_CreateDataset', _('Create dataset from opened images'))
+        self.create_dataset_checkbox.widget.setChecked(show_dataset_create)
         tab_dataset_layout.addWidget(self.create_dataset_checkbox)
 
-        validation_label = QtWidgets.QLabel(_('Validation ratio'))
+        validation_label = HelpLabel('Training_ValidationRatio', _('Validation ratio'))
         self.validation = QtWidgets.QSpinBox()
-        self.validation.setValue(0)
+        self.validation.setValue(10)
         self.validation.setMinimum(0)
         self.validation.setMaximum(90)
         self.validation.setFixedWidth(50)
@@ -206,13 +206,13 @@ class TrainingWindow(WorkerDialog):
             self.create_dataset_checkbox.hide()
             self.create_dataset_group.hide()
 
-        self.create_dataset_checkbox.toggled.connect(lambda: self.switch_visibility(self.create_dataset_group, self.dataset_folder_group))
+        self.create_dataset_checkbox.widget.toggled.connect(lambda: self.switch_visibility(self.create_dataset_group, self.dataset_folder_group))
 
         self.output_folder = QtWidgets.QLineEdit()
         self.output_folder.setText(os.path.join(project_folder, self.parent._config['project_training_folder']))
-        self.output_folder.setReadOnly(True)
-        output_browse_btn = QtWidgets.QPushButton(_('Browse'))
-        output_browse_btn.clicked.connect(self.output_browse_btn_clicked)
+        # self.output_folder.setReadOnly(True)
+        # output_browse_btn = QtWidgets.QPushButton(_('Browse'))
+        # output_browse_btn.clicked.connect(self.output_browse_btn_clicked)
 
         training_name_label = HelpLabel('Training_TrainingName', _('Training name'))
         self.training_name = QtWidgets.QLineEdit()
@@ -221,15 +221,14 @@ class TrainingWindow(WorkerDialog):
         output_folder_group.setTitle(_('Output folder'))
         output_folder_group_layout = QtWidgets.QGridLayout()
         output_folder_group.setLayout(output_folder_group_layout)
-        output_folder_group_layout.addWidget(self.output_folder, 0, 0, 1, 2)
-        output_folder_group_layout.addWidget(output_browse_btn, 0, 2)
+        # output_folder_group_layout.addWidget(self.output_folder, 0, 0, 1, 2)
+        # output_folder_group_layout.addWidget(output_browse_btn, 0, 2)
         output_folder_group_layout.addWidget(training_name_label, 1, 0, 1, 3)
         output_folder_group_layout.addWidget(self.training_name, 2, 0, 1, 3)
         tab_dataset_layout.addWidget(output_folder_group)
 
         # Resume Tab
 
-        #self.resume_training_checkbox = QtWidgets.QCheckBox(_('Resume previous training'))
         self.resume_training_checkbox = HelpCheckbox('Training_Resume', _('Resume previous training'))
         self.resume_training_checkbox.widget.setChecked(False)
         tab_resume_layout.addWidget(self.resume_training_checkbox)
@@ -413,7 +412,7 @@ class TrainingWindow(WorkerDialog):
                 json_data = json.load(f)
 
             # Dataset tab
-            self.create_dataset_checkbox.setChecked(False)
+            self.create_dataset_checkbox.widget.setChecked(False)
             self.set_current_format(json_data['dataset'])
             self.train_dataset_folder.setText(json_data['args']['train_dataset'])
             if json_data['args']['validate_dataset']:
@@ -491,17 +490,17 @@ class TrainingWindow(WorkerDialog):
             return dataset_folder_or_file
         return False
 
-    def output_browse_btn_clicked(self):
-        project_folder = self.parent.settings.value('settings/project/folder', '')
-        logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
-        training_folder = os.path.join(project_folder, self.parent._config['project_training_folder'])
-        output_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select output folder'), training_folder)
-        if output_folder:
-            output_folder = os.path.normpath(output_folder)
-            self.output_folder.setText(output_folder)
+    # def output_browse_btn_clicked(self):
+    #     project_folder = self.parent.settings.value('settings/project/folder', '')
+    #     logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
+    #     training_folder = os.path.join(project_folder, self.parent._config['project_training_folder'])
+    #     output_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select output folder'), training_folder)
+    #     if output_folder:
+    #         output_folder = os.path.normpath(output_folder)
+    #         self.output_folder.setText(output_folder)
 
     def training_btn_clicked(self):
-        create_dataset = self.create_dataset_checkbox.isChecked()
+        create_dataset = self.create_dataset_checkbox.widget.isChecked()
         self.dataset_export_data = {}
         if create_dataset:
             self.export_before_training()
@@ -573,7 +572,7 @@ class TrainingWindow(WorkerDialog):
         
         # Data
         data = {
-            'create_dataset': self.create_dataset_checkbox.isChecked(),
+            'create_dataset': self.create_dataset_checkbox.widget.isChecked(),
             'resume_training': resume_training_file,
             'start_epoch': resume_epoch,
             'dataset_export_data': self.dataset_export_data,

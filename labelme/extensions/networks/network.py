@@ -173,7 +173,7 @@ class Network(WorkerExecutor):
         logger.info('Start training from [Epoch {}]'.format(self.args.start_epoch))
 
     def afterTrain(self, last_full_epoch):
-        self.thread.update.emit(_('Finished training ...'), 100, -1)
+        self.thread.update.emit(_('Finished training'), 100, -1)
 
     def beforeEpoch(self, epoch, num_batches):
         self.thread.update.emit(_('Start training on epoch {} ...').format(epoch + 1), None, -1)
