@@ -1,6 +1,21 @@
 {
-    "Training_DatasetFormat": "",
-    "Training_TrainingDataset": "",
-    "Training_ValidationDataset": "",
-    "Training_TrainingName": ""
+    "Training_DatasetFormat": "Here you can select the format for the data set with which the network is to be trained. The selected format determines which files you can select in the <i>Training data</i> and <i>Validation data</i> fields. The following formats are available:<ul><li><b>ImageRecord</b><br>Contains the folders <i>train, val</i> (for training and validation record). The images are stored in a .rec file, while the labels are stored in a .lst file.</li><li><b>COCO</b><br>Contains the folders <i>annotations, train, val</i>. The images are stored in the folders <i>train, val</i>, while the labels are stored in <i>annotations</i> in .json files.</li><li><b>VOC</b><br>Contains the folders <i>Annotations, ImageSets, JPEGImages</i>. The images are stored in <i>JPEGImages</i>, while the labels are stored in <i>Annotations</i> in .xml files. The division for training and validation is stored in .txt files in the folder <i>ImageSets/Main</i>.</li></ul>",
+    "Training_TrainingDataset": "The training data contains the images and labels that are used to train a network in each epoch. Based on this data, the network learns to recognize objects in other data as well.",
+    "Training_ValidationDataset": "The validation data is used to validate the result after each training epoch. It is important that the validation data <i>not</i> is identical to the training data. The validation allows you to determine how well the trained network reacts to unknown data (i.e. data with which it was not trained).",
+    "Training_TrainingName": "The training name determines the name of the folder under \"<i>Project folder</i>/trainings\" in which all data generated during training is stored. If the training name is <i>net001</i>, all associated data is stored under \"<i>project folder</i>/trainings/net001\".",
+    
+    "Training_NetworkArchitecture": "Here you can select the network architecture. Currently, the networks <b>YoloV3</b> and <b>SSD512</b> are available, both of which specialize in object detection in images. The <i>Mobilenet1.0</i> variant is available for both architectures and allows similarly good results with far less GPU memory consumption.",
+    "Training_SettingsEpochs": "An epoch in training corresponds to a run with all training data. After a complete epoch, a validation with the validation data record (if available) is performed and a new epoch is started in which all training data is fed into the network once again. By default, many epochs are performed. However, it is possible to terminate the training early via the <i>Early-Stop</i>-setting if no further improvement in accuracy is achieved.",
+    "Training_SettingsBatchSize": "The batch size determines how many images are moved to the GPU at the same time for a training iteration. The maximum possible stack size is limited by the available memory on the GPU and depends on the selected network architecture. When you select a network architecture, the system tries to determine the optimum stack size.",
+    "Training_SettingsLearningRate": "The learning rate defines the step size at which the internal parameters of a network are updated during training. A too low learning rate leads to a very slow training, a too high rate leads to worse results. A suitable learning rate is preset for each network architecture.",
+    "Training_SettingsEarlyStop": "The Early-Stop parameter determines whether the training can be terminated prematurely if no improvement in the accuracy of the network has been achieved after the number of epochs specified here.",
+    
+    "Training_Resume": "Select a folder that contains a previous workout to continue training it. As soon as a folder has been selected, all settings of the old workout are automatically applied to the new one. You can also select an epoch after which you want to continue training.",
+    
+    "Validation_InputImage": "Select an image in which a trained network should recognize objects.",
+    "Validation_TrainingFolder": "Select a folder in which a network has previously been trained with this software. Usually the trained nets are located under \"<i>Project folder</i>/trainings/<i>Training name</i>\".",
+    
+    "Inference_Confidence": "The confidence provides information on how reliably the network has detected an object. Under difficult conditions, the confidence of detected objects often decreases.",
+    
+    "__last__": "The last entry MUST NOT be followed by a , (comma)"
 }
