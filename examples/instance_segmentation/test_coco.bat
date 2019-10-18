@@ -1,0 +1,1 @@
+python labelme2coco.py --labels labels.txt data_annotated test/coco

@@ -1,0 +1,1 @@
+python labelme2voc.py --labels labels.txt data_annotated test/voc
