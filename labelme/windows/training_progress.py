@@ -2,6 +2,7 @@ import os
 import re
 import time
 import math
+import mxnet
 import traceback
 
 from qtpy import QtCore
@@ -28,6 +29,7 @@ class TrainingProgressWindow(WorkerDialog):
         self.set_default_window_flags(self)
         self.setWindowModality(Qt.ApplicationModal)
 
+        self.batch_size = 0
         self.training_has_started = False
 
         layout = QtWidgets.QVBoxLayout()
@@ -233,13 +235,14 @@ class TrainingProgressWindow(WorkerDialog):
             logger.error(traceback.format_exc())
 
     def start_training(self, data):
-        config = get_config()
-
         self.progress_bar.setRange(0, 4)
         self.progress_bar.setValue(0)
 
         if not data['val_dataset']:
             self.validation_group.hide()
+
+        if 'args_batch_size' in data:
+            self.batch_size = data['args_batch_size']
 
         # Execution
         executor = TrainingExecutor(data)
@@ -256,7 +259,11 @@ class TrainingProgressWindow(WorkerDialog):
         self.close()
 
     def on_error(self, e):
-        super().on_error(e)
+        if 'out of memory' in str(e).lower():
+            mb = QtWidgets.QMessageBox
+            mb.critical(self, _('Training'), _('The GPU ran out of memory. Please close other applications that occupy GPU memory and try to decrease the batch size for training. The current batch size was {}.').format(self.batch_size))
+        else:
+            super().on_error(e)
         self.reset_thread()
         self.close()
 
