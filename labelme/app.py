@@ -730,7 +730,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def logGpuUsage(self):
         gpus = GPUtil.getGPUs()
         for gpu in gpus:
-            logger.debug('[GPU] {}: Memory {}MB/{}MB ({:05.2f}%), Usage {:05.2f}%, Driver {}'.format(gpu.name, gpu.memoryUsed, gpu.memoryTotal, gpu.memoryUtil*100, gpu.load*100, gpu.driver))
+            logger.debug('[GPU] {}: Memory {}MB/{}MB ({:05.2f}%), Usage {:05.2f}%, Driver {}, DisplayMode={}, DisplayActive={}'.format(gpu.name, gpu.memoryUsed, gpu.memoryTotal, gpu.memoryUtil*100, gpu.load*100, gpu.driver, gpu.display_mode, gpu.display_active))
 
     def check_startup(self):
         # Check settings
