@@ -399,8 +399,8 @@ class MainWindow(QtWidgets.QMainWindow):
                          functools.partial(self.togglePolygons, True),
                          icon='eye', tip=_('Show all polygons'), enabled=False)
 
-        help = action(_('&Tutorial'), self.tutorial, icon='help',
-                      tip=_('Show tutorial page'))
+        # help = action(_('&Tutorial'), self.tutorial, icon='help',
+        #               tip=_('Show tutorial page'))
 
         about = action(_('&About'), self.about,
                       tip=_('Show about page'))
@@ -587,7 +587,7 @@ class MainWindow(QtWidgets.QMainWindow):
             settings,
             ))
         utils.addActions(self.menus.help, (
-            help,
+            #help,
             openLogs,
             about,
             ))
@@ -871,10 +871,10 @@ class MainWindow(QtWidgets.QMainWindow):
             is_first_label = len(undone) == 0
             self.statistics_model.addLabel(last.label, is_first_label)
 
-    def tutorial(self):
-        mb = QtWidgets.QMessageBox
-        msg = 'Tutorial not available yet'
-        mb.information(self, 'Tutorial', msg)
+    # def tutorial(self):
+    #     mb = QtWidgets.QMessageBox
+    #     msg = 'Tutorial not available yet'
+    #     mb.information(self, 'Tutorial', msg)
 
     def about(self):
         mb = QtWidgets.QMessageBox
