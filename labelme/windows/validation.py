@@ -9,6 +9,7 @@ from labelme.config import Training
 from labelme.extensions.networks import Network
 from .inference import InferenceWindow
 from labelme.config.export import Export
+from labelme.widgets import HelpLabel, HelpCheckbox, HelpGroupBox
 
 
 class ValidationWindow(WorkerDialog):
@@ -28,10 +29,9 @@ class ValidationWindow(WorkerDialog):
         input_image_file_browse_btn = QtWidgets.QPushButton(_('Browse'))
         input_image_file_browse_btn.clicked.connect(self.input_image_file_browse_btn_clicked)
 
-        input_image_group = QtWidgets.QGroupBox()
-        input_image_group.setTitle(_('Input image'))
+        input_image_group = HelpGroupBox('Validation_InputImage', _('Input image'))
         input_image_group_layout = QtWidgets.QGridLayout()
-        input_image_group.setLayout(input_image_group_layout)
+        input_image_group.widget.setLayout(input_image_group_layout)
         input_image_group_layout.addWidget(self.input_image_file, 0, 0)
         input_image_group_layout.addWidget(input_image_file_browse_btn, 0, 1)
         layout.addWidget(input_image_group)
@@ -40,10 +40,9 @@ class ValidationWindow(WorkerDialog):
         training_folder_browse_btn = QtWidgets.QPushButton(_('Browse'))
         training_folder_browse_btn.clicked.connect(self.training_folder_browse_btn_clicked)
 
-        network_files_group = QtWidgets.QGroupBox()
-        network_files_group.setTitle(_('Training'))
+        network_files_group = HelpGroupBox('Validation_TrainingFolder', _('Training'))
         network_files_group_layout = QtWidgets.QGridLayout()
-        network_files_group.setLayout(network_files_group_layout)
+        network_files_group.widget.setLayout(network_files_group_layout)
         network_files_group_layout.addWidget(self.training_folder, 0, 0)
         network_files_group_layout.addWidget(training_folder_browse_btn, 0, 1)
         layout.addWidget(network_files_group)

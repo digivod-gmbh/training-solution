@@ -14,6 +14,7 @@ from labelme.utils import WorkerDialog
 from labelme.config import MessageType
 from labelme.config import get_config
 from labelme.config.export import Export
+from labelme.widgets import HelpLabel, HelpCheckbox, HelpGroupBox
 
 
 class InferenceWindow(WorkerDialog):
@@ -40,10 +41,9 @@ class InferenceWindow(WorkerDialog):
         self.score_slider.setTickInterval(10)
         self.score_slider.valueChanged.connect(self.update_results)
 
-        self.confidence_group = QtWidgets.QGroupBox()
-        self.confidence_group.setTitle(_('Minimum confidence'))
+        self.confidence_group = HelpGroupBox('Inference_Confidence', _('Minimum confidence'))
         confidence_group_layout = QtWidgets.QGridLayout()
-        self.confidence_group.setLayout(confidence_group_layout)
+        self.confidence_group.widget.setLayout(confidence_group_layout)
         confidence_group_layout.addWidget(self.score_value, 0, 0)
         confidence_group_layout.addWidget(self.score_slider, 0, 1, 1, 8)
         layout.addWidget(self.confidence_group)

@@ -23,6 +23,7 @@ from labelme.config import MessageType
 from labelme.config import Training
 from labelme.config.export import Export
 from labelme.windows import ExportExecutor, TrainingProgressWindow
+from labelme.widgets import HelpLabel, HelpCheckbox, HelpGroupBox
 
 
 class TrainingWindow(WorkerDialog):
@@ -65,31 +66,30 @@ class TrainingWindow(WorkerDialog):
             self.networks.addItem(val)
         self.networks.currentIndexChanged.connect(self.network_selection_changed)
 
-        network_group = QtWidgets.QGroupBox()
-        network_group.setTitle(_('Network'))
+        network_group = HelpGroupBox('Training_NetworkArchitecture', _('Network'))
         network_group_layout = QtWidgets.QVBoxLayout()
-        network_group.setLayout(network_group_layout)
+        network_group.widget.setLayout(network_group_layout)
         network_group_layout.addWidget(self.networks)
         tab_network_layout.addWidget(network_group)
 
         training_defaults = self.parent._config['training_defaults']
         network = self.get_current_network()
 
-        args_epochs_label = QtWidgets.QLabel(_('Epochs'))
+        args_epochs_label = HelpLabel('Training_SettingsEpochs', _('Epochs'))
         self.args_epochs = QtWidgets.QSpinBox()
         self.args_epochs.setMinimum(1)
         self.args_epochs.setMaximum(500)
         self.args_epochs.setValue(training_defaults['epochs'])
 
         default_batch_size = self.get_default_batch_size(network)
-        args_batch_size_label = QtWidgets.QLabel(_('Batch size'))
+        args_batch_size_label = HelpLabel('Training_SettingsBatchSize', _('Batch size'))
         self.args_batch_size = QtWidgets.QSpinBox()
         self.args_batch_size.setMinimum(1)
         self.args_batch_size.setMaximum(100)
         self.args_batch_size.setValue(default_batch_size)
 
         default_learning_rate = self.get_default_learning_rate(network)
-        args_learning_rate_label = QtWidgets.QLabel(_('Learning rate'))
+        args_learning_rate_label = HelpLabel('Training_SettingsLearningRate', _('Learning rate'))
         self.args_learning_rate = QtWidgets.QDoubleSpinBox()
         self.args_learning_rate.setMinimum(1e-7)
         self.args_learning_rate.setMaximum(1.0)
@@ -97,7 +97,7 @@ class TrainingWindow(WorkerDialog):
         self.args_learning_rate.setDecimals(7)
         self.args_learning_rate.setValue(default_learning_rate)
 
-        args_early_stop_epochs_label = QtWidgets.QLabel(_('Early stop epochs'))
+        args_early_stop_epochs_label = HelpLabel('Training_SettingsEarlyStop', _('Early stop epochs'))
         self.args_early_stop_epochs = QtWidgets.QSpinBox()
         self.args_early_stop_epochs.setMinimum(0)
         self.args_early_stop_epochs.setMaximum(100)
@@ -165,7 +165,7 @@ class TrainingWindow(WorkerDialog):
         create_dataset_group_layout.addWidget(self.validation, 3, 0)
         create_dataset_group_layout.addWidget(validation_description_label, 3, 1)
 
-        formats_label = QtWidgets.QLabel(_('Format'))
+        formats_label = HelpLabel('Training_DatasetFormat', _('Format'))
         self.formats = QtWidgets.QComboBox()
         for key, val in Export.config('formats').items():
             self.formats.addItem(val)
@@ -173,13 +173,13 @@ class TrainingWindow(WorkerDialog):
         self.formats.currentTextChanged.connect(self.on_format_change)
         self.selected_format = list(Export.config('formats').keys())[0]
 
-        train_dataset_label = QtWidgets.QLabel(_('Training dataset'))
+        train_dataset_label = HelpLabel('Training_TrainingDataset', _('Training dataset'))
         self.train_dataset_folder = QtWidgets.QLineEdit()
         train_dataset_folder_browse_btn = QtWidgets.QPushButton(_('Browse'))
         train_dataset_folder_browse_btn.clicked.connect(self.train_dataset_folder_browse_btn_clicked)
 
         val_label_text = '{} ({})'.format(_('Validation dataset'), _('optional'))
-        val_dataset_label = QtWidgets.QLabel(val_label_text)
+        val_dataset_label = HelpLabel('Training_ValidationDataset', val_label_text)
         self.val_dataset_folder = QtWidgets.QLineEdit()
         val_dataset_folder_browse_btn = QtWidgets.QPushButton(_('Browse'))
         val_dataset_folder_browse_btn.clicked.connect(self.val_dataset_folder_browse_btn_clicked)
@@ -214,7 +214,7 @@ class TrainingWindow(WorkerDialog):
         output_browse_btn = QtWidgets.QPushButton(_('Browse'))
         output_browse_btn.clicked.connect(self.output_browse_btn_clicked)
 
-        training_name_label = QtWidgets.QLabel(_('Training name'))
+        training_name_label = HelpLabel('Training_TrainingName', _('Training name'))
         self.training_name = QtWidgets.QLineEdit()
 
         output_folder_group = QtWidgets.QGroupBox()
@@ -229,8 +229,9 @@ class TrainingWindow(WorkerDialog):
 
         # Resume Tab
 
-        self.resume_training_checkbox = QtWidgets.QCheckBox(_('Resume previous training'))
-        self.resume_training_checkbox.setChecked(False)
+        #self.resume_training_checkbox = QtWidgets.QCheckBox(_('Resume previous training'))
+        self.resume_training_checkbox = HelpCheckbox('Training_Resume', _('Resume previous training'))
+        self.resume_training_checkbox.widget.setChecked(False)
         tab_resume_layout.addWidget(self.resume_training_checkbox)
 
         self.resume_group = QtWidgets.QWidget()
@@ -239,7 +240,7 @@ class TrainingWindow(WorkerDialog):
         tab_resume_layout.addWidget(self.resume_group)
 
         self.resume_group.hide()
-        self.resume_training_checkbox.toggled.connect(self.toggle_resume_training_checkbox)
+        self.resume_training_checkbox.widget.toggled.connect(self.toggle_resume_training_checkbox)
 
         self.resume_folder = QtWidgets.QLineEdit()
         self.resume_folder.setText('')
@@ -565,7 +566,7 @@ class TrainingWindow(WorkerDialog):
 
         resume_training_file = ''
         resume_epoch = 0
-        if self.resume_training_checkbox.isChecked() and self.resume_file.count() > 0:
+        if self.resume_training_checkbox.widget.isChecked() and self.resume_file.count() > 0:
             idx = self.resume_file.currentIndex()
             resume_training_file, resume_epoch = self.resume_file.itemData(idx)
             epochs += resume_epoch
