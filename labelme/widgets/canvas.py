@@ -1,6 +1,7 @@
 from qtpy import QtCore
 from qtpy import QtGui
 from qtpy import QtWidgets
+from qtpy.QtCore import Qt
 
 from labelme import QT5
 from labelme.shape import Shape
@@ -495,6 +496,14 @@ class Canvas(QtWidgets.QWidget):
         p.translate(self.offsetToCenter())
 
         p.drawPixmap(0, 0, self.pixmap)
+
+        # Canvas border
+        border_pen = QtGui.QPen(Qt.gray, 0, Qt.CustomDashLine)
+        border_pen.setDashPattern([2, 4])
+        border_pen.setCosmetic(True)
+        p.setPen(border_pen)
+        p.drawRect(0, 0, self.pixmap.width(), self.pixmap.height())
+
         Shape.scale = self.scale
         for shape in self.shapes:
             if (shape.selected or not self._hideBackround) and \
