@@ -19,5 +19,8 @@
     
     "Inference_Confidence": "The confidence provides information on how reliably the network has detected an object. Under difficult conditions, the confidence of detected objects often decreases.",
     
+    "Settings_ProjectFolder": "In the project folder, all files such as images, datasets and trained networks are stored. The subfolders <i>datasets, imports, trainings</i> are automatically created in the project folder.",
+    "Settings_SingleLabelMode": "In single-label mode, each drawn polygon or rectangle is given the same label. This speeds up the work when annotating a dataset in which only one label is represented anyway.",
+    
     "__last__": "The last entry MUST NOT be followed by a , (comma)"
 }

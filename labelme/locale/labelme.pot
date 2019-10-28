@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2019-10-18 15:30+0200\n"
+"POT-Creation-Date: 2019-10-28 14:27+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -92,8 +92,8 @@ msgid "&Settings"
 msgstr ""
 
 #: ../labelme\app.py:245 ../labelme\app.py:743
-#: ../labelme\windows\settings.py:18 ../labelme\windows\settings.py:84
-#: ../labelme\windows\training.py:117
+#: ../labelme\windows\settings.py:19 ../labelme\windows\settings.py:114
+#: ../labelme\windows\settings.py:132 ../labelme\windows\training.py:117
 msgid "Settings"
 msgstr ""
 
@@ -445,51 +445,51 @@ msgstr ""
 msgid "This software uses icons from {}"
 msgstr ""
 
-#: ../labelme\app.py:1653
+#: ../labelme\app.py:1662
 msgid "You are about to permanently delete this label file, proceed anyway?"
 msgstr ""
 
-#: ../labelme\app.py:1655 ../labelme\app.py:1736
+#: ../labelme\app.py:1664 ../labelme\app.py:1745
 msgid "Attention"
 msgstr ""
 
-#: ../labelme\app.py:1662
+#: ../labelme\app.py:1671
 msgid "Label file is removed: {}"
 msgstr ""
 
-#: ../labelme\app.py:1673
+#: ../labelme\app.py:1682
 msgid "No objects labeled"
 msgstr ""
 
-#: ../labelme\app.py:1674
+#: ../labelme\app.py:1683
 msgid "You must label at least one object to save the file."
 msgstr ""
 
-#: ../labelme\app.py:1689
+#: ../labelme\app.py:1698
 msgid "Save annotations to \"{}\" before closing?"
 msgstr ""
 
-#: ../labelme\app.py:1691
+#: ../labelme\app.py:1700
 msgid "Save annotations?"
 msgstr ""
 
-#: ../labelme\app.py:1712 ../labelme\app.py:1745
+#: ../labelme\app.py:1721 ../labelme\app.py:1754
 msgid "Choose line color"
 msgstr ""
 
-#: ../labelme\app.py:1722 ../labelme\app.py:1754
+#: ../labelme\app.py:1731 ../labelme\app.py:1763
 msgid "Choose fill color"
 msgstr ""
 
-#: ../labelme\app.py:1734
+#: ../labelme\app.py:1743
 msgid "You are about to permanently delete {} polygons, proceed anyway?"
 msgstr ""
 
-#: ../labelme\app.py:1784
+#: ../labelme\app.py:1793
 msgid "%s - Open Directory"
 msgstr ""
 
-#: ../labelme\app.py:1879 ../labelme\windows\image_import.py:73
+#: ../labelme\app.py:1888 ../labelme\windows\image_import.py:73
 msgid "- all labels -"
 msgstr ""
 
@@ -525,63 +525,81 @@ msgstr ""
 msgid "SSD512 (Mobilenet1.0)"
 msgstr ""
 
-#: ../labelme\extensions\formats\coco.py:79
+#: ../labelme\extensions\formats\coco.py:81
 msgid "Input folder must be initialized for import"
 msgstr ""
 
-#: ../labelme\extensions\formats\coco.py:86
+#: ../labelme\extensions\formats\coco.py:88
 msgid "Writing label files ..."
 msgstr ""
 
-#: ../labelme\extensions\formats\coco.py:106
+#: ../labelme\extensions\formats\coco.py:108
 msgid "Split could not be detected"
 msgstr ""
 
-#: ../labelme\extensions\formats\coco.py:110
-#: ../labelme\extensions\formats\coco.py:124
-#: ../labelme\extensions\formats\coco.py:146
-#: ../labelme\extensions\formats\voc.py:135
-#: ../labelme\extensions\formats\voc.py:185
+#: ../labelme\extensions\formats\coco.py:112
+#: ../labelme\extensions\formats\coco.py:126
+#: ../labelme\extensions\formats\coco.py:148
+#: ../labelme\extensions\formats\voc.py:137
+#: ../labelme\extensions\formats\voc.py:187
 #: ../labelme\extensions\networks\network.py:54
 msgid "Loading dataset ..."
 msgstr ""
 
-#: ../labelme\extensions\formats\coco.py:151
+#: ../labelme\extensions\formats\coco.py:153
 msgid "Intermediate format must be initialized for export"
 msgstr ""
 
-#: ../labelme\extensions\formats\coco.py:153
-#: ../labelme\extensions\formats\imagerecord.py:170
-#: ../labelme\extensions\formats\voc.py:192
+#: ../labelme\extensions\formats\coco.py:155
+#: ../labelme\extensions\formats\imagerecord.py:172
+#: ../labelme\extensions\formats\voc.py:194
 msgid "Gathering samples ..."
 msgstr ""
 
-#: ../labelme\extensions\formats\coco.py:277
+#: ../labelme\extensions\formats\coco.py:282
 msgid "Writing samples ..."
 msgstr ""
 
-#: ../labelme\extensions\formats\coco.py:338
+#: ../labelme\extensions\formats\coco.py:292
+#: ../labelme\extensions\formats\imagerecord.py:285
+#: ../labelme\extensions\formats\voc.py:332
+msgid "The following images could not be exported:"
+msgstr ""
+
+#: ../labelme\extensions\formats\coco.py:293
+#: ../labelme\extensions\formats\imagerecord.py:286
+#: ../labelme\extensions\formats\voc.py:333
+msgid "Warning"
+msgstr ""
+
+#: ../labelme\extensions\formats\coco.py:295
+#: ../labelme\extensions\formats\imagerecord.py:288
+#: ../labelme\extensions\formats\voc.py:335
+msgid "Dataset contains no images for export"
+msgstr ""
+
+#: ../labelme\extensions\formats\coco.py:353
 msgid "Invalid bbox list: {}"
 msgstr ""
 
-#: ../labelme\extensions\formats\imagerecord.py:119
-#: ../labelme\extensions\formats\imagerecord.py:137
+#: ../labelme\extensions\formats\imagerecord.py:121
+#: ../labelme\extensions\formats\imagerecord.py:139
 msgid "Loading image record file ..."
 msgstr ""
 
-#: ../labelme\extensions\formats\imagerecord.py:187
+#: ../labelme\extensions\formats\imagerecord.py:189
 msgid "Creating training dataset ..."
 msgstr ""
 
-#: ../labelme\extensions\formats\imagerecord.py:202
+#: ../labelme\extensions\formats\imagerecord.py:204
 msgid "Creating validation dataset ..."
 msgstr ""
 
-#: ../labelme\extensions\formats\imagerecord.py:273
+#: ../labelme\extensions\formats\imagerecord.py:277
 msgid "Writing dataset ..."
 msgstr ""
 
-#: ../labelme\extensions\formats\voc.py:313
+#: ../labelme\extensions\formats\voc.py:317
 msgid "Writing sample ..."
 msgstr ""
 
@@ -640,7 +658,7 @@ msgstr ""
 msgid "Validating..."
 msgstr ""
 
-#: ../labelme\main.py:238
+#: ../labelme\main.py:235
 msgid "An error occured with following message"
 msgstr ""
 
@@ -656,21 +674,21 @@ msgstr ""
 msgid "Cancelling ..."
 msgstr ""
 
-#: ../labelme\utils\dialog.py:91
-msgid "An error occured. For further details look into the log files"
-msgstr ""
-
-#: ../labelme\utils\dialog.py:91
+#: ../labelme\utils\dialog.py:92 ../labelme\utils\dialog.py:94
 msgid "Error"
 msgstr ""
 
-#: ../labelme\utils\dialog.py:153
+#: ../labelme\utils\dialog.py:94
+msgid "An error occured. For further details look into the log files"
+msgstr ""
+
+#: ../labelme\utils\dialog.py:156
 msgid "Initializing ..."
 msgstr ""
 
-#: ../labelme\utils\dialog.py:153 ../labelme\windows\export.py:120
+#: ../labelme\utils\dialog.py:156 ../labelme\windows\export.py:120
 #: ../labelme\windows\image_import.py:38 ../labelme\windows\import_.py:74
-#: ../labelme\windows\merge.py:61 ../labelme\windows\settings.py:48
+#: ../labelme\windows\merge.py:61 ../labelme\windows\settings.py:73
 #: ../labelme\windows\training.py:274
 #: ../labelme\windows\training_progress.py:111
 #: ../labelme\windows\validation.py:55
@@ -681,7 +699,7 @@ msgstr ""
 msgid "Images"
 msgstr ""
 
-#: ../labelme\utils\statistics.py:88
+#: ../labelme\utils\statistics.py:88 ../labelme\windows\settings.py:60
 msgid "Labels"
 msgstr ""
 
@@ -724,7 +742,7 @@ msgstr ""
 
 #: ../labelme\windows\export.py:84 ../labelme\windows\import_.py:45
 #: ../labelme\windows\import_.py:58 ../labelme\windows\merge.py:45
-#: ../labelme\windows\settings.py:26 ../labelme\windows\training.py:178
+#: ../labelme\windows\settings.py:27 ../labelme\windows\training.py:178
 #: ../labelme\windows\training.py:184 ../labelme\windows\training.py:247
 #: ../labelme\windows\validation.py:29 ../labelme\windows\validation.py:40
 msgid "Browse"
@@ -800,7 +818,7 @@ msgid "Export format {} could not be found"
 msgstr ""
 
 #: ../labelme\windows\export.py:324
-#: ../labelme\windows\training_progress.py:334
+#: ../labelme\windows\training_progress.py:333
 msgid "Loading data ..."
 msgstr ""
 
@@ -933,15 +951,27 @@ msgstr ""
 msgid "Project folder"
 msgstr ""
 
-#: ../labelme\windows\settings.py:46
+#: ../labelme\windows\settings.py:45
+msgid "Single-label mode"
+msgstr ""
+
+#: ../labelme\windows\settings.py:49
+msgid "Label name"
+msgstr ""
+
+#: ../labelme\windows\settings.py:71
 msgid "Save"
 msgstr ""
 
-#: ../labelme\windows\settings.py:53
+#: ../labelme\windows\settings.py:78
 msgid "Select project folder"
 msgstr ""
 
-#: ../labelme\windows\settings.py:83
+#: ../labelme\windows\settings.py:113
+msgid "You must specify a label name in single-label mode"
+msgstr ""
+
+#: ../labelme\windows\settings.py:131
 msgid "Project folder must not be empty"
 msgstr ""
 
@@ -954,8 +984,8 @@ msgstr ""
 #: ../labelme\windows\training_progress.py:28
 #: ../labelme\windows\training_progress.py:134
 #: ../labelme\windows\training_progress.py:257
-#: ../labelme\windows\training_progress.py:265
-#: ../labelme\windows\training_progress.py:294
+#: ../labelme\windows\training_progress.py:264
+#: ../labelme\windows\training_progress.py:293
 #: ../labelme\windows\validation.py:43
 msgid "Training"
 msgstr ""
@@ -1113,11 +1143,11 @@ msgstr ""
 msgid "Are you sure to cancel to current training session? The last completed epoch will be saved. Remember: Shorter training time leeds to worse results."
 msgstr ""
 
-#: ../labelme\windows\training_progress.py:265
+#: ../labelme\windows\training_progress.py:264
 msgid "The GPU ran out of memory. Please close other applications that occupy GPU memory and try to decrease the batch size for training. The current batch size was {}."
 msgstr ""
 
-#: ../labelme\windows\training_progress.py:294
+#: ../labelme\windows\training_progress.py:293
 msgid "Network {} could not be found"
 msgstr ""
 

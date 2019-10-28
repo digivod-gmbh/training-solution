@@ -19,5 +19,8 @@
     
     "Inference_Confidence": "Die Wahrscheinlichkeit gibt Aufschluss darüber, wie sicher das Netz ein Objekt erkannt hat. Unter schwierigen Bedingungen sinkt häufig die Wahrscheinlichkeit erkannter Objekte.",
     
+    "Settings_ProjectFolder": "Im Projektordner werden alle Dateien wie Bilder, Datensätze und trainierte Netze gespeichert. Die Unterordner <i>datasets, imports, trainings</i> werden automatisch im Projektordner angelegt.",
+    "Settings_SingleLabelMode": "Im Ein-Label-Modus wird jedes gezeichnete Polygon oder Rechteck mit dem gleichen Label versehen. Dies beschleunigt die Arbeit beim Annotieren eines Datensatzes, in dem ohnehin nur ein Label vertreten ist.",
+    
     "__last__": "The last entry MUST NOT be followed by a , (comma)"
 }
