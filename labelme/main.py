@@ -125,14 +125,11 @@ def main():
         print('{0} {1}'.format(__appname__, __version__))
         sys.exit(0)
 
-    global LOG_LEVEL
-    LOG_LEVEL = args.logger_level.upper()
-
     if hasattr(args, 'debug_mode'):
-        LOG_LEVEL = 'DEBUG'
-        logger.addStreamHandler()
-        
-    logger.setLevel(getattr(logging, LOG_LEVEL))
+        logger.addStreamHandler(logging.DEBUG)
+    else:
+        level = args.logger_level.upper()
+        logger.addStreamHandler(getattr(logging, level))
 
     if hasattr(args, 'flags'):
         if os.path.isfile(args.flags):
@@ -238,13 +235,8 @@ def excepthook(exctype, excvalue, tracebackobj):
     notice = _('An error occured with following message')
     errmsg = '%s:\n\n%s' % (notice, str(excvalue))
     
-    global LOG_LEVEL
-    if LOG_LEVEL == 'DEBUG':
-        msg = '\n'.join([errmsg, '-' * 80, tbinfo])
-        logger.error(msg)
-    else:
-        msg = errmsg
-        logger.error(errmsg)
+    msg = '\n'.join([errmsg, '-' * 80, tbinfo])
+    logger.error(msg)
 
     errorbox = QtWidgets.QMessageBox()
     errorbox.setText(msg)
