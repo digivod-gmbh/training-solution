@@ -1233,23 +1233,32 @@ class MainWindow(QtWidgets.QMainWindow):
         items = self.uniqLabelList.selectedItems()
         text = None
         flags = {}
-        if items:
-            text = items[0].text()
-        if self._config['display_label_popup'] or not text:
-            # instance label auto increment
-            if self._config['instance_label_auto_increment']:
-                previous_label = self.labelDialog.edit.text()
-                split = previous_label.split('-')
-                if len(split) > 1 and split[-1].isdigit():
-                    split[-1] = str(int(split[-1]) + 1)
-                    instance_text = '-'.join(split)
-                else:
-                    instance_text = previous_label
-                if instance_text != '':
-                    text = instance_text
-            text, flags = self.labelDialog.popUp(text)
-            if text is None:
-                self.labelDialog.edit.setText(previous_label)
+
+        # Single label mode
+        saved_single_label_mode = self.settings.value('settings/project/single_label_mode', '0')
+        logger.debug('Restored value "{}" for setting settings/project/single_label_mode'.format(saved_single_label_mode))
+        if saved_single_label_mode == '1':
+            saved_single_label_name = self.settings.value('settings/project/single_label_name', '')
+            logger.debug('Restored value "{}" for setting settings/project/single_label_name'.format(saved_single_label_name))
+            text = saved_single_label_name
+        else:
+            if items:
+                text = items[0].text()
+            if self._config['display_label_popup'] or not text:
+                # instance label auto increment
+                if self._config['instance_label_auto_increment']:
+                    previous_label = self.labelDialog.edit.text()
+                    split = previous_label.split('-')
+                    if len(split) > 1 and split[-1].isdigit():
+                        split[-1] = str(int(split[-1]) + 1)
+                        instance_text = '-'.join(split)
+                    else:
+                        instance_text = previous_label
+                    if instance_text != '':
+                        text = instance_text
+                text, flags = self.labelDialog.popUp(text)
+                if text is None:
+                    self.labelDialog.edit.setText(previous_label)
 
         if text and not self.validateLabel(text):
             self.errorMessage('Invalid label',
