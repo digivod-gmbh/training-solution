@@ -1,6 +1,7 @@
 import os
 import glob
 import shutil
+import traceback
 import lxml.builder
 import lxml.etree
 import numpy as np
@@ -11,7 +12,8 @@ from .format import DatasetFormat
 from .intermediate import IntermediateFormat
 from labelme.config.export import Export
 from labelme.logger import logger
-from labelme.utils import polygon_to_bbox
+from labelme.utils import polygon_to_bbox, save_image_as_jpeg
+from labelme.config import MessageType
 
 
 class FormatVoc(DatasetFormat):
@@ -235,88 +237,102 @@ class FormatVoc(DatasetFormat):
         out_split_file = os.path.join(output_folder, output_file)
         open(out_split_file, 'w').close()
 
+        failed_images = []
         for image in samples_per_image:
-            samples = samples_per_image[image]
-            num_samples = num_samples + len(samples)
-            base = os.path.splitext(image)[0]
-            out_img_file = os.path.join(output_folder, FormatVoc._directories['images'], base + '.jpg')
-            out_xml_file = os.path.join(output_folder, FormatVoc._directories['annotations'], base + '.xml')
-            img_file = os.path.join(input_folder, os.path.basename(image))
-            img = np.asarray(PIL.Image.open(img_file))
-            if not os.path.exists(out_img_file):
-                PIL.Image.fromarray(img).save(out_img_file)
+            try:
+                samples = samples_per_image[image]
+                base = os.path.splitext(image)[0]
+                out_img_file = os.path.join(output_folder, FormatVoc._directories['images'], base + '.jpg')
+                out_xml_file = os.path.join(output_folder, FormatVoc._directories['annotations'], base + '.xml')
+                img_file = os.path.join(input_folder, os.path.basename(image))
+                image = PIL.Image.open(img_file)
+                img = np.asarray(image)
+                if not os.path.exists(out_img_file):
+                    save_image_as_jpeg(image, out_img_file)
 
-            self.checkAborted()
-
-            samples_count = len(samples) if len(samples) > 0 else -1
-            with open(out_split_file, 'a') as f:
-                f.write(base + '\n')
-                #f.write(base + ' ' + str(samples_count) + '\n')
-
-            # Convert grayscale image to rgb
-            if len(img.shape) == 2:
-                img = np.stack((img,)*3, axis=-1)
-
-            maker = lxml.builder.ElementMaker()
-            xml = maker.annotation(
-                maker.folder(),
-                maker.filename(base + '.jpg'),
-                maker.database(),    # e.g., The VOC2007 Database
-                maker.annotation(),  # e.g., Pascal VOC2007
-                maker.image(),       # e.g., flickr
-                maker.size(
-                    maker.height(str(img.shape[0])),
-                    maker.width(str(img.shape[1])),
-                    maker.depth(str(img.shape[2])),
-                ),
-                maker.segmented(),
-            )
-
-            self.checkAborted()
-
-            bboxes = []
-            labels = []
-            for sample in samples:
-                points = sample.points
-                label = sample.label
-                shape_type = sample.shape_type
-
-                class_name = label
-                class_id = class_names.index(class_name)
-
-                # VOC can only handle bounding boxes
-                # Therefore polygons are converted to rectangles
-                if shape_type == 'rectangle':
-                    (xmin, ymin), (xmax, ymax) = points
-                elif shape_type == 'polygon':
-                    xmin, ymin, xmax, ymax = polygon_to_bbox(points)
-                else:
-                    continue
-                bboxes.append([xmin, ymin, xmax, ymax])
-                labels.append(class_id)
-
-                xml.append(
-                    maker.object(
-                        maker.name(label),
-                        maker.pose(),
-                        maker.truncated(str(0)),
-                        maker.difficult(str(0)),
-                        maker.bndbox(
-                            maker.xmin(str(xmin)),
-                            maker.ymin(str(ymin)),
-                            maker.xmax(str(xmax)),
-                            maker.ymax(str(ymax)),
-                        ),
-                    )
-                )
-                
-                self.thread.update.emit(_('Writing sample ...'), -1, -1)
                 self.checkAborted()
 
-            self.checkAborted()
+                #samples_count = len(samples) if len(samples) > 0 else -1
+                with open(out_split_file, 'a') as f:
+                    f.write(base + '\n')
+                    #f.write(base + ' ' + str(samples_count) + '\n')
 
-            with open(out_xml_file, 'wb') as f:
-                f.write(lxml.etree.tostring(xml, pretty_print=True))
+                # Convert grayscale image to rgb
+                if len(img.shape) == 2:
+                    img = np.stack((img,)*3, axis=-1)
+
+                maker = lxml.builder.ElementMaker()
+                xml = maker.annotation(
+                    maker.folder(),
+                    maker.filename(base + '.jpg'),
+                    maker.database(),    # e.g., The VOC2007 Database
+                    maker.annotation(),  # e.g., Pascal VOC2007
+                    maker.image(),       # e.g., flickr
+                    maker.size(
+                        maker.height(str(img.shape[0])),
+                        maker.width(str(img.shape[1])),
+                        maker.depth(str(img.shape[2])),
+                    ),
+                    maker.segmented(),
+                )
+
+                self.checkAborted()
+
+                bboxes = []
+                labels = []
+                for sample in samples:
+                    points = sample.points
+                    label = sample.label
+                    shape_type = sample.shape_type
+
+                    class_name = label
+                    class_id = class_names.index(class_name)
+
+                    # VOC can only handle bounding boxes
+                    # Therefore polygons are converted to rectangles
+                    if shape_type == 'rectangle':
+                        (xmin, ymin), (xmax, ymax) = points
+                    elif shape_type == 'polygon':
+                        xmin, ymin, xmax, ymax = polygon_to_bbox(points)
+                    else:
+                        continue
+                    bboxes.append([xmin, ymin, xmax, ymax])
+                    labels.append(class_id)
+
+                    xml.append(
+                        maker.object(
+                            maker.name(label),
+                            maker.pose(),
+                            maker.truncated(str(0)),
+                            maker.difficult(str(0)),
+                            maker.bndbox(
+                                maker.xmin(str(xmin)),
+                                maker.ymin(str(ymin)),
+                                maker.xmax(str(xmax)),
+                                maker.ymax(str(ymax)),
+                            ),
+                        )
+                    )
+                    
+                    self.thread.update.emit(_('Writing sample ...'), -1, -1)
+                    self.checkAborted()
+
+                self.checkAborted()
+
+                with open(out_xml_file, 'wb') as f:
+                    f.write(lxml.etree.tostring(xml, pretty_print=True))
+
+                num_samples = num_samples + len(samples)
+
+            except Exception as e:
+                failed_images.append(image)
+                logger.error(traceback.format_exc())
+
+        if len(failed_images) > 0:
+            msg = _('The following images could not be exported:') + '\n' + ', '.join(failed_images)
+            self.thread.message.emit(_('Warning'), msg, MessageType.Warning)
+            if num_samples == 0:
+                self.throwUserException(_('Dataset contains no images for export'))
 
         return num_samples
 

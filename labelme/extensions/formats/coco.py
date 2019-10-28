@@ -2,6 +2,7 @@ import os
 import json
 import shutil
 import datetime
+import traceback
 import collections
 import numpy as np
 import PIL.Image
@@ -12,7 +13,8 @@ from .format import DatasetFormat
 from .intermediate import IntermediateFormat
 from labelme.config.export import Export
 from labelme.logger import logger
-from labelme.utils import shape_to_mask
+from labelme.utils import shape_to_mask, save_image_as_jpeg
+from labelme.config import MessageType
 
 
 class FormatCoco(DatasetFormat):
@@ -207,77 +209,90 @@ class FormatCoco(DatasetFormat):
 
         self.checkAborted()
 
+        failed_images = []
         for image in samples_per_image:
-            samples = samples_per_image[image]
-            num_samples = num_samples + len(samples)
-            base = os.path.splitext(image)[0]
-            out_img_file = os.path.join(image_folder, base + '.jpg')
-            img_file = os.path.join(input_folder, os.path.basename(image))
-            img = np.asarray(PIL.Image.open(img_file))
-            if not os.path.exists(out_img_file):
-                PIL.Image.fromarray(img).save(out_img_file)
-
-            self.checkAborted()
-
-            data['images'].append(dict(
-                license=0,
-                url=None,
-                file_name=os.path.basename(out_img_file),
-                height=img.shape[0],
-                width=img.shape[1],
-                date_captured=None,
-                id=image_id,
-            ))
-
-            masks = {}                                     # for area
-            segmentations = collections.defaultdict(list)  # for segmentation
-            for sample in samples:
-                label = sample.label
-                shape_type = sample.shape_type
-                points = sample.points
-                
-                mask = shape_to_mask(
-                    img.shape[:2], points, shape_type
-                )
-
-                points = np.asarray(points).flatten().tolist()
+            try:
+                samples = samples_per_image[image]
+                num_samples = num_samples + len(samples)
+                base = os.path.splitext(image)[0]
+                out_img_file = os.path.join(image_folder, base + '.jpg')
+                img_file = os.path.join(input_folder, os.path.basename(image))
+                image = PIL.Image.open(img_file)
+                img = np.asarray(image)
+                if not os.path.exists(out_img_file):
+                    save_image_as_jpeg(image, out_img_file)
 
                 self.checkAborted()
 
-                if label in masks:
-                    masks[label].append(mask)
-                    segmentations[label].append(points)
-                else:
-                    masks[label] = [mask]
-                    segmentations[label] = [points]
+                data['images'].append(dict(
+                    license=0,
+                    url=None,
+                    file_name=os.path.basename(out_img_file),
+                    height=img.shape[0],
+                    width=img.shape[1],
+                    date_captured=None,
+                    id=image_id,
+                ))
 
-            for label, mask in masks.items():
-                for i in range(len(mask)):
-                    m = mask[i]
-                    cls_name = label.split('-')[0]
-                    if cls_name not in class_name_to_id:
-                        continue
-                    cls_id = class_name_to_id[cls_name]
+                masks = {}                                     # for area
+                segmentations = collections.defaultdict(list)  # for segmentation
+                for sample in samples:
+                    label = sample.label
+                    shape_type = sample.shape_type
+                    points = sample.points
+                    
+                    mask = shape_to_mask(
+                        img.shape[:2], points, shape_type
+                    )
 
-                    m = np.asfortranarray(m.astype(np.uint8))
-                    m = pycocotools.mask.encode(m)
-                    area = float(pycocotools.mask.area(m))
-                    bbox = pycocotools.mask.toBbox(m).flatten().tolist()
+                    points = np.asarray(points).flatten().tolist()
 
-                    data['annotations'].append(dict(
-                        id=len(data['annotations']),
-                        image_id=image_id,
-                        category_id=cls_id,
-                        segmentation=segmentations[label][i],
-                        area=area,
-                        bbox=bbox,
-                        iscrowd=0,
-                    ))
-
-                    self.thread.update.emit(_('Writing samples ...'), -1, -1)
                     self.checkAborted()
 
-            image_id = image_id + 1
+                    if label in masks:
+                        masks[label].append(mask)
+                        segmentations[label].append(points)
+                    else:
+                        masks[label] = [mask]
+                        segmentations[label] = [points]
+
+                for label, mask in masks.items():
+                    for i in range(len(mask)):
+                        m = mask[i]
+                        cls_name = label.split('-')[0]
+                        if cls_name not in class_name_to_id:
+                            continue
+                        cls_id = class_name_to_id[cls_name]
+
+                        m = np.asfortranarray(m.astype(np.uint8))
+                        m = pycocotools.mask.encode(m)
+                        area = float(pycocotools.mask.area(m))
+                        bbox = pycocotools.mask.toBbox(m).flatten().tolist()
+
+                        data['annotations'].append(dict(
+                            id=len(data['annotations']),
+                            image_id=image_id,
+                            category_id=cls_id,
+                            segmentation=segmentations[label][i],
+                            area=area,
+                            bbox=bbox,
+                            iscrowd=0,
+                        ))
+
+                        self.thread.update.emit(_('Writing samples ...'), -1, -1)
+                        self.checkAborted()
+
+                image_id = image_id + 1
+
+            except Exception as e:
+                failed_images.append(image)
+                logger.error(traceback.format_exc())
+
+        if len(failed_images) > 0:
+            msg = _('The following images could not be exported:') + '\n' + ', '.join(failed_images)
+            self.thread.message.emit(_('Warning'), msg, MessageType.Warning)
+            if len(data['annotations']) == 0:
+                self.throwUserException(_('Dataset contains no images for export'))
 
         self.checkAborted()
 

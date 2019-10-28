@@ -80,3 +80,17 @@ def apply_exif_orientation(image):
         return image.transpose(PIL.Image.ROTATE_90)
     else:
         return image
+
+
+def convert_image_to_rgb(img):
+    if img.mode != 'RGB':
+        input_rgba = img.convert('RGBA')
+        background = PIL.Image.new('RGBA', input_rgba.size, (255, 255, 255))
+        alpha_composite = PIL.Image.alpha_composite(background, input_rgba)
+        output_rgb = alpha_composite.convert('RGB')
+        return output_rgb
+    return img
+
+def save_image_as_jpeg(img, out_file, quality=80):
+    rgb_image = convert_image_to_rgb(img)
+    rgb_image.save(out_file, 'JPEG', quality=quality)

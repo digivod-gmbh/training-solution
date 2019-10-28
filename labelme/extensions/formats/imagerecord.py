@@ -2,6 +2,7 @@ import numpy as np
 import os
 import sys
 import itertools
+import traceback
 
 import mxnet as mx
 import random
@@ -16,6 +17,7 @@ from labelme.label_file import LabelFile
 from labelme.logger import logger
 from labelme.utils.map import Map
 from labelme.config.export import Export
+from labelme.config import MessageType
 
 from .format import DatasetFormat
 from .intermediate import IntermediateFormat
@@ -259,19 +261,32 @@ class FormatImageRecord(DatasetFormat):
         q_out = queue.Queue()
         cnt = 0
         pre_time = time.time()
+        failed_images = []
         for i, item in enumerate(image_list):
-            self.imageEncode(args, i, item, q_out)
-            if q_out.empty():
-                continue
-            _a, s, _b = q_out.get()
-            record.write_idx(item[0], s)
-            if cnt % 1000 == 0:
-                cur_time = time.time()
-                logger.debug('time: {} count: {}'.format(cur_time - pre_time, cnt))
-                pre_time = cur_time
-            cnt += 1
-            self.thread.update.emit(_('Writing dataset ...'), -1, -1)
-            self.checkAborted()
+            try:
+                self.imageEncode(args, i, item, q_out)
+                if q_out.empty():
+                    continue
+                _a, s, _b = q_out.get()
+                record.write_idx(item[0], s)
+                if cnt % 1000 == 0:
+                    cur_time = time.time()
+                    logger.debug('time: {} count: {}'.format(cur_time - pre_time, cnt))
+                    pre_time = cur_time
+                cnt += 1
+                self.thread.update.emit(_('Writing dataset ...'), -1, -1)
+                self.checkAborted()
+
+            except Exception as e:
+                failed_images.append(item)
+                logger.error(traceback.format_exc())
+
+        if len(failed_images) > 0:
+            msg = _('The following images could not be exported:') + '\n' + ', '.join(failed_images)
+            self.thread.message.emit(_('Warning'), msg, MessageType.Warning)
+            if cnt == 0:
+                self.throwUserException(_('Dataset contains no images for export'))
+
         logger.debug('total time: {} total count: {}'.format(time.time() - pre_time, cnt))
 
     def readLstFile(self, path_in):
