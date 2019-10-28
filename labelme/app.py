@@ -881,9 +881,13 @@ class MainWindow(QtWidgets.QMainWindow):
     def about(self):
         mb = QtWidgets.QMessageBox
         title = __appname__
+        version = '?'
+        revision_file = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'revision.txt'))
+        with open(revision_file, 'r') as f:
+            version = f.read()
         line1 = _('An easy-to-use tool for training of object detection networks')
         icon_attribution = _('This software uses icons from {}').format('<a href="https://icons8.com/">icons8</a>')
-        msg = '<h1>{}</h1>{}<br><br><i>{}</i>'.format(title, line1, icon_attribution)
+        msg = '<h1>{}</h1>{}<br><br><i>{}</i><br><br>{}: <i>{}</i>'.format(title, line1, icon_attribution, _('Version'), version)
         mb.about(self, 'About', msg)
 
     def openLogs(self):

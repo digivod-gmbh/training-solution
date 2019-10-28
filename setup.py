@@ -102,6 +102,16 @@ if sys.argv[1] == 'release':
     sys.exit(0)
 
 
+# Git revision
+import subprocess
+commit_revision = subprocess.check_output(['git', 'rev-parse', '--short=12', 'HEAD']).strip().decode('utf-8')
+commit_number = subprocess.check_output(['git', 'rev-list', '--count', 'HEAD']).strip().decode('utf-8')
+revision_file = os.path.normpath(os.path.join(os.path.dirname(__file__), 'revision.txt'))
+with open(revision_file, 'w+') as f:
+    content = '{}@{}'.format(commit_number, commit_revision)
+    f.write(content)
+
+
 def get_long_description():
     with open('README.md') as f:
         long_description = f.read()
