@@ -12,6 +12,8 @@ class ToolBar(QtWidgets.QToolBar):
         layout.setContentsMargins(*m)
         self.setContentsMargins(*m)
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.FramelessWindowHint)
+        self.setMovable(False)
+        self.setFloatable(False)
 
     def addAction(self, action):
         if isinstance(action, QtWidgets.QWidgetAction):
