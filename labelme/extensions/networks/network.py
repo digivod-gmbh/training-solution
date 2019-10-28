@@ -18,7 +18,7 @@ from gluoncv.utils.metrics.voc_detection import VOC07MApMetric, VOCMApMetric
 from gluoncv.utils.metrics.coco_detection import COCODetectionMetric
 
 from labelme.logger import logger
-from labelme.extensions.thread import WorkerExecutor
+from labelme.utils import WorkerExecutor
 from labelme.utils.map import Map
 
 

@@ -9,7 +9,7 @@ from labelme.utils.map import Map
 from labelme.logger import logger
 from labelme.config import Training
 from labelme.extensions.networks import Network
-from labelme.extensions.thread import WorkerExecutor
+from labelme.utils import WorkerExecutor
 from labelme.utils import WorkerDialog
 from labelme.config import MessageType
 from labelme.config import get_config

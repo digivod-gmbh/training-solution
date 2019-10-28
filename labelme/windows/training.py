@@ -16,7 +16,7 @@ import traceback
 from labelme.logger import logger
 from labelme.utils import deltree, WorkerDialog, QHLine, confirm
 from labelme.utils.map import Map
-from labelme.extensions.thread import WorkerExecutor
+from labelme.utils import WorkerExecutor
 from labelme.extensions.formats import *
 from labelme.extensions.networks import Network
 from labelme.config import MessageType

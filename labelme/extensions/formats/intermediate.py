@@ -4,7 +4,7 @@ import base64
 
 from labelme.logger import logger
 from labelme.label_file import LabelFile
-from labelme.extensions.thread import WorkerExecutor
+from labelme.utils import WorkerExecutor
 
 
 class IntermediateSample():

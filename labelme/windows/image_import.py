@@ -9,7 +9,7 @@ from qtpy import QtWidgets
 
 from labelme.utils.map import Map
 from labelme.logger import logger
-from labelme.extensions.thread import WorkerExecutor
+from labelme.utils import WorkerExecutor
 from labelme.utils import WorkerDialog, Application, StatisticsModel
 from labelme.label_file import LabelFile
 from labelme.shape import Shape

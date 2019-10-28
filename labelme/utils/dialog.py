@@ -5,7 +5,7 @@ from qtpy.QtCore import Qt
 from labelme.logger import logger
 from labelme.utils import Application, Worker, ProgressObject
 from labelme.config import MessageType
-from labelme.extensions.thread import WorkerExecutor
+from labelme.utils import WorkerExecutor
 
 
 def confirm(parent, title, message, kind):
@@ -84,11 +84,14 @@ class WorkerDialog(QtWidgets.QDialog):
         worker.wait()
         self.cancel_progress()
 
-    def on_error(self, e):
+    def on_error(self, error_msg, is_custom_msg=False):
         logger.debug('on_error')
         self.cancel_progress()
         mb = QtWidgets.QMessageBox()
-        mb.warning(self, _('Error'), _('An error occured. For further details look into the log files'))
+        if is_custom_msg:
+            mb.warning(self, _('Error'), error_msg)
+        else:
+            mb.warning(self, _('Error'), _('An error occured. For further details look into the log files'))
 
     def on_finish(self):
         logger.debug('on_finish')

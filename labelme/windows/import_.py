@@ -8,7 +8,7 @@ import os
 from labelme.logger import logger
 from labelme.label_file import LabelFile
 from labelme.utils import deltree, WorkerDialog
-from labelme.extensions.thread import WorkerExecutor
+from labelme.utils import WorkerExecutor
 from labelme.config import MessageType
 from labelme.utils.map import Map
 from labelme.extensions.formats import *

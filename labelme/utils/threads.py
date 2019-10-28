@@ -1,10 +1,79 @@
+import time
 import traceback
 
 from qtpy import QtCore
 from qtpy.QtCore import Qt
 
 from labelme.logger import logger
-from labelme.extensions.thread import AbortWorkerException, Abortable
+
+
+class AbortWorkerException(Exception):
+    pass
+
+
+class UserException(Exception):
+    pass
+
+
+class Abortable:
+
+    def __init__(self):
+        self.isAborted = False
+
+    def checkAborted(self):
+        if self.isAborted:
+            raise AbortWorkerException()
+
+    def abort(self):
+        self.isAborted = True
+
+
+class WorkerExecutor():
+
+    def __init__(self):
+        self.abortable = Abortable()
+        self.wait_for_confirm = False
+        self.confirm_value = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        import gc
+        gc.collect()
+
+    def run(self):
+        raise NotImplementedError('Method run() must be implemented in subclass')
+
+    def isAborted(self):
+        return self.abortable.isAborted
+
+    def abort(self):
+        self.abortable.abort()
+
+    def checkAborted(self):
+        self.abortable.checkAborted()
+
+    def throwUserException(self, msg):
+        raise UserException(msg)
+
+    def setAbortable(self, abortable):
+        self.abortable = abortable
+
+    def setThread(self, thread):
+        self.thread = thread
+
+    def doConfirm(self, title, message, kind):
+        self.wait_for_confirm = True
+        self.confirm_value = None
+        self.thread.confirm.emit(title, message, kind)
+        while self.wait_for_confirm:
+            time.sleep(0.5)
+        return self.confirm_value
+
+    def confirmResult(self, result):
+        self.wait_for_confirm = False
+        self.confirm_value = result
 
 
 class Worker(QtCore.QThread):
@@ -48,7 +117,7 @@ class WorkerObject(QtCore.QObject):
 
 class ProgressObject(WorkerObject):
 
-    handleError = QtCore.Signal(str)
+    handleError = QtCore.Signal(str, bool)
     finished = QtCore.Signal()
     update = QtCore.Signal(str, int, int)
     aborted = QtCore.Signal()
@@ -84,10 +153,14 @@ class ProgressObject(WorkerObject):
     def start(self):
         try:
             self.start_func()
-        except AbortWorkerException as e:
+        except UserException as e:
+            self.handleError.emit(str(e), True)
+            self.error.emit(traceback.format_exc())
+            return
+        except AbortWorkerException:
             return
         except Exception as e:
-            self.handleError.emit(str(e))
+            self.handleError.emit(str(e), False)
             self.error.emit(traceback.format_exc())
             return
         self.finish()

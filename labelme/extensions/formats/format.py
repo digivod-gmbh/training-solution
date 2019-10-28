@@ -3,7 +3,7 @@ import os
 
 from labelme.logger import logger
 from labelme.utils.map import Map
-from labelme.extensions.thread import WorkerExecutor
+from labelme.utils import WorkerExecutor
 
 
 class DatasetFormat(WorkerExecutor):
