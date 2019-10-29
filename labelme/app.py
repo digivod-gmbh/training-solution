@@ -237,8 +237,8 @@ class MainWindow(QtWidgets.QMainWindow):
         shortcuts = self._config['shortcuts']
         quit = action(_('&Quit'), self.close, shortcuts['quit'], 'quit',
                       _('Quit application'))
-        open_ = action(_('&Open'), self.openFile, shortcuts['open'], 'open',
-                       _('Open image or label file'))
+        # open_ = action(_('&Open'), self.openFile, shortcuts['open'], 'open',
+        #                _('Open image or label file'))
         opendir = action(_('&Open Dir'), self.openDirDialog,
                          shortcuts['open_dir'], 'dir', _(u'Open Dir'))
         settings = action(_('&Settings'), self.settingsDialog,
@@ -318,19 +318,19 @@ class MainWindow(QtWidgets.QMainWindow):
             checkable=True)
         toggle_keep_prev_mode.setChecked(self._config['keep_prev'])
 
-        createMode = action(
-            _('Create Polygons'),
-            lambda: self.toggleDrawMode(False, createMode='polygon'),
-            shortcuts['create_polygon'],
-            'objects',
-            _('Start drawing polygons'),
-            enabled=False,
-        )
+        # createMode = action(
+        #     _('Create Polygons'),
+        #     lambda: self.toggleDrawMode(False, createMode='polygon'),
+        #     shortcuts['create_polygon'],
+        #     'objects',
+        #     _('Start drawing polygons'),
+        #     enabled=False,
+        # )
         createRectangleMode = action(
             _('Create Rectangle'),
             lambda: self.toggleDrawMode(False, createMode='rectangle'),
             shortcuts['create_rectangle'],
-            'objects',
+            'create_rectangle',
             _('Start drawing rectangles'),
             enabled=False,
         )
@@ -366,9 +366,12 @@ class MainWindow(QtWidgets.QMainWindow):
         #     _('Start drawing linestrip. Ctrl+LeftClick ends creation.'),
         #     enabled=False,
         # )
-        editMode = action(_('Edit Polygons'), self.setEditMode,
+        editMode = action(_('Edit mode'), self.setEditMode,
                           shortcuts['edit_polygon'], 'edit',
                           _('Move and edit the selected polygons'), enabled=False)
+        selectShape = action(_('Select polygon'), self.selectShape,
+                          shortcuts['select_shape'], 'select_shape',
+                          _('Select the polygon you right-clicked on'), enabled=False)
 
         delete = action(_('Delete Polygons'), self.deleteSelectedShape,
                         shortcuts['delete_polygon'], 'cancel',
@@ -466,16 +469,16 @@ class MainWindow(QtWidgets.QMainWindow):
         shapeFillColor = action(
             _('Shape &Fill Color'), self.chshapeFillColor, icon='color',
             tip=_('Change the fill color for this specific shape'), enabled=False)
-        fill_drawing = action(
-            _('Fill Drawing Polygon'),
-            lambda x: self.canvas.setFillDrawing(x),
-            None,
-            'color',
-            _('Fill polygon while drawing'),
-            checkable=True,
-            enabled=True,
-        )
-        fill_drawing.setChecked(True)
+        # fill_drawing = action(
+        #     _('Fill Drawing Polygon'),
+        #     lambda x: self.canvas.setFillDrawing(x),
+        #     None,
+        #     'color',
+        #     _('Fill polygon while drawing'),
+        #     checkable=True,
+        #     enabled=True,
+        # )
+        # fill_drawing.setChecked(True)
 
         # Lavel list context menu.
         labelMenu = QtWidgets.QMenu()
@@ -488,14 +491,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions = utils.struct(
             saveAuto=saveAuto,
             changeOutputDir=changeOutputDir,
-            save=save, saveAs=saveAs, open=open_, close=close,
+            save=save, saveAs=saveAs, #open=open_, 
+            close=close,
             deleteFile=deleteFile,
             #lineColor=color1, fillColor=color2,
             toggleKeepPrevMode=toggle_keep_prev_mode,
             delete=delete, edit=edit, copy=copy,
             undoLastPoint=undoLastPoint, undo=undo,
             addPointToEdge=addPointToEdge,
-            createMode=createMode, editMode=editMode,
+            #createMode=createMode, 
+            editMode=editMode,
+            selectShape=selectShape,
             createRectangleMode=createRectangleMode,
             #createCircleMode=createCircleMode,
             #createLineMode=createLineMode,
@@ -509,20 +515,21 @@ class MainWindow(QtWidgets.QMainWindow):
             settings=settings,
             import_=import_, export=export, #merge=merge, 
             training=training, validation=validation,
-            fileMenuActions=(open_, opendir, save, saveAs, close, quit),
+            fileMenuActions=(opendir, save, saveAs, close, quit), # open_
             tool=(),
             editMenu=(edit, copy, delete, None, undo, undoLastPoint,
                       None, addPointToEdge,
                       None, toggle_keep_prev_mode), # None, color1, color2,
             # menu shown at right click
             menu=(
-                createMode,
+                #createMode,
                 createRectangleMode,
                 #createCircleMode,
                 #createLineMode,
                 #createPointMode,
                 #createLineStripMode,
-                editMode,
+                selectShape,
+                #editMode,
                 edit,
                 copy,
                 delete,
@@ -534,13 +541,14 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
             onLoadActive=(
                 close,
-                createMode,
+                #createMode,
                 createRectangleMode,
                 #createCircleMode,
                 #createLineMode,
                 #createPointMode,
                 #createLineStripMode,
-                editMode,
+                #editMode,
+                selectShape,
             ),
             onShapesPresent=(saveAs, hideAll, showAll),
         )
@@ -562,7 +570,7 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(
             self.menus.file,
             (
-                open_,
+                #open_,
                 openNextImg,
                 openPrevImg,
                 opendir,
@@ -600,8 +608,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.label_dock.toggleViewAction(),
                 self.shape_dock.toggleViewAction(),
                 self.file_dock.toggleViewAction(),
-                None,
-                fill_drawing,
+                #None,
+                #fill_drawing,
                 None,
                 hideAll,
                 showAll,
@@ -620,18 +628,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Custom context menu for the canvas widget:
         utils.addActions(self.canvas.menus[0], self.actions.menu)
-        utils.addActions(
-            self.canvas.menus[1],
-            (
-                action(_('&Copy here'), self.copyShape),
-                action(_('&Move here'), self.moveShape),
-            ),
-        )
+        utils.addActions(self.canvas.menus[1], self.actions.menu)
+        # utils.addActions(
+        #     self.canvas.menus[1],
+        #     (
+        #         action(_('&Copy here'), self.copyShape),
+        #         action(_('&Move here'), self.moveShape),
+        #     ),
+        # )
 
         self.tools = self.toolbar(_('Tools'))
         # Menu buttons on Left
         self.actions.tool = (
-            open_,
+            #open_,
             opendir,
             openPrevImg,
             openNextImg,
@@ -645,7 +654,7 @@ class MainWindow(QtWidgets.QMainWindow):
             validation,
             None,
             deleteFile,
-            createMode,
+            createRectangleMode,
             editMode,
             copy,
             delete,
@@ -772,7 +781,7 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(self.canvas.menus[0], menu)
         self.menus.edit.clear()
         actions = (
-            self.actions.createMode,
+            #self.actions.createMode,
             self.actions.createRectangleMode,
             #self.actions.createCircleMode,
             #self.actions.createLineMode,
@@ -789,7 +798,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 label_file_without_path = osp.basename(label_file)
                 label_file = osp.normpath(osp.join(self.output_dir, label_file_without_path))
             self.saveLabels(label_file)
-            return
+            if self.actions.saveAuto.isChecked():
+                return
         self.dirty = True
         self.actions.save.setEnabled(True)
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
@@ -801,7 +811,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def setClean(self):
         self.dirty = False
         self.actions.save.setEnabled(False)
-        self.actions.createMode.setEnabled(True)
+        self.actions.editMode.setEnabled(False)
+        #self.actions.createMode.setEnabled(True)
         self.actions.createRectangleMode.setEnabled(True)
         #self.actions.createCircleMode.setEnabled(True)
         #self.actions.createLineMode.setEnabled(True)
@@ -904,26 +915,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.undo.setEnabled(not drawing)
         self.actions.delete.setEnabled(not drawing)
 
-    def toggleDrawMode(self, edit=True, createMode='polygon'):
+    def toggleDrawMode(self, edit=True, createMode='rectangle'):
         self.canvas.setEditing(edit)
         self.canvas.createMode = createMode
         if edit:
-            self.actions.createMode.setEnabled(True)
+            #self.actions.createMode.setEnabled(True)
             self.actions.createRectangleMode.setEnabled(True)
             #self.actions.createCircleMode.setEnabled(True)
             #self.actions.createLineMode.setEnabled(True)
             #self.actions.createPointMode.setEnabled(True)
             #self.actions.createLineStripMode.setEnabled(True)
         else:
-            if createMode == 'polygon':
-                self.actions.createMode.setEnabled(False)
-                self.actions.createRectangleMode.setEnabled(True)
-                #self.actions.createCircleMode.setEnabled(True)
-                #self.actions.createLineMode.setEnabled(True)
-                #self.actions.createPointMode.setEnabled(True)
-                #self.actions.createLineStripMode.setEnabled(True)
-            elif createMode == 'rectangle':
-                self.actions.createMode.setEnabled(True)
+            # if createMode == 'polygon':
+            #     self.actions.createMode.setEnabled(False)
+            #     self.actions.createRectangleMode.setEnabled(True)
+            #     self.actions.createCircleMode.setEnabled(True)
+            #     self.actions.createLineMode.setEnabled(True)
+            #     self.actions.createPointMode.setEnabled(True)
+            #     self.actions.createLineStripMode.setEnabled(True)
+            if createMode == 'rectangle':
+                #self.actions.createMode.setEnabled(True)
                 self.actions.createRectangleMode.setEnabled(False)
                 #self.actions.createCircleMode.setEnabled(True)
                 #self.actions.createLineMode.setEnabled(True)
@@ -960,9 +971,14 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 raise ValueError('Unsupported createMode: %s' % createMode)
         self.actions.editMode.setEnabled(not edit)
+        self.actions.selectShape.setEnabled(True)
 
     def setEditMode(self):
         self.toggleDrawMode(True)
+
+    def selectShape(self):
+        self.toggleDrawMode(True)
+        self.canvas.selectShapeFromRightClick()
 
     def updateFileMenu(self):
         current = self.filename
@@ -1539,22 +1555,22 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._config['keep_prev'] = keep_prev
 
-    def openFile(self, _value=False):
-        if not self.mayContinue():
-            return
-        path = osp.dirname(str(self.filename)) if self.filename else '.'
-        formats = ['*.{}'.format(fmt.data().decode())
-                   for fmt in QtGui.QImageReader.supportedImageFormats()]
-        filters = "Image & Label files (%s)" % ' '.join(
-            formats + ['*%s' % LabelFile.suffix])
-        filename = QtWidgets.QFileDialog.getOpenFileName(
-            self, '%s - Choose Image or Label file' % __appname__,
-            path, filters)
-        if QT5:
-            filename, _ = filename
-        filename = str(filename)
-        if filename:
-            self.loadFile(filename)
+    # def openFile(self, _value=False):
+    #     if not self.mayContinue():
+    #         return
+    #     path = osp.dirname(str(self.filename)) if self.filename else '.'
+    #     formats = ['*.{}'.format(fmt.data().decode())
+    #                for fmt in QtGui.QImageReader.supportedImageFormats()]
+    #     filters = "Image & Label files (%s)" % ' '.join(
+    #         formats + ['*%s' % LabelFile.suffix])
+    #     filename = QtWidgets.QFileDialog.getOpenFileName(
+    #         self, '%s - Choose Image or Label file' % __appname__,
+    #         path, filters)
+    #     if QT5:
+    #         filename, _ = filename
+    #     filename = str(filename)
+    #     if filename:
+    #         self.loadFile(filename)
 
     def changeOutputDirDialog(self, _value=False):
         default_output_dir = self.output_dir
@@ -1698,19 +1714,26 @@ class MainWindow(QtWidgets.QMainWindow):
     def mayContinue(self):
         if not self.dirty:
             return True
-        mb = QtWidgets.QMessageBox
         msg = _('Save annotations to "{}" before closing?').format(self.filename)
-        answer = mb.question(self,
-                             _('Save annotations?'),
-                             msg,
-                             mb.Save | mb.Discard | mb.Cancel,
-                             mb.Save)
-        if answer == mb.Discard:
+        box = QtWidgets.QMessageBox(self)
+        box.setIcon(QtWidgets.QMessageBox.Question)
+        box.setWindowTitle(_('Save annotations?'))
+        box.setText(msg)
+        box.setStandardButtons(QtWidgets.QMessageBox.Save|QtWidgets.QMessageBox.Discard|QtWidgets.QMessageBox.Cancel)
+        buttonSave = box.button(QtWidgets.QMessageBox.Save)
+        buttonSave.setText(_('Save'))
+        buttonDiscard = box.button(QtWidgets.QMessageBox.Discard)
+        buttonDiscard.setText(_('Discard'))
+        buttonCancel = box.button(QtWidgets.QMessageBox.Cancel)
+        buttonCancel.setText(_('Cancel'))
+        box.exec_()
+        answer = box.clickedButton()
+        if answer == buttonDiscard:
             return True
-        elif answer == mb.Save:
+        elif answer == buttonSave:
             self.saveFile()
             return True
-        else:  # answer == mb.Cancel
+        else:  # answer == buttonCancel
             return False
 
     def errorMessage(self, title, message):

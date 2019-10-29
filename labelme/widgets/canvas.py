@@ -32,7 +32,7 @@ class Canvas(QtWidgets.QWidget):
     CREATE, EDIT = 0, 1
 
     # polygon, rectangle, line, or point
-    _createMode = 'polygon'
+    _createMode = 'rectangle'
 
     _fill_drawing = False
 
@@ -205,16 +205,16 @@ class Canvas(QtWidgets.QWidget):
             return
 
         # Polygon copy moving.
-        if QtCore.Qt.RightButton & ev.buttons():
-            if self.selectedShapesCopy and self.prevPoint:
-                self.overrideCursor(CURSOR_MOVE)
-                self.boundedMoveShapes(self.selectedShapesCopy, pos)
-                self.repaint()
-            elif self.selectedShapes:
-                self.selectedShapesCopy = \
-                    [s.copy() for s in self.selectedShapes]
-                self.repaint()
-            return
+        # if QtCore.Qt.RightButton & ev.buttons():
+        #     if self.selectedShapesCopy and self.prevPoint:
+        #         self.overrideCursor(CURSOR_MOVE)
+        #         self.boundedMoveShapes(self.selectedShapesCopy, pos)
+        #         self.repaint()
+        #     elif self.selectedShapes:
+        #         self.selectedShapesCopy = \
+        #             [s.copy() for s in self.selectedShapes]
+        #         self.repaint()
+        #     return
 
         # Polygon/Vertex moving.
         self.movingShape = False
@@ -409,6 +409,9 @@ class Canvas(QtWidgets.QWidget):
                         self.selectionChanged.emit([shape])
                     return
         self.deSelectShape()
+
+    def selectShapeFromRightClick(self):
+        self.selectShapePoint(self.prevMovePoint, False)
 
     def calculateOffsets(self, shape, point):
         rect = shape.boundingRect()
