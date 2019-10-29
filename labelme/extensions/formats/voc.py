@@ -12,7 +12,7 @@ from .format import DatasetFormat
 from .intermediate import IntermediateFormat
 from labelme.config.export import Export
 from labelme.logger import logger
-from labelme.utils import polygon_to_bbox, save_image_as_jpeg
+from labelme.utils import polygon_to_bbox, save_image_as_jpeg, replace_special_chars
 from labelme.config import MessageType
 
 
@@ -241,7 +241,7 @@ class FormatVoc(DatasetFormat):
         for image in samples_per_image:
             try:
                 samples = samples_per_image[image]
-                base = os.path.splitext(image)[0]
+                base = replace_special_chars(os.path.splitext(image)[0])
                 out_img_file = os.path.join(output_folder, FormatVoc._directories['images'], base + '.jpg')
                 out_xml_file = os.path.join(output_folder, FormatVoc._directories['annotations'], base + '.xml')
                 img_file = os.path.join(input_folder, os.path.basename(image))

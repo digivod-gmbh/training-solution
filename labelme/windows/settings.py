@@ -8,6 +8,7 @@ import os
 from labelme.logger import logger
 from labelme.config.export import Export
 from labelme.widgets import HelpLabel, HelpCheckbox, HelpGroupBox
+from labelme.utils import contains_special_chars
 
 
 class SettingsWindow(QtWidgets.QDialog):
@@ -129,6 +130,10 @@ class SettingsWindow(QtWidgets.QDialog):
     def check_folder(self, project_folder):
         if not project_folder:
             msg = _('Project folder must not be empty')
+            QtWidgets.QMessageBox.warning(self, _('Settings'), msg)
+            return False
+        if contains_special_chars(project_folder, is_path=True):
+            msg = _('Project folder must not contain special chars like ä, ö, ü, ß')
             QtWidgets.QMessageBox.warning(self, _('Settings'), msg)
             return False
         return True

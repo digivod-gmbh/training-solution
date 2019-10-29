@@ -15,7 +15,7 @@ import traceback
 
 from labelme.logger import logger
 from labelme.label_file import LabelFile
-from labelme.utils import deltree, WorkerDialog
+from labelme.utils import deltree, WorkerDialog, replace_special_chars
 from labelme.utils.map import Map
 from labelme.utils import WorkerExecutor
 from labelme.extensions.formats import *
@@ -270,7 +270,7 @@ class ExportExecutor(WorkerExecutor):
             self.abort()
             return
 
-        dataset_name = self.data['dataset_name']
+        dataset_name = replace_special_chars(self.data['dataset_name'])
         if not dataset_name:
             self.thread.message.emit(_('Export'), _('Please enter a valid dataset name'), MessageType.Warning)
             self.abort()

@@ -14,7 +14,7 @@ import glob
 import traceback
 
 from labelme.logger import logger
-from labelme.utils import deltree, WorkerDialog, QHLine, confirm
+from labelme.utils import deltree, WorkerDialog, QHLine, confirm, replace_special_chars
 from labelme.utils.map import Map
 from labelme.utils import WorkerExecutor
 from labelme.extensions.formats import *
@@ -510,7 +510,7 @@ class TrainingWindow(WorkerDialog):
     def export_before_training(self):
         training_defaults = self.parent._config['training_defaults']
         selected_format = training_defaults['dataset_format']
-        dataset_name = re.sub(r'[^a-zA-Z0-9 _-]+', '', self.dataset_name.text())
+        dataset_name = replace_special_chars(self.dataset_name.text())
 
         data_folder = None
         if self.parent.lastOpenDir is not None:
@@ -640,7 +640,7 @@ class TrainingWindow(WorkerDialog):
 
         output_folder = os.path.normpath(data['output_folder'])
         training_name = data['training_name']
-        training_name = re.sub(r'[^a-zA-Z0-9 _-]+', '', training_name)
+        training_name = replace_special_chars(training_name)
         data['training_name'] = training_name
 
         if not training_name:

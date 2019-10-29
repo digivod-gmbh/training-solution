@@ -1,5 +1,6 @@
 import os.path as osp
 import os
+import re
 
 import numpy as np
 import PIL.Image
@@ -32,4 +33,21 @@ def deltree(target):
             os.remove(target + '/' + d)
     os.rmdir(target)
     logger.debug('Deleted folder {}'.format(target))
+
+def replace_special_chars(filename, is_path=False):
+    if is_path:
+        drive_split = os.path.splitdrive(filename)
+        subpath = drive_split[1]
+        replaced = re.sub(r'[^a-zA-Z0-9\./\\ _-]+', '', subpath)
+        return drive_split[0] + replaced
+    else:
+        return re.sub(r'[^a-zA-Z0-9 \._-]+', '', filename)
+
+def contains_special_chars(filename, is_path=False):
+    if is_path:
+        subpath = os.path.splitdrive(filename)[1]
+        r = re.search(r'[^a-zA-Z0-9\./\\ _-]+', subpath)
+    else:
+        r = re.search(r'[^a-zA-Z0-9\. _-]+', filename)
+    return r is not None
 
