@@ -34,14 +34,15 @@ def deltree(target):
     os.rmdir(target)
     logger.debug('Deleted folder {}'.format(target))
 
-def replace_special_chars(filename, is_path=False):
-    if is_path:
-        drive_split = os.path.splitdrive(filename)
-        subpath = drive_split[1]
-        replaced = re.sub(r'[^a-zA-Z0-9\./\\ _-]+', '', subpath)
-        return drive_split[0] + replaced
-    else:
-        return re.sub(r'[^a-zA-Z0-9 \._-]+', '', filename)
+def replace_special_chars(filename):
+    filename = filename.replace('ä', 'ae')
+    filename = filename.replace('ö', 'oe')
+    filename = filename.replace('ü', 'ue')
+    filename = filename.replace('Ä', 'Ae')
+    filename = filename.replace('Ö', 'Oe')
+    filename = filename.replace('Ü', 'Ue')
+    filename = filename.replace('ß', 'ss')
+    return re.sub(r'[^a-zA-Z0-9 \._-]+', '', filename)
 
 def contains_special_chars(filename, is_path=False):
     if is_path:
