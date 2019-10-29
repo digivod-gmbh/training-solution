@@ -460,7 +460,7 @@ class MainWindow(QtWidgets.QMainWindow):
         }
 
         edit = action(_('&Edit Label'), self.editLabel, shortcuts['edit_label'],
-                      'edit', _('Modify the label of the selected polygon'),
+                      'labels', _('Modify the label of the selected polygon'),
                       enabled=False)
 
         shapeLineColor = action(
@@ -563,7 +563,8 @@ class MainWindow(QtWidgets.QMainWindow):
             view=self.menu(_('&View')),
             project=self.menu(_('&Project')),
             help=self.menu(_('&Help')),
-            recentFiles=QtWidgets.QMenu(_('Open &Recent')),
+            #recentFiles=QtWidgets.QMenu(_('Open &Recent')),
+            recentDirs=QtWidgets.QMenu(_('Open &Recent')),
             labelList=labelMenu,
         )
 
@@ -574,7 +575,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 openNextImg,
                 openPrevImg,
                 opendir,
-                self.menus.recentFiles,
+                #self.menus.recentFiles,
+                self.menus.recentDirs,
                 save,
                 saveAs,
                 saveAuto,
@@ -624,7 +626,8 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
         )
 
-        self.menus.file.aboutToShow.connect(self.updateFileMenu)
+        #self.menus.file.aboutToShow.connect(self.updateFileMenu)
+        self.menus.file.aboutToShow.connect(self.updateDirMenu)
 
         # Custom context menu for the canvas widget:
         utils.addActions(self.canvas.menus[0], self.actions.menu)
@@ -684,6 +687,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.image = QtGui.QImage()
         self.imagePath = None
         self.recentFiles = []
+        self.recentDirs = []
         self.maxRecent = 7
         self.lineColor = None
         self.fillColor = None
@@ -705,6 +709,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings = QtCore.QSettings('digivod', 'labelme')
         # FIXME: QSettings.value can return None on PyQt4
         self.recentFiles = self.settings.value('recentFiles', []) or []
+        self.recentDirs = self.settings.value('recentDirs', []) or []
         size = self.settings.value('window/size', QtCore.QSize(config['window_width'], config['window_height']))
         position = self.settings.value('window/position', QtCore.QPoint(0, 0))
         self.resize(size)
@@ -721,7 +726,8 @@ class MainWindow(QtWidgets.QMainWindow):
         Shape.fill_color = self.fillColor
 
         # Populate the File menu dynamically.
-        self.updateFileMenu()
+        #self.updateFileMenu()
+        self.updateDirMenu()
         # Since loading the file may take some time,
         # make sure it runs in the background.
         if self.filename is not None:
@@ -868,6 +874,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.recentFiles.pop()
         self.recentFiles.insert(0, filename)
 
+    def addRecentDir(self, dirname):
+        if dirname in self.recentDirs:
+            self.recentDirs.remove(dirname)
+        elif len(self.recentDirs) >= self.maxRecent:
+            self.recentDirs.pop()
+        self.recentDirs.insert(0, dirname)
+
     # Callbacks
 
     def undoShapeEdit(self):
@@ -996,6 +1009,22 @@ class MainWindow(QtWidgets.QMainWindow):
             action.triggered.connect(functools.partial(self.loadRecent, f))
             menu.addAction(action)
 
+    def updateDirMenu(self):
+        current = self.lastOpenDir
+
+        def exists(dirname):
+            return osp.isdir(str(dirname))
+
+        menu = self.menus.recentDirs
+        menu.clear()
+        dirs = [d for d in self.recentDirs if exists(d)] # d != current
+        for i, d in enumerate(dirs):
+            icon = utils.newIcon('dir')
+            action = QtWidgets.QAction(
+                icon, '&%s (%s)' % (QtCore.QFileInfo(d).fileName(), d), self)
+            action.triggered.connect(functools.partial(self.loadRecentDir, d))
+            menu.addAction(action)
+
     def popLabelListMenu(self, point):
         self.menus.labelList.exec_(self.labelList.mapToGlobal(point))
 
@@ -1032,8 +1061,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if text is None:
             return
         if not self.validateLabel(text):
-            self.errorMessage('Invalid label',
-                              "Invalid label '{}' with validation type '{}'"
+            self.errorMessage(_('Invalid label'),
+                              _('Invalid label "{}" with validation type "{}"')
                               .format(text, self._config['validate_label']))
             return
         shape.label = text
@@ -1213,7 +1242,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # self.filename = filename
             return True
         except LabelFileError as e:
-            self.errorMessage('Error saving label data', '<b>%s</b>' % e)
+            self.errorMessage(_('Error saving label data'), '<b>%s</b>' % e)
             return False
 
     def copySelectedShape(self):
@@ -1281,8 +1310,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.labelDialog.edit.setText(previous_label)
 
         if text and not self.validateLabel(text):
-            self.errorMessage('Invalid label',
-                              "Invalid label '{}' with validation type '{}'"
+            self.errorMessage(_('Invalid label'),
+                              _('Invalid label "{}" with validation type "{}"')
                               .format(text, self._config['validate_label']))
             text = ''
         if text:
@@ -1375,10 +1404,10 @@ class MainWindow(QtWidgets.QMainWindow):
         filename = str(filename)
         if not QtCore.QFile.exists(filename):
             self.errorMessage(
-                'Error opening file', 'No such file: <b>%s</b>' % filename)
+                _('Error opening file'), _('No such file: <b>%s</b>') % filename)
             return False
         # assumes same name, but json extension
-        self.status("Loading %s..." % osp.basename(str(filename)))
+        self.status(_('Loading %s...') % osp.basename(str(filename)))
         label_file = osp.splitext(filename)[0] + '.json'
         if self.output_dir:
             label_file_without_path = osp.basename(label_file)
@@ -1389,11 +1418,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.labelFile = LabelFile(label_file)
             except LabelFileError as e:
                 self.errorMessage(
-                    'Error opening file',
-                    "<p><b>%s</b></p>"
-                    "<p>Make sure <i>%s</i> is a valid label file."
-                    % (e, label_file))
-                self.status("Error reading %s" % label_file)
+                    _('Error opening file'),
+                    '<p><b>%s</b></p>' % e +
+                    '<p>' + _('Make sure <i>%s</i> is a valid label file.') % label_file
+                )
+                self.status(_('Error reading %s') % label_file)
                 return False
             self.imageData = self.labelFile.imageData
             self.imagePath = osp.join(
@@ -1416,11 +1445,11 @@ class MainWindow(QtWidgets.QMainWindow):
             formats = ['*.{}'.format(fmt.data().decode())
                        for fmt in QtGui.QImageReader.supportedImageFormats()]
             self.errorMessage(
-                'Error opening file',
-                '<p>Make sure <i>{0}</i> is a valid image file.<br/>'
-                'Supported image formats: {1}</p>'
+                _('Error opening file'),
+                '<p>' + _('Make sure <i>{}</i> is a valid image file.').format(filename) + 
+                '<br/>' + _('Supported image formats: {}').format(', '.join(formats)) + '</p>'
                 .format(filename, ','.join(formats)))
-            self.status("Error reading %s" % filename)
+            self.status(_('Error reading %s') % filename)
             return False
         self.image = image
         self.filename = filename
@@ -1441,7 +1470,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.paintCanvas()
         self.addRecentFile(self.filename)
         self.toggleActions(True)
-        self.status("Loaded %s" % osp.basename(str(filename)))
+        self.status(_('Loaded %s') % osp.basename(str(filename)))
         return True
 
     def resizeEvent(self, event):
@@ -1495,6 +1524,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.setValue('line/color', self.lineColor)
         self.settings.setValue('fill/color', self.fillColor)
         self.settings.setValue('recentFiles', self.recentFiles)
+        self.settings.setValue('recentDirs', self.recentDirs)
         # ask the use for where to save the labels
         # self.settings.setValue('window/geometry', self.saveGeometry())
 
@@ -1503,6 +1533,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def loadRecent(self, filename):
         if self.mayContinue():
             self.loadFile(filename)
+
+    def loadRecentDir(self, dirname):
+        if self.mayContinue():
+            self.importDirImages(dirname)
 
     def openPrevImg(self, _value=False):
         keep_prev = self._config['keep_prev']
@@ -1863,6 +1897,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.lastOpenDir = dirpath
         self.filename = None
+
+        self.addRecentDir(dirpath)
 
         # Clear all lists/widgets
         self.fileListWidget.clear()

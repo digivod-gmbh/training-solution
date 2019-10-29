@@ -79,9 +79,11 @@ class WorkerDialog(QtWidgets.QDialog):
         if isinstance(self.progress, QtWidgets.QProgressDialog):
             self.progress.setLabelText(_('Cancelling ...'))
         self.progress.setMaximum(0)
-        self.current_worker_object.abort()
+        if self.current_worker_object:
+            self.current_worker_object.abort()
         worker = Application.getWorker(self.current_worker_idx)
-        worker.wait()
+        if worker:
+            worker.wait()
         self.cancel_progress()
 
     def on_error(self, error_msg, is_custom_msg=False):

@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2019-10-29 09:43+0100\n"
-"PO-Revision-Date: 2019-10-29 09:47+0100\n"
+"POT-Creation-Date: 2019-10-29 10:22+0100\n"
+"PO-Revision-Date: 2019-10-29 10:52+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -89,7 +89,7 @@ msgstr "Ordner öffnen"
 msgid "&Settings"
 msgstr "&Einstellungen"
 
-#: ../labelme\app.py:245 ../labelme\app.py:751
+#: ../labelme\app.py:245 ../labelme\app.py:752
 #: ../labelme\windows\settings.py:19 ../labelme\windows\settings.py:114
 #: ../labelme\windows\settings.py:132 ../labelme\windows\training.py:117
 msgid "Settings"
@@ -217,7 +217,7 @@ msgstr "Modus \"vorherige Annotationen beibehalten\" umschalten"
 
 #: ../labelme\app.py:330
 msgid "Create Rectangle"
-msgstr "Markierung erstellen"
+msgstr "Neue Markierung erstellen"
 
 #: ../labelme\app.py:334
 msgid "Start drawing rectangles"
@@ -382,39 +382,39 @@ msgstr "Form &Füllfarbe"
 msgid "Change the fill color for this specific shape"
 msgstr "Ändern Sie die Füllfarbe für diese Form"
 
-#: ../labelme\app.py:560
+#: ../labelme\app.py:561
 msgid "&File"
 msgstr "&Datei"
 
-#: ../labelme\app.py:561
+#: ../labelme\app.py:562
 msgid "&Edit"
 msgstr "&Bearbeiten"
 
-#: ../labelme\app.py:562
+#: ../labelme\app.py:563
 msgid "&View"
 msgstr "&Ansicht"
 
-#: ../labelme\app.py:563
+#: ../labelme\app.py:564
 msgid "&Project"
 msgstr "&Projekt"
 
-#: ../labelme\app.py:564
+#: ../labelme\app.py:565
 msgid "&Help"
 msgstr "&Hilfe"
 
-#: ../labelme\app.py:565
+#: ../labelme\app.py:566
 msgid "Open &Recent"
 msgstr "Zuletzt geöffnet"
 
-#: ../labelme\app.py:639
+#: ../labelme\app.py:640
 msgid "Tools"
 msgstr "Werkzeuge"
 
-#: ../labelme\app.py:670
+#: ../labelme\app.py:671
 msgid "%s started."
 msgstr "%s gestartet."
 
-#: ../labelme\app.py:675
+#: ../labelme\app.py:676
 msgid ""
 "If `auto_save` argument is True, `output_file` argument is ignored and "
 "output filename is automatically set as IMAGE_BASENAME.json."
@@ -422,64 +422,108 @@ msgstr ""
 "Wenn der Parameter `auto_save` True ist, wird `output_file` ignoriert und "
 "der Dateiname wird automatisch auf IMAGE_BASENAME.json gesetzt."
 
-#: ../labelme\app.py:750
+#: ../labelme\app.py:751
 msgid "No project folder is defined in settings. Please configure one."
 msgstr ""
 "Es ist kein Projektordner in den Einstellungen hinterlegt. Bitte hinterlegen "
 "Sie dort einen Ordner, in dem alle Importe, Datensätze und Trainings "
 "gespeichert werden können."
 
-#: ../labelme\app.py:897
+#: ../labelme\app.py:899
 msgid "An easy-to-use tool for training of object detection networks"
 msgstr ""
 "Ein Werkzeug für das Training von neuronalen Netzen zur Objekterkennung"
 
-#: ../labelme\app.py:898
+#: ../labelme\app.py:900
 msgid "This software uses icons from {}"
 msgstr "Diese Software nutzt Icons von {}"
 
-#: ../labelme\app.py:899
+#: ../labelme\app.py:901
 msgid "Version"
 msgstr "Version"
 
-#: ../labelme\app.py:1679
+#: ../labelme\app.py:1035 ../labelme\app.py:1284
+msgid "Invalid label"
+msgstr "Ungültige Kategorie"
+
+#: ../labelme\app.py:1036 ../labelme\app.py:1285
+msgid "Invalid label \"{}\" with validation type \"{}\""
+msgstr "Ungültige Kategorie \"{}\" mit Validierungstyp \"{}\""
+
+#: ../labelme\app.py:1216
+msgid "Error saving label data"
+msgstr "Fehler beim Speichern der Markierungen"
+
+#: ../labelme\app.py:1378
+msgid "No such file: <b>%s</b>"
+msgstr "Datei nicht gefunden: <b>%s</b>"
+
+#: ../labelme\app.py:1378 ../labelme\app.py:1392 ../labelme\app.py:1419
+msgid "Error opening file"
+msgstr "Fehler beim Öffnen"
+
+#: ../labelme\app.py:1381
+msgid "Loading %s..."
+msgstr "Lade %s..."
+
+#: ../labelme\app.py:1394
+msgid "Make sure <i>%s</i> is a valid label file."
+msgstr "Stellen Sie sicher, dass <i>%s</i> eine gültige Datei ist."
+
+#: ../labelme\app.py:1396 ../labelme\app.py:1423
+msgid "Error reading %s"
+msgstr "Fehler beim Lesen von %s"
+
+#: ../labelme\app.py:1420
+msgid "Make sure <i>{}</i> is a valid image file."
+msgstr "Stellen Sie sicher, dass <i>%s</i> eine gültige Bilddatei ist."
+
+#: ../labelme\app.py:1421
+msgid "Supported image formats: {}"
+msgstr "Unterstützte Bildformate: {}"
+
+#: ../labelme\app.py:1444
+msgid "Loaded %s"
+msgstr "%s geladen"
+
+#: ../labelme\app.py:1682
 msgid "You are about to permanently delete this label file, proceed anyway?"
 msgstr "Wollen Sie diese Markierung(en) wirklich dauerhaft löschen?"
 
-#: ../labelme\app.py:1681 ../labelme\app.py:1769
+#: ../labelme\app.py:1684 ../labelme\app.py:1772
 msgid "Attention"
 msgstr "Achtung"
 
-#: ../labelme\app.py:1688
+#: ../labelme\app.py:1691
 msgid "Label file is removed: {}"
 msgstr "Labeldatei entfernt: {}"
 
-#: ../labelme\app.py:1699
+#: ../labelme\app.py:1702
 msgid "No objects labeled"
 msgstr "Keine Objekte annotiert"
 
-#: ../labelme\app.py:1700
+#: ../labelme\app.py:1703
 msgid "You must label at least one object to save the file."
 msgstr ""
 "Sie müssen mindestens ein Objekt annotieren, um die Datei zu speichern."
 
-#: ../labelme\app.py:1714
+#: ../labelme\app.py:1717
 msgid "Save annotations to \"{}\" before closing?"
 msgstr "Annotationen vor dem Schließen in \"{}\" speichern?"
 
-#: ../labelme\app.py:1717
+#: ../labelme\app.py:1720
 msgid "Save annotations?"
 msgstr "Annotationen speichern?"
 
-#: ../labelme\app.py:1721 ../labelme\windows\settings.py:71
+#: ../labelme\app.py:1724 ../labelme\windows\settings.py:71
 msgid "Save"
 msgstr "Speichern"
 
-#: ../labelme\app.py:1723
+#: ../labelme\app.py:1726
 msgid "Discard"
 msgstr "Verwerfen"
 
-#: ../labelme\app.py:1725 ../labelme\utils\dialog.py:156
+#: ../labelme\app.py:1728 ../labelme\utils\dialog.py:158
 #: ../labelme\windows\export.py:120 ../labelme\windows\image_import.py:38
 #: ../labelme\windows\import_.py:74 ../labelme\windows\merge.py:61
 #: ../labelme\windows\settings.py:73 ../labelme\windows\training.py:274
@@ -488,23 +532,23 @@ msgstr "Verwerfen"
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: ../labelme\app.py:1745 ../labelme\app.py:1778
+#: ../labelme\app.py:1748 ../labelme\app.py:1781
 msgid "Choose line color"
 msgstr "Linienfarbe wählen"
 
-#: ../labelme\app.py:1755 ../labelme\app.py:1787
+#: ../labelme\app.py:1758 ../labelme\app.py:1790
 msgid "Choose fill color"
 msgstr "Füllfarbe wählen"
 
-#: ../labelme\app.py:1767
+#: ../labelme\app.py:1770
 msgid "You are about to permanently delete {} polygons, proceed anyway?"
 msgstr "Wollen Sie {} Markierung(en) wirklich dauerhaft löschen?"
 
-#: ../labelme\app.py:1817
+#: ../labelme\app.py:1820
 msgid "%s - Open Directory"
 msgstr "%s - Ordner öffnen"
 
-#: ../labelme\app.py:1912 ../labelme\windows\image_import.py:73
+#: ../labelme\app.py:1915 ../labelme\windows\image_import.py:73
 msgid "- all labels -"
 msgstr " - Alle Kategorien - "
 
@@ -689,17 +733,17 @@ msgstr "Nein"
 msgid "Cancelling ..."
 msgstr "Abbrechen ..."
 
-#: ../labelme\utils\dialog.py:92 ../labelme\utils\dialog.py:94
+#: ../labelme\utils\dialog.py:94 ../labelme\utils\dialog.py:96
 msgid "Error"
 msgstr "Fehler"
 
-#: ../labelme\utils\dialog.py:94
+#: ../labelme\utils\dialog.py:96
 msgid "An error occured. For further details look into the log files"
 msgstr ""
 "Es ist ein Fehler aufgetreten. Weitere Details können Sie den Logdateien "
 "entnehmen."
 
-#: ../labelme\utils\dialog.py:156
+#: ../labelme\utils\dialog.py:158
 msgid "Initializing ..."
 msgstr "Initialisieren ..."
 
