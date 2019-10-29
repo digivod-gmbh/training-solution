@@ -37,7 +37,10 @@ class Network(WorkerExecutor):
         self.net_name = None
         self.model_file_name = None
         self.network = 'network'
-        self.files = {}
+        self.files = {
+            'architecture': '{}-symbol.json'.format(self.integration_network_name),
+            'weights': '{}-0000.params'.format(self.integration_network_name), 
+        }
 
     def training(self):
         gutils.random.seed(self.args.seed)

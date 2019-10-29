@@ -40,11 +40,7 @@ class NetworkSSD512(Network):
         else:
             raise Exception('Unknown architecture {}'.format(architecture))
         self.network = 'ssd512'
-        self.files = {
-            'architecture': '{}-symbol.json'.format(self.network),
-            'weights': '{}-0000.params'.format(self.network), 
-        }
-
+    
     def getGpuSizes(self):
         # (base size, additional size per batch item)
         if self.architecture_name == 'resnet50':
