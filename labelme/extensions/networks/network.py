@@ -386,14 +386,8 @@ class Network(WorkerExecutor):
         return ctx
 
     def saveTraining(self, network_name, epoch=0):
-        from labelme.config import Training
-        config_file = os.path.join(self.output_folder, Training.config('config_file'))
         # Export weights to .params file
         export_block(os.path.join(self.output_folder, network_name), self.net, epoch=epoch, preprocess=True, layout='HWC', ctx=self.ctx[0])
-        # Update config with last epoch
-        modified_weights_file = self.files['weights'].replace('0000', '{:04d}'.format(epoch))
-        files = [self.files['architecture'], modified_weights_file]
-        self.updateConfig(config_file, files=files)
 
     def inference(self, input_image_file, labels, architecture_file, weights_file, args = None):
         default_args = {
