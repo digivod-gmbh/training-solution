@@ -18,7 +18,7 @@ class ValidationWindow(WorkerDialog):
         super().__init__(parent)
         self.setWindowTitle(_('Validation'))
         self.set_default_window_flags(self)
-        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowModality(Qt.NonModal)
 
         self.inference_windows = []
 

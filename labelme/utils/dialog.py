@@ -165,4 +165,4 @@ class WorkerDialog(QtWidgets.QDialog):
             self.progress = self.custom_progress
 
     def set_default_window_flags(self, obj):
-        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
+        obj.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint) # Qt.WindowMinimizeButtonHint

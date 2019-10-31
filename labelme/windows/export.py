@@ -29,7 +29,7 @@ class ExportWindow(WorkerDialog):
         super().__init__(parent)
         self.setWindowTitle(_('Export dataset'))
         self.set_default_window_flags(self)
-        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowModality(Qt.NonModal)
 
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
