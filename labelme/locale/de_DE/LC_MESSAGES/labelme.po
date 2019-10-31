@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2019-10-29 10:22+0100\n"
-"PO-Revision-Date: 2019-10-31 12:16+0100\n"
+"POT-Creation-Date: 2019-10-31 17:04+0100\n"
+"PO-Revision-Date: 2019-10-31 17:06+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -89,9 +89,10 @@ msgstr "Ordner öffnen"
 msgid "&Settings"
 msgstr "&Einstellungen"
 
-#: ../labelme\app.py:245 ../labelme\app.py:752
-#: ../labelme\windows\settings.py:19 ../labelme\windows\settings.py:114
-#: ../labelme\windows\settings.py:132 ../labelme\windows\training.py:117
+#: ../labelme\app.py:245 ../labelme\app.py:758
+#: ../labelme\windows\settings.py:20 ../labelme\windows\settings.py:115
+#: ../labelme\windows\settings.py:133 ../labelme\windows\settings.py:137
+#: ../labelme\windows\training.py:117
 msgid "Settings"
 msgstr "Einstellungen"
 
@@ -410,19 +411,19 @@ msgstr "&Projekt"
 msgid "&Help"
 msgstr "&Hilfe"
 
-#: ../labelme\app.py:566
+#: ../labelme\app.py:567
 msgid "Open &Recent"
 msgstr "Zuletzt geöffnet"
 
-#: ../labelme\app.py:640
+#: ../labelme\app.py:643
 msgid "Tools"
 msgstr "Werkzeuge"
 
-#: ../labelme\app.py:671
+#: ../labelme\app.py:674
 msgid "%s started."
 msgstr "%s gestartet."
 
-#: ../labelme\app.py:676
+#: ../labelme\app.py:679
 msgid ""
 "If `auto_save` argument is True, `output_file` argument is ignored and "
 "output filename is automatically set as IMAGE_BASENAME.json."
@@ -430,133 +431,133 @@ msgstr ""
 "Wenn der Parameter `auto_save` True ist, wird `output_file` ignoriert und "
 "der Dateiname wird automatisch auf IMAGE_BASENAME.json gesetzt."
 
-#: ../labelme\app.py:751
+#: ../labelme\app.py:757
 msgid "No project folder is defined in settings. Please configure one."
 msgstr ""
 "Es ist kein Projektordner in den Einstellungen hinterlegt. Bitte hinterlegen "
 "Sie dort einen Ordner, in dem alle Importe, Datensätze und Trainings "
 "gespeichert werden können."
 
-#: ../labelme\app.py:899
+#: ../labelme\app.py:912
 msgid "An easy-to-use tool for training of object detection networks"
 msgstr ""
 "Ein Werkzeug für das Training von neuronalen Netzen zur Objekterkennung"
 
-#: ../labelme\app.py:900
+#: ../labelme\app.py:913
 msgid "This software uses icons from {}"
 msgstr "Diese Software nutzt Icons von {}"
 
-#: ../labelme\app.py:901
+#: ../labelme\app.py:914
 msgid "Version"
 msgstr "Version"
 
-#: ../labelme\app.py:1035 ../labelme\app.py:1284
+#: ../labelme\app.py:1064 ../labelme\app.py:1313
 msgid "Invalid label"
 msgstr "Ungültige Kategorie"
 
-#: ../labelme\app.py:1036 ../labelme\app.py:1285
+#: ../labelme\app.py:1065 ../labelme\app.py:1314
 msgid "Invalid label \"{}\" with validation type \"{}\""
 msgstr "Ungültige Kategorie \"{}\" mit Validierungstyp \"{}\""
 
-#: ../labelme\app.py:1216
+#: ../labelme\app.py:1245
 msgid "Error saving label data"
 msgstr "Fehler beim Speichern der Markierungen"
 
-#: ../labelme\app.py:1378
+#: ../labelme\app.py:1407
 msgid "No such file: <b>%s</b>"
 msgstr "Datei nicht gefunden: <b>%s</b>"
 
-#: ../labelme\app.py:1378 ../labelme\app.py:1392 ../labelme\app.py:1419
+#: ../labelme\app.py:1407 ../labelme\app.py:1421 ../labelme\app.py:1448
 msgid "Error opening file"
 msgstr "Fehler beim Öffnen"
 
-#: ../labelme\app.py:1381
+#: ../labelme\app.py:1410
 msgid "Loading %s..."
 msgstr "Lade %s..."
 
-#: ../labelme\app.py:1394
+#: ../labelme\app.py:1423
 msgid "Make sure <i>%s</i> is a valid label file."
 msgstr "Stellen Sie sicher, dass <i>%s</i> eine gültige Datei ist."
 
-#: ../labelme\app.py:1396 ../labelme\app.py:1423
+#: ../labelme\app.py:1425 ../labelme\app.py:1452
 msgid "Error reading %s"
 msgstr "Fehler beim Lesen von %s"
 
-#: ../labelme\app.py:1420
+#: ../labelme\app.py:1449
 msgid "Make sure <i>{}</i> is a valid image file."
 msgstr "Stellen Sie sicher, dass <i>%s</i> eine gültige Bilddatei ist."
 
-#: ../labelme\app.py:1421
+#: ../labelme\app.py:1450
 msgid "Supported image formats: {}"
 msgstr "Unterstützte Bildformate: {}"
 
-#: ../labelme\app.py:1444
+#: ../labelme\app.py:1473
 msgid "Loaded %s"
 msgstr "%s geladen"
 
-#: ../labelme\app.py:1682
+#: ../labelme\app.py:1716
 msgid "You are about to permanently delete this label file, proceed anyway?"
 msgstr "Wollen Sie die Markierungen in diesem Bild wirklich dauerhaft löschen?"
 
-#: ../labelme\app.py:1684 ../labelme\app.py:1772
+#: ../labelme\app.py:1718 ../labelme\app.py:1806
 msgid "Attention"
 msgstr "Achtung"
 
-#: ../labelme\app.py:1691
+#: ../labelme\app.py:1725
 msgid "Label file is removed: {}"
 msgstr "Labeldatei entfernt: {}"
 
-#: ../labelme\app.py:1702
+#: ../labelme\app.py:1736
 msgid "No objects labeled"
 msgstr "Keine Objekte annotiert"
 
-#: ../labelme\app.py:1703
+#: ../labelme\app.py:1737
 msgid "You must label at least one object to save the file."
 msgstr ""
 "Sie müssen mindestens ein Objekt annotieren, um die Datei zu speichern."
 
-#: ../labelme\app.py:1717
+#: ../labelme\app.py:1751
 msgid "Save annotations to \"{}\" before closing?"
 msgstr "Annotationen vor dem Schließen in \"{}\" speichern?"
 
-#: ../labelme\app.py:1720
+#: ../labelme\app.py:1754
 msgid "Save annotations?"
 msgstr "Annotationen speichern?"
 
-#: ../labelme\app.py:1724 ../labelme\windows\settings.py:71
+#: ../labelme\app.py:1758 ../labelme\windows\settings.py:72
 msgid "Save"
 msgstr "Speichern"
 
-#: ../labelme\app.py:1726
+#: ../labelme\app.py:1760
 msgid "Discard"
 msgstr "Verwerfen"
 
-#: ../labelme\app.py:1728 ../labelme\utils\dialog.py:158
+#: ../labelme\app.py:1762 ../labelme\utils\dialog.py:158
 #: ../labelme\windows\export.py:120 ../labelme\windows\image_import.py:38
 #: ../labelme\windows\import_.py:74 ../labelme\windows\merge.py:61
-#: ../labelme\windows\settings.py:73 ../labelme\windows\training.py:274
-#: ../labelme\windows\training_progress.py:111
+#: ../labelme\windows\settings.py:74 ../labelme\windows\training.py:274
+#: ../labelme\windows\training_progress.py:128
 #: ../labelme\windows\validation.py:55
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: ../labelme\app.py:1748 ../labelme\app.py:1781
+#: ../labelme\app.py:1782 ../labelme\app.py:1815
 msgid "Choose line color"
 msgstr "Linienfarbe wählen"
 
-#: ../labelme\app.py:1758 ../labelme\app.py:1790
+#: ../labelme\app.py:1792 ../labelme\app.py:1824
 msgid "Choose fill color"
 msgstr "Füllfarbe wählen"
 
-#: ../labelme\app.py:1770
+#: ../labelme\app.py:1804
 msgid "You are about to permanently delete {} polygons, proceed anyway?"
 msgstr "Wollen Sie {} Markierung(en) wirklich dauerhaft löschen?"
 
-#: ../labelme\app.py:1820
+#: ../labelme\app.py:1854
 msgid "%s - Open Directory"
 msgstr "%s - Ordner öffnen"
 
-#: ../labelme\app.py:1915 ../labelme\windows\image_import.py:73
+#: ../labelme\app.py:1951 ../labelme\windows\image_import.py:73
 msgid "- all labels -"
 msgstr " - Alle Kategorien - "
 
@@ -609,7 +610,7 @@ msgstr "Aufteilung konnte nicht ermittelt werden"
 #: ../labelme\extensions\formats\coco.py:148
 #: ../labelme\extensions\formats\voc.py:137
 #: ../labelme\extensions\formats\voc.py:187
-#: ../labelme\extensions\networks\network.py:54
+#: ../labelme\extensions\networks\network.py:57
 msgid "Loading dataset ..."
 msgstr "Datensatz laden ..."
 
@@ -670,58 +671,58 @@ msgstr "Datensatz schreiben ..."
 msgid "Writing sample ..."
 msgstr "Probe schreiben ..."
 
-#: ../labelme\extensions\networks\network.py:51
+#: ../labelme\extensions\networks\network.py:54
 msgid "Loading model ..."
 msgstr "Modell laden ..."
 
-#: ../labelme\extensions\networks\network.py:57
-#: ../labelme\extensions\networks\network.py:170
+#: ../labelme\extensions\networks\network.py:60
+#: ../labelme\extensions\networks\network.py:173
 msgid "Start training ..."
 msgstr "Training starten ..."
 
-#: ../labelme\extensions\networks\network.py:61
-#: ../labelme\extensions\networks\network.py:176
+#: ../labelme\extensions\networks\network.py:64
+#: ../labelme\extensions\networks\network.py:179
 msgid "Finished training"
 msgstr "Training beendet"
 
-#: ../labelme\extensions\networks\network.py:165
+#: ../labelme\extensions\networks\network.py:168
 msgid "Waiting for first validation ..."
 msgstr "Auf erste Validierung warten …"
 
-#: ../labelme\extensions\networks\network.py:179
+#: ../labelme\extensions\networks\network.py:182
 msgid "Start training on epoch {} ..."
 msgstr "Training in Epoche {} starten ..."
 
-#: ../labelme\extensions\networks\network.py:195
+#: ../labelme\extensions\networks\network.py:198
 msgid "Finished training on epoch {}"
 msgstr "Training in Epoche {} beendet"
 
-#: ../labelme\extensions\networks\network.py:208
+#: ../labelme\extensions\networks\network.py:211
 msgid "Training ..."
 msgstr "Trainieren ..."
 
-#: ../labelme\extensions\networks\network.py:208
+#: ../labelme\extensions\networks\network.py:211
 #: ../labelme\windows\training.py:446
 #: ../labelme\windows\training_progress.py:40
 msgid "Epoch"
 msgstr "Epoche"
 
-#: ../labelme\extensions\networks\network.py:208
+#: ../labelme\extensions\networks\network.py:211
 #: ../labelme\windows\training_progress.py:45
 msgid "Batch"
 msgstr "Stapel"
 
-#: ../labelme\extensions\networks\network.py:208
+#: ../labelme\extensions\networks\network.py:211
 #: ../labelme\windows\training_progress.py:52
 msgid "Speed"
 msgstr "Geschwindigkeit"
 
-#: ../labelme\extensions\networks\network.py:208
-#: ../labelme\windows\training_progress.py:188
+#: ../labelme\extensions\networks\network.py:211
+#: ../labelme\windows\training_progress.py:209
 msgid "samples/sec"
 msgstr "Proben/Sek."
 
-#: ../labelme\extensions\networks\network.py:241
+#: ../labelme\extensions\networks\network.py:244
 msgid "Validating..."
 msgstr "Validieren ..."
 
@@ -759,7 +760,7 @@ msgstr "Initialisieren ..."
 msgid "Images"
 msgstr "Bilder"
 
-#: ../labelme\utils\statistics.py:88 ../labelme\windows\settings.py:60
+#: ../labelme\utils\statistics.py:88 ../labelme\windows\settings.py:61
 msgid "Labels"
 msgstr "Labels"
 
@@ -801,15 +802,14 @@ msgid "Label selection"
 msgstr "Labelauswahl"
 
 #: ../labelme\windows\export.py:84 ../labelme\windows\import_.py:45
-#: ../labelme\windows\merge.py:45 ../labelme\windows\settings.py:27
-#: ../labelme\windows\training.py:178 ../labelme\windows\training.py:184
-#: ../labelme\windows\training.py:247 ../labelme\windows\validation.py:29
-#: ../labelme\windows\validation.py:40
+#: ../labelme\windows\import_.py:58 ../labelme\windows\merge.py:45
+#: ../labelme\windows\settings.py:28 ../labelme\windows\training.py:178
+#: ../labelme\windows\training.py:184 ../labelme\windows\training.py:247
+#: ../labelme\windows\validation.py:29 ../labelme\windows\validation.py:40
 msgid "Browse"
 msgstr "Durchsuchen"
 
-#: ../labelme\windows\export.py:87 ../labelme\windows\import_.py:62
-#: ../labelme\windows\training.py:155
+#: ../labelme\windows\export.py:87 ../labelme\windows\training.py:155
 msgid "Dataset name"
 msgstr "Datensatzname"
 
@@ -838,7 +838,7 @@ msgstr "Export"
 msgid "Please open a folder with images first"
 msgstr "Bitte öffnen Sie zuerst einen Ordner mit Bildern"
 
-#: ../labelme\windows\export.py:195
+#: ../labelme\windows\export.py:195 ../labelme\windows\import_.py:109
 msgid "Select output folder"
 msgstr "Bitte wählen Sie einen Ausgabeordner"
 
@@ -882,7 +882,7 @@ msgstr "Der Ordner \"{}\" konnte nicht erstellt werden"
 msgid "Export format {} could not be found"
 msgstr "Exportformat {} konnte nicht gefunden werden"
 
-#: ../labelme\windows\export.py:324 ../labelme\windows\training_progress.py:333
+#: ../labelme\windows\export.py:324 ../labelme\windows\training_progress.py:354
 msgid "Loading data ..."
 msgstr "Daten laden ..."
 
@@ -908,6 +908,10 @@ msgstr "Datensatz importieren"
 #: ../labelme\windows\import_.py:49
 msgid "Dataset folder"
 msgstr "Datensatz"
+
+#: ../labelme\windows\import_.py:62 ../labelme\windows\training.py:221
+msgid "Output folder"
+msgstr "Ausgabeordner"
 
 #: ../labelme\windows\import_.py:92 ../labelme\windows\training.py:474
 msgid "files"
@@ -941,8 +945,10 @@ msgstr "Importformat {} konnte nicht gefunden werden"
 msgid "Invalid dataset format"
 msgstr "Ungültiges Datensatzformat"
 
-#: ../labelme\windows\inference.py:24 ../labelme\windows\validation.py:19
-#: ../labelme\windows\validation.py:84 ../labelme\windows\validation.py:90
+#: ../labelme\windows\inference.py:24
+#: ../labelme\windows\training_progress.py:99
+#: ../labelme\windows\validation.py:19 ../labelme\windows\validation.py:84
+#: ../labelme\windows\validation.py:90
 msgid "Validation"
 msgstr "Validierung"
 
@@ -950,9 +956,67 @@ msgstr "Validierung"
 msgid "Minimum confidence"
 msgstr "Minimale Wahrscheinlichkeit"
 
-#: ../labelme\windows\inference.py:120
+#: ../labelme\windows\inference.py:53 ../labelme\windows\training.py:217
+msgid "Training name"
+msgstr "Trainingname"
+
+#: ../labelme\windows\inference.py:56 ../labelme\windows\training.py:55
+#: ../labelme\windows\training.py:69
+msgid "Network"
+msgstr "Netz"
+
+#: ../labelme\windows\inference.py:59 ../labelme\windows\training.py:78
+msgid "Epochs"
+msgstr "Epochen"
+
+#: ../labelme\windows\inference.py:62
+msgid "Trained epochs"
+msgstr "Trainierte Epochen"
+
+#: ../labelme\windows\inference.py:65 ../labelme\windows\training.py:100
+msgid "Early stop epochs"
+msgstr "Early-Stop Epochen"
+
+#: ../labelme\windows\inference.py:68 ../labelme\windows\training.py:85
+msgid "Batch size"
+msgstr "Stapelgröße"
+
+#: ../labelme\windows\inference.py:71 ../labelme\windows\training.py:92
+msgid "Learning rate"
+msgstr "Lernrate"
+
+#: ../labelme\windows\inference.py:74
+msgid "Dataset format"
+msgstr "Datensatzformat"
+
+#: ../labelme\windows\inference.py:77
+msgid "Train dataset"
+msgstr "Trainingdaten"
+
+#: ../labelme\windows\inference.py:80 ../labelme\windows\training.py:181
+msgid "Validation dataset"
+msgstr "Validierungsdaten"
+
+#: ../labelme\windows\inference.py:83
+msgid "Network config"
+msgstr "Netzwerkkonfiguration"
+
+#: ../labelme\windows\inference.py:197 ../labelme\windows\inference.py:203
+#: ../labelme\windows\settings.py:37
+msgid "Project folder"
+msgstr "Projektordner"
+
+#: ../labelme\windows\inference.py:215
 msgid "unknown"
 msgstr "unbekannt"
+
+#: ../labelme\windows\inference.py:278
+msgid "Validating ..."
+msgstr "Validieren ..."
+
+#: ../labelme\windows\inference.py:283
+msgid "Finished"
+msgstr "Fertig"
 
 #: ../labelme\windows\merge.py:16 ../labelme\windows\merge.py:124
 #: ../labelme\windows\merge.py:134 ../labelme\windows\merge.py:139
@@ -1007,31 +1071,31 @@ msgstr "Alle Datensätze müssen das gleiche Format haben"
 msgid "Please select at least 2 datasets to merge"
 msgstr "Bitte wählen Sie mindestens 2 Datensätze zum Zussamenführen"
 
-#: ../labelme\windows\settings.py:36
-msgid "Project folder"
-msgstr "Projektordner"
-
-#: ../labelme\windows\settings.py:45
+#: ../labelme\windows\settings.py:46
 msgid "Single-label mode"
 msgstr "Ein-Label-Modus"
 
-#: ../labelme\windows\settings.py:49
+#: ../labelme\windows\settings.py:50
 msgid "Label name"
 msgstr "Labelname"
 
-#: ../labelme\windows\settings.py:78
+#: ../labelme\windows\settings.py:79
 msgid "Select project folder"
 msgstr "Projektordner auswählen"
 
-#: ../labelme\windows\settings.py:113
+#: ../labelme\windows\settings.py:114
 msgid "You must specify a label name in single-label mode"
 msgstr ""
 "Sie müssen einen Labelnamen festlegen, wenn Sie den Ein-Label-Modus "
 "verwenden wollen"
 
-#: ../labelme\windows\settings.py:131
+#: ../labelme\windows\settings.py:132
 msgid "Project folder must not be empty"
 msgstr "Projektordner muss leer sein"
+
+#: ../labelme\windows\settings.py:136
+msgid "Project folder must not contain special chars"
+msgstr "Projektordner darf keine Sonderzeichen (z.B. ä, ö, ü, ß) enthalten"
 
 #: ../labelme\windows\training.py:33 ../labelme\windows\training.py:456
 #: ../labelme\windows\training.py:488 ../labelme\windows\training.py:520
@@ -1040,37 +1104,17 @@ msgstr "Projektordner muss leer sein"
 #: ../labelme\windows\training.py:655 ../labelme\windows\training.py:659
 #: ../labelme\windows\training.py:669 ../labelme\windows\training.py:680
 #: ../labelme\windows\training_progress.py:28
-#: ../labelme\windows\training_progress.py:134
-#: ../labelme\windows\training_progress.py:257
-#: ../labelme\windows\training_progress.py:264
-#: ../labelme\windows\training_progress.py:293
+#: ../labelme\windows\training_progress.py:151
+#: ../labelme\windows\training_progress.py:278
+#: ../labelme\windows\training_progress.py:285
+#: ../labelme\windows\training_progress.py:314
 #: ../labelme\windows\validation.py:43
 msgid "Training"
 msgstr "Training"
 
-#: ../labelme\windows\training.py:55 ../labelme\windows\training.py:69
-msgid "Network"
-msgstr "Netz"
-
 #: ../labelme\windows\training.py:60 ../labelme\windows\training.py:451
 msgid "Resume training"
 msgstr "Training fortführen"
-
-#: ../labelme\windows\training.py:78
-msgid "Epochs"
-msgstr "Epochen"
-
-#: ../labelme\windows\training.py:85
-msgid "Batch size"
-msgstr "Stapelgröße"
-
-#: ../labelme\windows\training.py:92
-msgid "Learning rate"
-msgstr "Lernrate"
-
-#: ../labelme\windows\training.py:100
-msgid "Early stop epochs"
-msgstr "Early-Stop Epochen"
 
 #: ../labelme\windows\training.py:106
 msgid "GPU"
@@ -1097,24 +1141,12 @@ msgid "Training dataset"
 msgstr "Trainingdaten"
 
 #: ../labelme\windows\training.py:181
-msgid "Validation dataset"
-msgstr "Validierungsdaten"
-
-#: ../labelme\windows\training.py:181
 msgid "optional"
 msgstr "optional"
 
 #: ../labelme\windows\training.py:188
 msgid "Use dataset file(s)"
 msgstr "Datensatz"
-
-#: ../labelme\windows\training.py:217
-msgid "Training name"
-msgstr "Trainingname"
-
-#: ../labelme\windows\training.py:221
-msgid "Output folder"
-msgstr "Ausgabeordner"
 
 #: ../labelme\windows\training.py:232
 msgid "Resume previous training"
@@ -1181,7 +1213,7 @@ msgstr ""
 "Der Ordner \"{}\" ist nicht leer. Bitte wählen Sie ein anderes Verzeichnis."
 
 #: ../labelme\windows\training.py:680
-#: ../labelme\windows\training_progress.py:257
+#: ../labelme\windows\training_progress.py:278
 msgid "Network has been trained successfully"
 msgstr "Netz wurde erfolgreich trainiert"
 
@@ -1205,11 +1237,7 @@ msgstr "Details"
 msgid "Metric"
 msgstr "Metrik"
 
-#: ../labelme\windows\training_progress.py:97
-msgid "Last validation"
-msgstr "Letzte Validierung"
-
-#: ../labelme\windows\training_progress.py:133
+#: ../labelme\windows\training_progress.py:150
 msgid ""
 "Are you sure to cancel to current training session? The last completed epoch "
 "will be saved. Remember: Shorter training time leeds to worse results."
@@ -1217,7 +1245,7 @@ msgstr ""
 "Wollen Sie die aktuelle Trainingsitzung wirklich abbrechen? Die letzte "
 "vollständige Epoche wird gespeichert."
 
-#: ../labelme\windows\training_progress.py:264
+#: ../labelme\windows\training_progress.py:285
 msgid ""
 "The GPU ran out of memory. Please close other applications that occupy GPU "
 "memory and try to decrease the batch size for training. The current batch "
@@ -1227,7 +1255,7 @@ msgstr ""
 "Anwendungen, die Speicher auf der GPU verbrauchen, und versuchen Sie die "
 "Stapelgröße für das Training zu reduzieren. Die aktuelle Stapelgröße war {}."
 
-#: ../labelme\windows\training_progress.py:293
+#: ../labelme\windows\training_progress.py:314
 msgid "Network {} could not be found"
 msgstr "Netz {} konnte nicht gefunden werden"
 
@@ -1254,6 +1282,9 @@ msgstr "Bitte wählen Sie ein gültiges Eingabebild"
 #: ../labelme\windows\validation.py:90
 msgid "Please select a valid training directory"
 msgstr "Bitte wählen Sie einen gültigen Trainingordner"
+
+#~ msgid "Last validation"
+#~ msgstr "Letzte Validierung"
 
 #~ msgid "&Open"
 #~ msgstr "Öffnen"

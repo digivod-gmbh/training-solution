@@ -133,7 +133,7 @@ class SettingsWindow(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(self, _('Settings'), msg)
             return False
         if contains_special_chars(project_folder, is_path=True):
-            msg = _('Project folder must not contain special chars like ä, ö, ü, ß')
+            msg = _('Project folder must not contain special chars')
             QtWidgets.QMessageBox.warning(self, _('Settings'), msg)
             return False
         return True
