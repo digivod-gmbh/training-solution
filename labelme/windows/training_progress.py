@@ -91,13 +91,30 @@ class TrainingProgressWindow(WorkerDialog):
         self.metric_group.setLayout(self.metric_group_layout)
         layout.addWidget(self.metric_group)
 
+        large_font = QtGui.QFont('Arial', 13, QtGui.QFont.Normal)
+
         self.validation_labels = []
         self.validation_values = []
         self.validation_group = QtWidgets.QGroupBox()
-        self.validation_group.setTitle(_('Last validation'))
+        self.validation_group.setTitle(_('Validation'))
+        self.validation_group.setFont(large_font)
+        self.validation_group.setStyleSheet('background-color:#f6f6f6;')
         self.validation_group_layout = QtWidgets.QGridLayout()
         self.validation_group.setLayout(self.validation_group_layout)
         layout.addWidget(self.validation_group)
+
+        # # Colors
+        # self.setAutoFillBackground(True)
+        # color = QtGui.QColor('#f0f0f0')
+        # p = self.palette()
+        # p.setColor(self.backgroundRole(), color)
+        # self.setPalette(p)
+
+        # self.validation_group.setAutoFillBackground(True)
+        # color = QtGui.QColor('#fafafa')
+        # p = self.validation_group.palette()
+        # p.setColor(self.validation_group.backgroundRole(), color)
+        # self.validation_group.setPalette(p)
 
         self.image_label = QtWidgets.QLabel()
         layout.addWidget(self.image_label)
@@ -147,11 +164,15 @@ class TrainingProgressWindow(WorkerDialog):
                 num_new_items = len(data.validation.items())
                 num_old_items = len(self.validation_values)
 
+                large_font = QtGui.QFont('Arial', 10, QtGui.QFont.Normal)
+
                 row = 0
                 for item in data.validation.items():
                     if row >= num_old_items:
                         label = QtWidgets.QLabel(str(item[0]))
+                        label.setFont(large_font)
                         value = QtWidgets.QLabel('-')
+                        value.setFont(large_font)
                         value.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
                         self.validation_group_layout.addWidget(label, row, 0)
                         self.validation_group_layout.addWidget(value, row, 1)
