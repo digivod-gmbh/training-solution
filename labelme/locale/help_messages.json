@@ -18,6 +18,8 @@
     "Validation_TrainingFolder": "Select a folder in which a network has previously been trained with this software. Usually the trained nets are located under \"<i>Project folder</i>/trainings/<i>Training name</i>\".",
     
     "Inference_Confidence": "The confidence provides information on how reliably the network has detected an object. Under difficult conditions, the confidence of detected objects often decreases.",
+    "Inference_NetworkConfig": "The network configuration contains all parameters that have been used to train the network.",
+    "Inference_Config_Epochs": "The number of actually trained epochs may be less than the predetermined number of epochs when the <i>early-stop parameter</i> is set. In this case, the training can be stopped as soon as the accuracy has not improved several epochs in a row.",
     
     "Settings_ProjectFolder": "In the project folder, all files such as images, datasets and trained networks are stored. The subfolders <i>datasets, imports, trainings</i> are automatically created in the project folder.",
     "Settings_SingleLabelMode": "In single-label mode, each drawn polygon or rectangle is given the same label. This speeds up the work when annotating a dataset in which only one label is represented anyway.",

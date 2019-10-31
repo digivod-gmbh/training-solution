@@ -49,10 +49,64 @@ class InferenceWindow(WorkerDialog):
         layout.addWidget(self.confidence_group)
         self.confidence_group.hide()
 
-        layout.addStretch()
+        # Network config
+        config_training_name_label = QtWidgets.QLabel(_('Training name'))
+        self.config_training_name_value = QtWidgets.QLabel('-')
 
-        self.progress_bar = QtWidgets.QProgressBar()
-        layout.addWidget(self.progress_bar)
+        config_network_label = QtWidgets.QLabel(_('Network'))
+        self.config_network_value = QtWidgets.QLabel('-')
+
+        config_epochs_label = QtWidgets.QLabel(_('Epochs'))
+        self.config_epochs_value = QtWidgets.QLabel('-')
+
+        config_trained_epochs_label = HelpLabel('Inference_Config_Epochs', _('Trained epochs'))
+        self.config_trained_epochs_value = QtWidgets.QLabel('-')
+
+        config_early_stop_label = QtWidgets.QLabel(_('Early stop epochs'))
+        self.config_early_stop_value = QtWidgets.QLabel('-')
+
+        config_batch_size_label = QtWidgets.QLabel(_('Batch size'))
+        self.config_batch_size_value = QtWidgets.QLabel('-')
+
+        config_learning_rate_label = QtWidgets.QLabel(_('Learning rate'))
+        self.config_learning_rate_value = QtWidgets.QLabel('-')
+
+        config_dataset_format_label = QtWidgets.QLabel(_('Dataset format'))
+        self.config_dataset_format_value = QtWidgets.QLabel('-')
+
+        config_dataset_train_label = QtWidgets.QLabel(_('Train dataset'))
+        self.config_dataset_train_value = QtWidgets.QLabel('-')
+
+        config_dataset_val_label = QtWidgets.QLabel(_('Validation dataset'))
+        self.config_dataset_val_value = QtWidgets.QLabel('-')
+
+        config_group = HelpGroupBox('Inference_NetworkConfig', _('Network config'))
+        config_group_layout = QtWidgets.QGridLayout()
+        config_group.widget.setLayout(config_group_layout)
+        config_group_layout.addWidget(config_training_name_label, 0, 0)
+        config_group_layout.addWidget(self.config_training_name_value, 0, 1)
+        config_group_layout.addWidget(config_network_label, 1, 0)
+        config_group_layout.addWidget(self.config_network_value, 1, 1)
+        config_group_layout.addWidget(config_epochs_label, 2, 0)
+        config_group_layout.addWidget(self.config_epochs_value, 2, 1)
+        config_group_layout.addWidget(config_trained_epochs_label, 3, 0)
+        config_group_layout.addWidget(self.config_trained_epochs_value, 3, 1)
+        config_group_layout.addWidget(config_early_stop_label, 4, 0)
+        config_group_layout.addWidget(self.config_early_stop_value, 4, 1)
+        config_group_layout.addWidget(config_batch_size_label, 5, 0)
+        config_group_layout.addWidget(self.config_batch_size_value, 5, 1)
+        config_group_layout.addWidget(config_learning_rate_label, 6, 0)
+        config_group_layout.addWidget(self.config_learning_rate_value, 6, 1)
+        config_group_layout.addWidget(config_dataset_format_label, 7, 0)
+        config_group_layout.addWidget(self.config_dataset_format_value, 7, 1)
+        config_group_layout.addWidget(config_dataset_train_label, 8, 0)
+        config_group_layout.addWidget(self.config_dataset_train_value, 8, 1)
+        config_group_layout.addWidget(config_dataset_val_label, 9, 0)
+        config_group_layout.addWidget(self.config_dataset_val_value, 9, 1)
+        
+        layout.addWidget(config_group)
+
+        layout.addStretch()
 
     def get_scaled_size(self, w, h, max_size):
         if w > max_size or h > max_size:
@@ -80,9 +134,6 @@ class InferenceWindow(WorkerDialog):
         pen.setWidth(2)
         self.painter.setPen(pen)
 
-        self.progress_bar.setRange(0, 4)
-        self.progress_bar.setValue(0)
-
         # Data
         data = {
             'training_folder': training_folder,
@@ -92,13 +143,12 @@ class InferenceWindow(WorkerDialog):
 
         # Execution
         executor = InferenceExecutor(data)
-        self.run_thread(executor, self.finish_inference, custom_progress=self.progress_bar)
+        self.run_thread(executor, self.finish_inference)
 
     def finish_inference(self):
         data = self.data
         logger.debug(data)
         self.confidence_group.show()
-        self.progress_bar.setValue(4)
         self.update_results()
 
     def reset_image(self):
@@ -107,6 +157,51 @@ class InferenceWindow(WorkerDialog):
         w, h = self.get_scaled_size(pixmap.width(), pixmap.height(), config['image_max_size'])
         scaled_pixmap = pixmap.scaled(w, h)
         self.painter.drawPixmap(0, 0, scaled_pixmap)
+
+    def on_data(self, data):
+        super().on_data(data)
+        if 'network_config' in data:
+            self.update_config_info(data['network_config'])
+
+    def update_config_info(self, config):
+        if 'network' in config:
+            network_name = config['network']
+            if network_name in Training.config('networks'):
+                network_name = Training.config('networks')[network_name]
+            self.config_network_value.setText(network_name)
+        if 'training_name' in config['args']:
+            self.config_training_name_value.setText(str(config['args']['training_name']))
+        if 'epochs' in config['args']:
+            self.config_epochs_value.setText(str(config['args']['epochs']))
+        if 'last_epoch' in config:
+            self.config_trained_epochs_value.setText(str(config['last_epoch']))
+        if 'early_stop_epochs' in config['args']:
+            self.config_early_stop_value.setText(str(config['args']['early_stop_epochs']))
+        if 'batch_size' in config['args']:
+            self.config_batch_size_value.setText(str(config['args']['batch_size']))
+        if 'learning_rate' in config['args']:
+            self.config_learning_rate_value.setText(str(config['args']['learning_rate']))
+        if 'dataset' in config:
+            dataset_format = config['dataset']
+            if dataset_format in Export.config('formats'):
+                dataset_format = Export.config('formats')[dataset_format]
+            self.config_dataset_format_value.setText(dataset_format)
+
+        project_folder = self.parent.parent.settings.value('settings/project/folder', '')
+        logger.debug('Restored value "{}" for setting settings/project/folder'.format(project_folder))
+
+        if 'train_dataset' in config['args']:
+            train_dataset = config['args']['train_dataset']
+            prefix = os.path.commonprefix([train_dataset, project_folder])
+            if len(prefix) >= len(project_folder):
+                train_dataset = _('Project folder') + train_dataset[len(prefix):]
+            self.config_dataset_train_value.setText(train_dataset)
+        if 'validate_dataset' in config['args']:
+            validate_dataset = config['args']['validate_dataset']
+            prefix = os.path.commonprefix([validate_dataset, project_folder])
+            if len(prefix) >= len(project_folder):
+                validate_dataset = _('Project folder') + validate_dataset[len(prefix):]
+            self.config_dataset_val_value.setText(validate_dataset)
 
     def update_results(self):
         data = Map(self.data)
@@ -160,6 +255,7 @@ class InferenceExecutor(WorkerExecutor):
         network.setThread(self.thread)
 
         network_config = network.loadConfig(config_file)
+        self.thread.data.emit({'network_config': network_config})
 
         architecture_file = ''
         weights_file = ''
@@ -179,6 +275,10 @@ class InferenceExecutor(WorkerExecutor):
             'labels': network_config.labels,
         })
 
+        self.thread.update.emit(_('Validating ...'), 1, 3)
+
         network.inference(inference_data.input_image_file, inference_data.labels, 
             inference_data.architecture_file, inference_data.weights_file, args = None)
+
+        self.thread.update.emit(_('Finished'), 3, 3)
         

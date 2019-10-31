@@ -18,6 +18,8 @@
     "Validation_TrainingFolder": "Wählen Sie hier einen Ordner aus, in dem zuvor ein Netz mit dieser Software trainiert worden ist. Überlicherweise liegen die trainierten Netze unter \"<i>Projektordner</i>/trainings/<i>Trainingname</i>\".",
     
     "Inference_Confidence": "Die Wahrscheinlichkeit gibt Aufschluss darüber, wie sicher das Netz ein Objekt erkannt hat. Unter schwierigen Bedingungen sinkt häufig die Wahrscheinlichkeit erkannter Objekte.",
+    "Inference_NetworkConfig": "Die Netzwerk-Konfiguration enthält alle Parameter, die zum Training des Netzwerks genutzt worden sind.",
+    "Inference_Config_Epochs": "Die Anzahl der tatsächlich trainierten Epochen kann kleiner sein, als die vorher festgelegte Zahl an Epochen, wenn der <i>Early-Stop-Parameter</i> gesetzt worden ist. In diesem Fall kann das Training beendet werden, sobald die Genauigkeit sich mehrere Epochen nacheinander nicht verbessert hat.",
     
     "Settings_ProjectFolder": "Im Projektordner werden alle Dateien wie Bilder, Datensätze und trainierte Netze gespeichert. Die Unterordner <i>datasets, imports, trainings</i> werden automatisch im Projektordner angelegt.",
     "Settings_SingleLabelMode": "Im Ein-Label-Modus wird jedes gezeichnete Polygon oder Rechteck mit dem gleichen Label versehen. Dies beschleunigt die Arbeit beim Annotieren eines Datensatzes, in dem ohnehin nur ein Label vertreten ist.",
