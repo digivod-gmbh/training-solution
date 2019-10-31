@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2019-10-29 10:22+0100\n"
-"PO-Revision-Date: 2019-10-29 10:52+0100\n"
+"PO-Revision-Date: 2019-10-31 12:03+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -161,7 +161,7 @@ msgstr "Markierung(en) in einer anderen Datei speichern"
 
 #: ../labelme\app.py:279
 msgid "&Delete File"
-msgstr "&Alles löschen"
+msgstr "&Alles im Bild löschen"
 
 #: ../labelme\app.py:283
 msgid "Delete current label file"
@@ -488,7 +488,7 @@ msgstr "%s geladen"
 
 #: ../labelme\app.py:1682
 msgid "You are about to permanently delete this label file, proceed anyway?"
-msgstr "Wollen Sie diese Markierung(en) wirklich dauerhaft löschen?"
+msgstr "Wollen Sie die Markierungen in diesem Bild wirklich dauerhaft löschen?"
 
 #: ../labelme\app.py:1684 ../labelme\app.py:1772
 msgid "Attention"
