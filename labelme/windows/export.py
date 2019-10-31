@@ -142,26 +142,26 @@ class ExportWindow(WorkerDialog):
             return False
         return True
 
-    def get_label_files_from_data_folder(self, data_folder, selected_labels = [], get_all_labels = False):
-        label_files = []
-        for root, dirs, files in os.walk(data_folder):
-            for f in files:
-                if LabelFile.is_label_file(f):
-                    full_path = os.path.normpath(os.path.join(data_folder, f))
-                    try:
-                        lf = LabelFile(full_path)
-                    except:
-                        continue
-                    if get_all_labels:
-                        label_files.append(full_path)
-                        continue
-                    labels = [s[0] for s in lf.shapes]
-                    intersect_labels = set(labels) & set(selected_labels)
-                    if len(intersect_labels) > 0:
-                        label_files.append(full_path)
-        num_label_files = len(label_files)
-        logger.debug('Found {} label files in dataset folder "{}"'.format(num_label_files, data_folder))
-        return label_files, num_label_files
+    # def get_label_files_from_data_folder(self, data_folder, selected_labels = [], get_all_labels = False):
+    #     label_files = []
+    #     for root, dirs, files in os.walk(data_folder):
+    #         for f in files:
+    #             if LabelFile.is_label_file(f):
+    #                 full_path = os.path.normpath(os.path.join(root, f))
+    #                 try:
+    #                     lf = LabelFile(full_path)
+    #                 except:
+    #                     continue
+    #                 if get_all_labels:
+    #                     label_files.append(full_path)
+    #                     continue
+    #                 labels = [s[0] for s in lf.shapes]
+    #                 intersect_labels = set(labels) & set(selected_labels)
+    #                 if len(intersect_labels) > 0:
+    #                     label_files.append(full_path)
+    #     num_label_files = len(label_files)
+    #     logger.debug('Found {} label files in dataset folder "{}"'.format(num_label_files, data_folder))
+    #     return label_files, num_label_files
 
     def cancel_btn_clicked(self):
         self.close()

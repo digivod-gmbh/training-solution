@@ -216,7 +216,7 @@ class FormatCoco(DatasetFormat):
                 num_samples = num_samples + len(samples)
                 base = replace_special_chars(os.path.splitext(image)[0])
                 out_img_file = os.path.join(image_folder, base + '.jpg')
-                img_file = os.path.join(input_folder, os.path.basename(image))
+                img_file = os.path.normpath(os.path.join(input_folder, image))
                 image = PIL.Image.open(img_file)
                 img = np.asarray(image)
                 if not os.path.exists(out_img_file):

@@ -244,7 +244,7 @@ class FormatVoc(DatasetFormat):
                 base = replace_special_chars(os.path.splitext(image)[0])
                 out_img_file = os.path.join(output_folder, FormatVoc._directories['images'], base + '.jpg')
                 out_xml_file = os.path.join(output_folder, FormatVoc._directories['annotations'], base + '.xml')
-                img_file = os.path.join(input_folder, os.path.basename(image))
+                img_file = os.path.normpath(os.path.join(input_folder, image))
                 image = PIL.Image.open(img_file)
                 img = np.asarray(image)
                 if not os.path.exists(out_img_file):

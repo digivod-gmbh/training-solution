@@ -97,7 +97,7 @@ class IntermediateFormat(WorkerExecutor):
         for root, dirs, files in os.walk(data_folder):
             for f in files:
                 if LabelFile.is_label_file(f):
-                    full_path = os.path.normpath(os.path.join(data_folder, f))
+                    full_path = os.path.normpath(os.path.join(root, f))
                     label_files.append(full_path)
         return label_files
 
@@ -106,17 +106,19 @@ class IntermediateFormat(WorkerExecutor):
         label_files = self.getLabelFilesFromDataFolder(data_folder)
         for label_file in label_files:
             self.checkAborted()
-            self.addFromLabelFile(label_file)
+            self.addFromLabelFile(label_file, root_folder=data_folder)
         if shuffle:
             for label_samples in self.samplesPerLabel:
                 self.checkAborted()
                 random.shuffle(self.samplesPerLabel[label_samples])
 
-    def addFromLabelFile(self, label_file):
+    def addFromLabelFile(self, label_file, root_folder):
         lf = LabelFile(label_file)
         image_size = (lf.imageHeight, lf.imageWidth)
+        image_dir = os.path.dirname(os.path.relpath(label_file, root_folder))
         for s in lf.shapes:
-            self.addSample(lf.imagePath, image_size, s[0], s[1], s[4])
+            image_path = os.path.normpath(os.path.join(image_dir, lf.imagePath))
+            self.addSample(image_path, image_size, s[0], s[1], s[4])
 
     def toLabelFiles(self):
         samples_per_image = self.getSamplesPerImage()
