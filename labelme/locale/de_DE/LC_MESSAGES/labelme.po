@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2019-10-29 10:22+0100\n"
-"PO-Revision-Date: 2019-10-31 12:03+0100\n"
+"PO-Revision-Date: 2019-10-31 12:16+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -161,7 +161,9 @@ msgstr "Markierung(en) in einer anderen Datei speichern"
 
 #: ../labelme\app.py:279
 msgid "&Delete File"
-msgstr "&Alles im Bild löschen"
+msgstr ""
+"&Alles im\n"
+"Bild löschen"
 
 #: ../labelme\app.py:283
 msgid "Delete current label file"
@@ -217,7 +219,9 @@ msgstr "Modus \"vorherige Annotationen beibehalten\" umschalten"
 
 #: ../labelme\app.py:330
 msgid "Create Rectangle"
-msgstr "Neue Markierung erstellen"
+msgstr ""
+"Neue Markierung\n"
+"erstellen"
 
 #: ../labelme\app.py:334
 msgid "Start drawing rectangles"
@@ -241,7 +245,9 @@ msgstr "Wählen Sie die Markierung aus, auf die Sie geklickt haben"
 
 #: ../labelme\app.py:376
 msgid "Delete Polygons"
-msgstr "Markierung(en) löschen"
+msgstr ""
+"Markierung(en)\n"
+"löschen"
 
 #: ../labelme\app.py:378
 msgid "Delete the selected polygons"
@@ -249,7 +255,9 @@ msgstr "Ausgewählte Markierung löschen"
 
 #: ../labelme\app.py:379
 msgid "Duplicate Polygons"
-msgstr "Markierung(en) duplizieren"
+msgstr ""
+"Markierung(en)\n"
+"duplizieren"
 
 #: ../labelme\app.py:381
 msgid "Create a duplicate of the selected polygons"
@@ -324,7 +332,7 @@ msgstr ""
 
 #: ../labelme\app.py:430
 msgid "Zoom &In"
-msgstr "Zoom &+"
+msgstr "Zoom +"
 
 #: ../labelme\app.py:432
 msgid "Increase zoom level"
@@ -332,7 +340,7 @@ msgstr "Zoomlevel erhöhen"
 
 #: ../labelme\app.py:433
 msgid "&Zoom Out"
-msgstr "Zoom &-"
+msgstr "Zoom -"
 
 #: ../labelme\app.py:436
 msgid "&Original size"
@@ -344,7 +352,7 @@ msgstr "Auf Originalgröße zoomen"
 
 #: ../labelme\app.py:440
 msgid "&Fit Window"
-msgstr "Zoom Fenster"
+msgstr "Fenstergröße"
 
 #: ../labelme\app.py:442
 msgid "Zoom follows window size"
