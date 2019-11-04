@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2019-10-31 17:04+0100\n"
-"PO-Revision-Date: 2019-10-31 17:06+0100\n"
+"POT-Creation-Date: 2019-11-04 09:43+0100\n"
+"PO-Revision-Date: 2019-11-04 09:46+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -17,15 +17,15 @@ msgstr ""
 "X-Generator: Poedit 2.2.1\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../labelme\app.py:116
+#: ../labelme\app.py:117
 msgid "Statistics"
 msgstr "Statistik"
 
-#: ../labelme\app.py:131
+#: ../labelme\app.py:132
 msgid "Polygon Labels"
 msgstr "Markierungen"
 
-#: ../labelme\app.py:137
+#: ../labelme\app.py:138
 msgid ""
 "Select label to start annotating for it. Double-click to filter by label. "
 "Press 'Esc' to deselect."
@@ -33,397 +33,397 @@ msgstr ""
 "Wählen Sie eine Kategorie, um mit der Markierung dafür zu beginnen. Drücken "
 "Sie 'Esc' zum Abwählen."
 
-#: ../labelme\app.py:144
+#: ../labelme\app.py:145
 msgid "Label List"
 msgstr "Kategorien"
 
-#: ../labelme\app.py:149
+#: ../labelme\app.py:150
 msgid "Search: "
 msgstr "Suche:"
 
-#: ../labelme\app.py:151
+#: ../labelme\app.py:152
 msgid "- all images -"
 msgstr "- Alle Bilder - "
 
-#: ../labelme\app.py:152 ../labelme\utils\statistics.py:84
+#: ../labelme\app.py:153 ../labelme\utils\statistics.py:84
 msgid "Labeled"
 msgstr "Mit Markierung(en)"
 
-#: ../labelme\app.py:153 ../labelme\utils\statistics.py:86
+#: ../labelme\app.py:154 ../labelme\utils\statistics.py:86
 msgid "Unlabeled"
 msgstr "Ohne Markierung(en)"
 
-#: ../labelme\app.py:157
+#: ../labelme\app.py:158
 msgid "Reset"
 msgstr "Zurücksetzen"
 
-#: ../labelme\app.py:167
+#: ../labelme\app.py:168
 msgid "Search Filename"
 msgstr "Datei suchen"
 
-#: ../labelme\app.py:171
+#: ../labelme\app.py:174
 msgid "Search"
 msgstr "Suchen"
 
-#: ../labelme\app.py:187
+#: ../labelme\app.py:190
 msgid "File List"
 msgstr "Dateien"
 
-#: ../labelme\app.py:238
+#: ../labelme\app.py:241
 msgid "&Quit"
 msgstr "Beenden"
 
-#: ../labelme\app.py:239
+#: ../labelme\app.py:242
 msgid "Quit application"
 msgstr "Beenden"
 
-#: ../labelme\app.py:242
+#: ../labelme\app.py:245
 msgid "&Open Dir"
 msgstr "&Ordner öffnen"
 
-#: ../labelme\app.py:243
+#: ../labelme\app.py:246
 msgid "Open Dir"
 msgstr "Ordner öffnen"
 
-#: ../labelme\app.py:244
+#: ../labelme\app.py:247
 msgid "&Settings"
 msgstr "&Einstellungen"
 
-#: ../labelme\app.py:245 ../labelme\app.py:758
+#: ../labelme\app.py:248 ../labelme\app.py:761
 #: ../labelme\windows\settings.py:20 ../labelme\windows\settings.py:115
 #: ../labelme\windows\settings.py:133 ../labelme\windows\settings.py:137
 #: ../labelme\windows\training.py:117
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: ../labelme\app.py:246
+#: ../labelme\app.py:249
 msgid "&Import"
 msgstr "&Import"
 
-#: ../labelme\app.py:247
+#: ../labelme\app.py:250
 msgid "Import images"
 msgstr "Bilder importieren"
 
-#: ../labelme\app.py:248
+#: ../labelme\app.py:251
 msgid "&Export"
 msgstr "&Export"
 
-#: ../labelme\app.py:249
+#: ../labelme\app.py:252
 msgid "Export images"
 msgstr "Bilder exportieren"
 
-#: ../labelme\app.py:252
+#: ../labelme\app.py:255
 msgid "&Training"
 msgstr "&Training"
 
-#: ../labelme\app.py:253
+#: ../labelme\app.py:256
 msgid "Train a network"
 msgstr "Ein neuronales Netz trainieren"
 
-#: ../labelme\app.py:254
+#: ../labelme\app.py:257
 msgid "&Validation"
 msgstr "&Validierung"
 
-#: ../labelme\app.py:255
+#: ../labelme\app.py:258
 msgid "Validate training results"
 msgstr "Trainingergebnisse validieren"
 
-#: ../labelme\app.py:257
+#: ../labelme\app.py:260
 msgid "&Next Image"
 msgstr "&Nächstes Bild"
 
-#: ../labelme\app.py:261
+#: ../labelme\app.py:264
 msgid "Open next (hold Ctl+Shift to copy labels)"
 msgstr "Nächstes öffnen (Strg+Shift halten um Markierung(en) zu kopieren)"
 
-#: ../labelme\app.py:265
+#: ../labelme\app.py:268
 msgid "&Prev Image"
 msgstr "&Vorheriges Bild"
 
-#: ../labelme\app.py:269
+#: ../labelme\app.py:272
 msgid "Open prev (hold Ctl+Shift to copy labels)"
 msgstr "Vorheriges öffnen (Strg+Shift halten um Markierung(en) zu kopieren)"
 
-#: ../labelme\app.py:272
+#: ../labelme\app.py:275
 msgid "&Save"
 msgstr "&Speichern"
 
-#: ../labelme\app.py:273
+#: ../labelme\app.py:276
 msgid "Save labels to file"
 msgstr "Markierung(en) in Datei speichern"
 
-#: ../labelme\app.py:274
+#: ../labelme\app.py:277
 msgid "&Save As"
 msgstr "&Speichern unter"
 
-#: ../labelme\app.py:275
+#: ../labelme\app.py:278
 msgid "Save labels to a different file"
 msgstr "Markierung(en) in einer anderen Datei speichern"
 
-#: ../labelme\app.py:279
+#: ../labelme\app.py:282
 msgid "&Delete File"
 msgstr ""
 "&Alles im\n"
 "Bild löschen"
 
-#: ../labelme\app.py:283
+#: ../labelme\app.py:286
 msgid "Delete current label file"
 msgstr "Alle Markierungen im aktuellen Bild löschen"
 
-#: ../labelme\app.py:287
+#: ../labelme\app.py:290
 msgid "&Change Output Dir"
 msgstr "&Ausgabeordner wechseln"
 
-#: ../labelme\app.py:291
+#: ../labelme\app.py:294
 msgid "Change where annotations are loaded/saved"
 msgstr "Speicherort der Annotationen ändern"
 
-#: ../labelme\app.py:295
+#: ../labelme\app.py:298
 msgid "Save &Automatically"
 msgstr "Automatisch &Speichern"
 
-#: ../labelme\app.py:298
+#: ../labelme\app.py:301
 msgid "Save automatically"
 msgstr "Automatisch speichern"
 
-#: ../labelme\app.py:304
+#: ../labelme\app.py:307
 msgid "&Close"
 msgstr "&Schließen"
 
-#: ../labelme\app.py:305
+#: ../labelme\app.py:308
 msgid "Close current file"
 msgstr "Aktuelle Datei schließen"
 
-#: ../labelme\app.py:306
+#: ../labelme\app.py:309
 msgid "Polygon &Line Color"
 msgstr "Markierung &Linienfarbe"
 
-#: ../labelme\app.py:308
+#: ../labelme\app.py:311
 msgid "Choose polygon line color"
 msgstr "Wähle Markierung Linienfarbe"
 
-#: ../labelme\app.py:309
+#: ../labelme\app.py:312
 msgid "Polygon &Fill Color"
 msgstr "Markierung &Füllfarbe"
 
-#: ../labelme\app.py:311
+#: ../labelme\app.py:314
 msgid "Choose polygon fill color"
 msgstr "Wähle Markierung Füllfarbe"
 
-#: ../labelme\app.py:314
+#: ../labelme\app.py:317
 msgid "Keep Previous Annotation"
 msgstr "Vorherige Annotationen beibehalten"
 
-#: ../labelme\app.py:317
+#: ../labelme\app.py:320
 msgid "Toggle \"keep pevious annotation\" mode"
 msgstr "Modus \"vorherige Annotationen beibehalten\" umschalten"
 
-#: ../labelme\app.py:330
+#: ../labelme\app.py:333
 msgid "Create Rectangle"
 msgstr ""
 "Neue Markierung\n"
 "erstellen"
 
-#: ../labelme\app.py:334
+#: ../labelme\app.py:337
 msgid "Start drawing rectangles"
 msgstr "Wechselt in den Markierungsmodus, in dem Sie Rechtecke zeichnen können"
 
-#: ../labelme\app.py:369
+#: ../labelme\app.py:372
 msgid "Edit mode"
 msgstr "Bearbeitungsmodus"
 
-#: ../labelme\app.py:371
+#: ../labelme\app.py:374
 msgid "Move and edit the selected polygons"
 msgstr "Markierung(en) auswählen, bewegen und bearbeiten"
 
-#: ../labelme\app.py:372
+#: ../labelme\app.py:375
 msgid "Select polygon"
 msgstr "Markierung auswählen"
 
-#: ../labelme\app.py:374
+#: ../labelme\app.py:377
 msgid "Select the polygon you right-clicked on"
 msgstr "Wählen Sie die Markierung aus, auf die Sie geklickt haben"
 
-#: ../labelme\app.py:376
+#: ../labelme\app.py:379
 msgid "Delete Polygons"
 msgstr ""
 "Markierung(en)\n"
 "löschen"
 
-#: ../labelme\app.py:378
+#: ../labelme\app.py:381
 msgid "Delete the selected polygons"
 msgstr "Ausgewählte Markierung löschen"
 
-#: ../labelme\app.py:379
+#: ../labelme\app.py:382
 msgid "Duplicate Polygons"
 msgstr ""
 "Markierung(en)\n"
 "duplizieren"
 
-#: ../labelme\app.py:381
+#: ../labelme\app.py:384
 msgid "Create a duplicate of the selected polygons"
 msgstr "Ausgewählte Markierung(en) duplizieren"
 
-#: ../labelme\app.py:383
+#: ../labelme\app.py:386
 msgid "Undo last point"
 msgstr "Letzten Punkt rückgängig"
 
-#: ../labelme\app.py:385
+#: ../labelme\app.py:388
 msgid "Undo last drawn point"
 msgstr "Zuletzt gezeichneten Punkt rückgängig machen"
 
-#: ../labelme\app.py:387
+#: ../labelme\app.py:390
 msgid "Add Point to Edge"
 msgstr "Punkt zu Kante hinzufügen"
 
-#: ../labelme\app.py:391
+#: ../labelme\app.py:394
 msgid "Add point to the nearest edge"
 msgstr "Punkt zu nächster Kante hinzufügen"
 
-#: ../labelme\app.py:395
+#: ../labelme\app.py:398
 msgid "Undo"
 msgstr "Rückgängig"
 
-#: ../labelme\app.py:396
+#: ../labelme\app.py:399
 msgid "Undo last add and edit of shape"
 msgstr "Letzte Änderung rückgängig machen"
 
-#: ../labelme\app.py:398
+#: ../labelme\app.py:401
 msgid ""
 "&Hide\n"
 "Polygons"
 msgstr "Markierung(en) ausblenden"
 
-#: ../labelme\app.py:400
+#: ../labelme\app.py:403
 msgid "Hide all polygons"
 msgstr "Alle Markierungen ausblenden"
 
-#: ../labelme\app.py:401
+#: ../labelme\app.py:404
 msgid ""
 "&Show\n"
 "Polygons"
 msgstr "Markierung(en) einblenden"
 
-#: ../labelme\app.py:403
+#: ../labelme\app.py:406
 msgid "Show all polygons"
 msgstr "Alle Markierungen einblenden"
 
-#: ../labelme\app.py:408
+#: ../labelme\app.py:411
 msgid "&About"
 msgstr "Über"
 
-#: ../labelme\app.py:409
+#: ../labelme\app.py:412
 msgid "Show about page"
 msgstr "Über"
 
-#: ../labelme\app.py:411
+#: ../labelme\app.py:414
 msgid "&Logs"
 msgstr "&Logs"
 
-#: ../labelme\app.py:412
+#: ../labelme\app.py:415
 msgid "Open log folder"
 msgstr "Log-Ordner öffnen"
 
-#: ../labelme\app.py:417
+#: ../labelme\app.py:420
 msgid ""
 "Zoom in or out of the image. Also accessible with {} and {} from the canvas."
 msgstr ""
 "Zoomen Sie in das oder aus dem Bild. Auch verfügbar durch {} und {} aus dem "
 "Zeichenbereich."
 
-#: ../labelme\app.py:430
+#: ../labelme\app.py:433
 msgid "Zoom &In"
 msgstr "Zoom +"
 
-#: ../labelme\app.py:432
+#: ../labelme\app.py:435
 msgid "Increase zoom level"
 msgstr "Zoomlevel erhöhen"
 
-#: ../labelme\app.py:433
+#: ../labelme\app.py:436
 msgid "&Zoom Out"
 msgstr "Zoom -"
 
-#: ../labelme\app.py:436
+#: ../labelme\app.py:439
 msgid "&Original size"
 msgstr "Originalgröße"
 
-#: ../labelme\app.py:438
+#: ../labelme\app.py:441
 msgid "Zoom to original size"
 msgstr "Auf Originalgröße zoomen"
 
-#: ../labelme\app.py:440
+#: ../labelme\app.py:443
 msgid "&Fit Window"
 msgstr "Fenstergröße"
 
-#: ../labelme\app.py:442
+#: ../labelme\app.py:445
 msgid "Zoom follows window size"
 msgstr "Auf Fenstergröße zoomen"
 
-#: ../labelme\app.py:444
+#: ../labelme\app.py:447
 msgid "Fit &Width"
 msgstr "Zoom Breite"
 
-#: ../labelme\app.py:446
+#: ../labelme\app.py:449
 msgid "Zoom follows window width"
 msgstr "Auf Fensterbreite zoomen"
 
-#: ../labelme\app.py:462
+#: ../labelme\app.py:465
 msgid "&Edit Label"
 msgstr "Kategorie bearbeiten"
 
-#: ../labelme\app.py:463
+#: ../labelme\app.py:466
 msgid "Modify the label of the selected polygon"
 msgstr "Bearbeiten Sie die Kategorie der ausgewählten Markierung"
 
-#: ../labelme\app.py:467
+#: ../labelme\app.py:470
 msgid "Shape &Line Color"
 msgstr "Form &Linienfarbe"
 
-#: ../labelme\app.py:468
+#: ../labelme\app.py:471
 msgid "Change the line color for this specific shape"
 msgstr "Ändern Sie die Linienfarbe für diese Form"
 
-#: ../labelme\app.py:470
+#: ../labelme\app.py:473
 msgid "Shape &Fill Color"
 msgstr "Form &Füllfarbe"
 
-#: ../labelme\app.py:471
+#: ../labelme\app.py:474
 msgid "Change the fill color for this specific shape"
 msgstr "Ändern Sie die Füllfarbe für diese Form"
 
-#: ../labelme\app.py:561
+#: ../labelme\app.py:564
 msgid "&File"
 msgstr "&Datei"
 
-#: ../labelme\app.py:562
+#: ../labelme\app.py:565
 msgid "&Edit"
 msgstr "&Bearbeiten"
 
-#: ../labelme\app.py:563
+#: ../labelme\app.py:566
 msgid "&View"
 msgstr "&Ansicht"
 
-#: ../labelme\app.py:564
+#: ../labelme\app.py:567
 msgid "&Project"
 msgstr "&Projekt"
 
-#: ../labelme\app.py:565
+#: ../labelme\app.py:568
 msgid "&Help"
 msgstr "&Hilfe"
 
-#: ../labelme\app.py:567
+#: ../labelme\app.py:570
 msgid "Open &Recent"
 msgstr "Zuletzt geöffnet"
 
-#: ../labelme\app.py:643
+#: ../labelme\app.py:646
 msgid "Tools"
 msgstr "Werkzeuge"
 
-#: ../labelme\app.py:674
+#: ../labelme\app.py:677
 msgid "%s started."
 msgstr "%s gestartet."
 
-#: ../labelme\app.py:679
+#: ../labelme\app.py:682
 msgid ""
 "If `auto_save` argument is True, `output_file` argument is ignored and "
 "output filename is automatically set as IMAGE_BASENAME.json."
@@ -431,135 +431,193 @@ msgstr ""
 "Wenn der Parameter `auto_save` True ist, wird `output_file` ignoriert und "
 "der Dateiname wird automatisch auf IMAGE_BASENAME.json gesetzt."
 
-#: ../labelme\app.py:757
+#: ../labelme\app.py:760
 msgid "No project folder is defined in settings. Please configure one."
 msgstr ""
 "Es ist kein Projektordner in den Einstellungen hinterlegt. Bitte hinterlegen "
 "Sie dort einen Ordner, in dem alle Importe, Datensätze und Trainings "
 "gespeichert werden können."
 
-#: ../labelme\app.py:912
+#: ../labelme\app.py:915
 msgid "An easy-to-use tool for training of object detection networks"
 msgstr ""
 "Ein Werkzeug für das Training von neuronalen Netzen zur Objekterkennung"
 
-#: ../labelme\app.py:913
+#: ../labelme\app.py:916
 msgid "This software uses icons from {}"
 msgstr "Diese Software nutzt Icons von {}"
 
-#: ../labelme\app.py:914
+#: ../labelme\app.py:917
 msgid "Version"
 msgstr "Version"
 
-#: ../labelme\app.py:1064 ../labelme\app.py:1313
+#: ../labelme\app.py:1067 ../labelme\app.py:1317
 msgid "Invalid label"
 msgstr "Ungültige Kategorie"
 
-#: ../labelme\app.py:1065 ../labelme\app.py:1314
+#: ../labelme\app.py:1068 ../labelme\app.py:1318
 msgid "Invalid label \"{}\" with validation type \"{}\""
 msgstr "Ungültige Kategorie \"{}\" mit Validierungstyp \"{}\""
 
-#: ../labelme\app.py:1245
+#: ../labelme\app.py:1249
 msgid "Error saving label data"
 msgstr "Fehler beim Speichern der Markierungen"
 
-#: ../labelme\app.py:1407
+#: ../labelme\app.py:1411
 msgid "No such file: <b>%s</b>"
 msgstr "Datei nicht gefunden: <b>%s</b>"
 
-#: ../labelme\app.py:1407 ../labelme\app.py:1421 ../labelme\app.py:1448
+#: ../labelme\app.py:1411 ../labelme\app.py:1425 ../labelme\app.py:1452
 msgid "Error opening file"
 msgstr "Fehler beim Öffnen"
 
-#: ../labelme\app.py:1410
+#: ../labelme\app.py:1414
 msgid "Loading %s..."
 msgstr "Lade %s..."
 
-#: ../labelme\app.py:1423
+#: ../labelme\app.py:1427
 msgid "Make sure <i>%s</i> is a valid label file."
 msgstr "Stellen Sie sicher, dass <i>%s</i> eine gültige Datei ist."
 
-#: ../labelme\app.py:1425 ../labelme\app.py:1452
+#: ../labelme\app.py:1429 ../labelme\app.py:1456
 msgid "Error reading %s"
 msgstr "Fehler beim Lesen von %s"
 
-#: ../labelme\app.py:1449
+#: ../labelme\app.py:1453
 msgid "Make sure <i>{}</i> is a valid image file."
 msgstr "Stellen Sie sicher, dass <i>%s</i> eine gültige Bilddatei ist."
 
-#: ../labelme\app.py:1450
+#: ../labelme\app.py:1454
 msgid "Supported image formats: {}"
 msgstr "Unterstützte Bildformate: {}"
 
-#: ../labelme\app.py:1473
+#: ../labelme\app.py:1477
 msgid "Loaded %s"
 msgstr "%s geladen"
 
-#: ../labelme\app.py:1716
+#: ../labelme\app.py:1720
 msgid "You are about to permanently delete this label file, proceed anyway?"
 msgstr "Wollen Sie die Markierungen in diesem Bild wirklich dauerhaft löschen?"
 
-#: ../labelme\app.py:1718 ../labelme\app.py:1806
+#: ../labelme\app.py:1722 ../labelme\app.py:1810
 msgid "Attention"
 msgstr "Achtung"
 
-#: ../labelme\app.py:1725
+#: ../labelme\app.py:1729
 msgid "Label file is removed: {}"
 msgstr "Labeldatei entfernt: {}"
 
-#: ../labelme\app.py:1736
+#: ../labelme\app.py:1740
 msgid "No objects labeled"
 msgstr "Keine Objekte annotiert"
 
-#: ../labelme\app.py:1737
+#: ../labelme\app.py:1741
 msgid "You must label at least one object to save the file."
 msgstr ""
 "Sie müssen mindestens ein Objekt annotieren, um die Datei zu speichern."
 
-#: ../labelme\app.py:1751
+#: ../labelme\app.py:1755
 msgid "Save annotations to \"{}\" before closing?"
 msgstr "Annotationen vor dem Schließen in \"{}\" speichern?"
 
-#: ../labelme\app.py:1754
+#: ../labelme\app.py:1758
 msgid "Save annotations?"
 msgstr "Annotationen speichern?"
 
-#: ../labelme\app.py:1758 ../labelme\windows\settings.py:72
+#: ../labelme\app.py:1762 ../labelme\windows\settings.py:72
 msgid "Save"
 msgstr "Speichern"
 
-#: ../labelme\app.py:1760
+#: ../labelme\app.py:1764
 msgid "Discard"
 msgstr "Verwerfen"
 
-#: ../labelme\app.py:1762 ../labelme\utils\dialog.py:158
-#: ../labelme\windows\export.py:120 ../labelme\windows\image_import.py:38
-#: ../labelme\windows\import_.py:74 ../labelme\windows\merge.py:61
-#: ../labelme\windows\settings.py:74 ../labelme\windows\training.py:274
+#: ../labelme\app.py:1766 ../labelme\utils\dialog.py:33
+#: ../labelme\utils\dialog.py:166 ../labelme\windows\export.py:120
+#: ../labelme\windows\image_import.py:38 ../labelme\windows\import_.py:74
+#: ../labelme\windows\merge.py:61 ../labelme\windows\settings.py:74
+#: ../labelme\windows\training.py:274
 #: ../labelme\windows\training_progress.py:128
 #: ../labelme\windows\validation.py:55
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: ../labelme\app.py:1782 ../labelme\app.py:1815
+#: ../labelme\app.py:1786 ../labelme\app.py:1819
 msgid "Choose line color"
 msgstr "Linienfarbe wählen"
 
-#: ../labelme\app.py:1792 ../labelme\app.py:1824
+#: ../labelme\app.py:1796 ../labelme\app.py:1828
 msgid "Choose fill color"
 msgstr "Füllfarbe wählen"
 
-#: ../labelme\app.py:1804
+#: ../labelme\app.py:1808
 msgid "You are about to permanently delete {} polygons, proceed anyway?"
 msgstr "Wollen Sie {} Markierung(en) wirklich dauerhaft löschen?"
 
-#: ../labelme\app.py:1854
+#: ../labelme\app.py:1858
 msgid "%s - Open Directory"
 msgstr "%s - Ordner öffnen"
 
-#: ../labelme\app.py:1951 ../labelme\windows\image_import.py:73
+#: ../labelme\app.py:1873
+msgid ""
+"You have active filters. Do you want to reset the filters before exporting "
+"in order to use all labeled images instead of only the filtered ones?"
+msgstr ""
+"Sie haben Filter ausgewählt. Wollen Sie die Filter vor dem Export "
+"zurücksetzen, um alle Bilder zu nutzen anstelle der aktuell gefilterten?"
+
+#: ../labelme\app.py:1874 ../labelme\windows\export.py:118
+#: ../labelme\windows\export.py:134 ../labelme\windows\export.py:218
+#: ../labelme\windows\export.py:245 ../labelme\windows\export.py:257
+#: ../labelme\windows\export.py:265 ../labelme\windows\export.py:269
+#: ../labelme\windows\export.py:275 ../labelme\windows\export.py:284
+#: ../labelme\windows\export.py:294 ../labelme\windows\export.py:302
+msgid "Export"
+msgstr "Export"
+
+#: ../labelme\app.py:1890
+msgid ""
+"You have active filters. Do you want to reset the filters before training in "
+"order to use all labeled images instead of only the filtered ones?"
+msgstr ""
+"Sie haben Filter ausgewählt. Wollen Sie die Filter vor dem Training "
+"zurücksetzen, um alle Bilder zu nutzen anstelle der aktuell gefilterten?"
+
+#: ../labelme\app.py:1891 ../labelme\windows\training.py:33
+#: ../labelme\windows\training.py:456 ../labelme\windows\training.py:488
+#: ../labelme\windows\training.py:520 ../labelme\windows\training.py:528
+#: ../labelme\windows\training.py:621 ../labelme\windows\training.py:638
+#: ../labelme\windows\training.py:647 ../labelme\windows\training.py:655
+#: ../labelme\windows\training.py:659 ../labelme\windows\training.py:669
+#: ../labelme\windows\training.py:680
+#: ../labelme\windows\training_progress.py:28
+#: ../labelme\windows\training_progress.py:151
+#: ../labelme\windows\training_progress.py:278
+#: ../labelme\windows\training_progress.py:285
+#: ../labelme\windows\training_progress.py:314
+#: ../labelme\windows\validation.py:43
+msgid "Training"
+msgstr "Training"
+
+#: ../labelme\app.py:1973 ../labelme\windows\image_import.py:77
 msgid "- all labels -"
 msgstr " - Alle Kategorien - "
+
+#: ../labelme\app.py:1989
+msgid "The file \"{}\" could not be found"
+msgstr "Die Datei \"{}\" konnte nicht gefunden werden"
+
+#: ../labelme\app.py:1989 ../labelme\app.py:1992 ../labelme\app.py:2004
+msgid "Delete file"
+msgstr "Datei löschen"
+
+#: ../labelme\app.py:1991
+msgid ""
+"Do you really want to delete this file? It will be deleted permanently from "
+"your hard drive."
+msgstr ""
+"Wollen Sie diese Datei wirklich löschen? Die Datei wird dauerhaft von der "
+"Festplatte gelöscht."
 
 #: ../labelme\config\export\export.py:18
 msgid "COCO"
@@ -730,29 +788,29 @@ msgstr "Validieren ..."
 msgid "An error occured with following message"
 msgstr "Es ist ein Fehler mit folgender Nachricht aufgetreten"
 
-#: ../labelme\utils\dialog.py:25
+#: ../labelme\utils\dialog.py:28
 msgid "Yes"
 msgstr "Ja"
 
-#: ../labelme\utils\dialog.py:27
+#: ../labelme\utils\dialog.py:30
 msgid "No"
 msgstr "Nein"
 
-#: ../labelme\utils\dialog.py:80 ../labelme\windows\image_import.py:43
+#: ../labelme\utils\dialog.py:88 ../labelme\windows\image_import.py:43
 msgid "Cancelling ..."
 msgstr "Abbrechen ..."
 
-#: ../labelme\utils\dialog.py:94 ../labelme\utils\dialog.py:96
+#: ../labelme\utils\dialog.py:102 ../labelme\utils\dialog.py:104
 msgid "Error"
 msgstr "Fehler"
 
-#: ../labelme\utils\dialog.py:96
+#: ../labelme\utils\dialog.py:104
 msgid "An error occured. For further details look into the log files"
 msgstr ""
 "Es ist ein Fehler aufgetreten. Weitere Details können Sie den Logdateien "
 "entnehmen."
 
-#: ../labelme\utils\dialog.py:158
+#: ../labelme\utils\dialog.py:166
 msgid "Initializing ..."
 msgstr "Initialisieren ..."
 
@@ -825,18 +883,11 @@ msgstr "% des Datensatzes"
 msgid "Validation ratio"
 msgstr "Validierungsrate"
 
-#: ../labelme\windows\export.py:118 ../labelme\windows\export.py:134
-#: ../labelme\windows\export.py:218 ../labelme\windows\export.py:245
-#: ../labelme\windows\export.py:257 ../labelme\windows\export.py:265
-#: ../labelme\windows\export.py:269 ../labelme\windows\export.py:275
-#: ../labelme\windows\export.py:284 ../labelme\windows\export.py:294
-#: ../labelme\windows\export.py:302
-msgid "Export"
-msgstr "Export"
-
-#: ../labelme\windows\export.py:134 ../labelme\windows\training.py:520
-msgid "Please open a folder with images first"
-msgstr "Bitte öffnen Sie zuerst einen Ordner mit Bildern"
+#: ../labelme\windows\export.py:134
+msgid "No labels found! Please open a folder with labeled images first"
+msgstr ""
+"Keine Markierungen gefunden! Bitte öffnen Sie einen Ordner mit markierten "
+"Bilder."
 
 #: ../labelme\windows\export.py:195 ../labelme\windows\import_.py:109
 msgid "Select output folder"
@@ -897,7 +948,7 @@ msgstr "Import"
 msgid "Loading ..."
 msgstr "Laden ..."
 
-#: ../labelme\windows\image_import.py:60
+#: ../labelme\windows\image_import.py:64
 msgid "Loading images ..."
 msgstr "Bilder laden ..."
 
@@ -1097,21 +1148,6 @@ msgstr "Projektordner muss leer sein"
 msgid "Project folder must not contain special chars"
 msgstr "Projektordner darf keine Sonderzeichen (z.B. ä, ö, ü, ß) enthalten"
 
-#: ../labelme\windows\training.py:33 ../labelme\windows\training.py:456
-#: ../labelme\windows\training.py:488 ../labelme\windows\training.py:520
-#: ../labelme\windows\training.py:528 ../labelme\windows\training.py:621
-#: ../labelme\windows\training.py:638 ../labelme\windows\training.py:647
-#: ../labelme\windows\training.py:655 ../labelme\windows\training.py:659
-#: ../labelme\windows\training.py:669 ../labelme\windows\training.py:680
-#: ../labelme\windows\training_progress.py:28
-#: ../labelme\windows\training_progress.py:151
-#: ../labelme\windows\training_progress.py:278
-#: ../labelme\windows\training_progress.py:285
-#: ../labelme\windows\training_progress.py:314
-#: ../labelme\windows\validation.py:43
-msgid "Training"
-msgstr "Training"
-
 #: ../labelme\windows\training.py:60 ../labelme\windows\training.py:451
 msgid "Resume training"
 msgstr "Training fortführen"
@@ -1183,6 +1219,10 @@ msgstr "Einstellungen des früheren Trainings werden übernommen"
 #: ../labelme\windows\training.py:488
 msgid "Could not detect format of selected dataset"
 msgstr "Das Format des ausgewählten Datensatzes konnte nicht ermittelt werden"
+
+#: ../labelme\windows\training.py:520
+msgid "Please open a folder with images first"
+msgstr "Bitte öffnen Sie zuerst einen Ordner mit Bildern"
 
 #: ../labelme\windows\training.py:528
 msgid "No labels found in dataset"
