@@ -49,9 +49,13 @@ class ImageImportWindow(WorkerDialog):
         self.parent.resetState()
         self.close()
 
-    def start_import(self, data):
+    def start_import(self, data, callback=None):
         self.load = data['load']
         self.initial = data['initial']
+
+        self.callback = lambda s: None
+        if callable(callback):
+            self.callback = callback
 
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
@@ -75,6 +79,7 @@ class ImageImportWindow(WorkerDialog):
                 self.parent.labelFilter.addItem(label, label)
         self.parent.openNextImg(load=self.load)
         self.close()
+        self.callback(self.parent)
 
     def on_data(self, data):
         self.data = data

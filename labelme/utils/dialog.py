@@ -8,7 +8,7 @@ from labelme.config import MessageType
 from labelme.utils import WorkerExecutor
 
 
-def confirm(parent, title, message, kind):
+def confirm(parent, title, message, kind, cancel=False):
     box = QtWidgets.QMessageBox(parent)
     if kind == MessageType.Warning:
         box.setIcon(QtWidgets.QMessageBox.Warning)
@@ -20,14 +20,21 @@ def confirm(parent, title, message, kind):
         box.setIcon(QtWidgets.QMessageBox.Information)
     box.setWindowTitle(title)
     box.setText(message)
-    box.setStandardButtons(QtWidgets.QMessageBox.Yes|QtWidgets.QMessageBox.No)
+    if cancel:
+        box.setStandardButtons(QtWidgets.QMessageBox.Yes|QtWidgets.QMessageBox.No|QtWidgets.QMessageBox.Cancel)
+    else:
+        box.setStandardButtons(QtWidgets.QMessageBox.Yes|QtWidgets.QMessageBox.No)
     buttonYes = box.button(QtWidgets.QMessageBox.Yes)
     buttonYes.setText(_('Yes'))
     buttonNo = box.button(QtWidgets.QMessageBox.No)
     buttonNo.setText(_('No'))
+    buttonCancel = box.button(QtWidgets.QMessageBox.Cancel)
+    buttonCancel.setText(_('Cancel'))
     box.exec_()
     if box.clickedButton() == buttonYes:
         return True
+    elif cancel and box.clickedButton() == buttonCancel:
+        return QtWidgets.QMessageBox.Cancel
     return False
 
 

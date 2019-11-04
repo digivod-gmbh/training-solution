@@ -4,6 +4,7 @@ import os.path as osp
 import re
 import webbrowser
 import GPUtil
+import time
 
 from qtpy import QtCore
 from qtpy.QtCore import Qt
@@ -1073,7 +1074,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.uniqLabelList.addItem(text)
             self.uniqLabelList.sortItems()
 
-    def fileSearchChanged(self):
+    def fileSearchChanged(self, callback=None):
         filters = {}
         idx = self.labelFilter.currentIndex()
         label = str(self.labelFilter.itemData(idx))
@@ -1086,6 +1087,7 @@ class MainWindow(QtWidgets.QMainWindow):
             pattern=self.fileSearch.text(),
             load=True,
             filters=filters,
+            callback=callback,
         )
 
     def fileSelectionChanged(self):
@@ -1865,6 +1867,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.importWindow.show()
 
     def exportDialog(self):
+        if self.hasAnyActiveFilters():
+            msg = _('You have active filters. Do you want to reset the filters before exporting in order to use all labeled images instead of only the filtered ones?')
+            button = confirm(self, _('Export'), msg, MessageType.Warning, cancel=True)
+            if button == QtWidgets.QMessageBox.Cancel:
+                return
+            elif button == True:
+                callback = lambda s: ExportWindow(s).show() 
+                self.searchResetBtnClicked(callback)
+                return
         self.exportWindow = ExportWindow(self)
         self.exportWindow.show()
 
@@ -1873,6 +1884,15 @@ class MainWindow(QtWidgets.QMainWindow):
     #     self.mergeWindow.show()
 
     def trainingDialog(self):
+        if self.hasAnyActiveFilters():
+            msg = _('You have active filters. Do you want to reset the filters before training in order to use all labeled images instead of only the filtered ones?')
+            button = confirm(self, _('Training'), msg, MessageType.Warning, cancel=True)
+            if button == QtWidgets.QMessageBox.Cancel:
+                return
+            elif button == True:
+                callback = lambda s: TrainingWindow(s).show() 
+                self.searchResetBtnClicked(callback)
+                return
         self.trainingWindow = TrainingWindow(self)
         self.trainingWindow.show()
 
@@ -1888,7 +1908,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lst.append(item.text())
         return lst
 
-    def importDirImages(self, dirpath, pattern=None, load=True, filters={}, initial=False):
+    def importDirImages(self, dirpath, pattern=None, load=True, filters={}, initial=False, callback=None):
         self.actions.openNextImg.setEnabled(True)
         self.actions.openPrevImg.setEnabled(True)
 
@@ -1917,7 +1937,7 @@ class MainWindow(QtWidgets.QMainWindow):
             'initial': initial,
         }
         importWindow = ImageImportWindow(self)
-        importWindow.start_import(data)
+        importWindow.start_import(data, callback)
 
     def scanAllImages(self, folderPath):
         extensions = ['.%s' % fmt.data().decode("ascii").lower()
@@ -1939,11 +1959,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelFilter.setCurrentIndex(idx)
         self.fileSearchChanged()
 
-    def searchResetBtnClicked(self):
+    def searchResetBtnClicked(self, callback=None):
         self.labelFilter.setCurrentIndex(0)
         self.hasLabelFilter.setCurrentIndex(0)
         self.fileSearch.setText('')
-        self.fileSearchChanged()
+        self.fileSearchChanged(callback=callback)
 
     def updateFilterLabels(self):
         labels = self.statistics_model.getLabels()
@@ -1955,4 +1975,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def updateLabelHistory(self):
         labels = self.statistics_model.getLabels()
         self.labelDialog.setLabelHistory(labels)
+
+    def hasAnyActiveFilters(self):
+        return self.labelFilter.currentIndex() > 0 or self.hasLabelFilter.currentIndex() > 0
 

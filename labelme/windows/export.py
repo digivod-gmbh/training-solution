@@ -131,7 +131,7 @@ class ExportWindow(WorkerDialog):
     def setVisible(self, visible):
         if not self.has_opened_images():
             mb = QtWidgets.QMessageBox()
-            mb.information(self, _('Export'), _('Please open a folder with images first'))
+            mb.information(self, _('Export'), _('No labels found! Please open a folder with labeled images first'))
         else:
             super().setVisible(visible)
 
