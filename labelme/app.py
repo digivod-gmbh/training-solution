@@ -283,10 +283,10 @@ class MainWindow(QtWidgets.QMainWindow):
                         enabled=False)
 
         deleteFile = action(
-            _('&Delete File'),
+            _('&Delete label file'),
             self.deleteFile,
             shortcuts['delete_file'],
-            'delete',
+            'eraser',
             _('Delete current label file'),
             enabled=False)
 
@@ -2008,11 +2008,15 @@ class MainWindow(QtWidgets.QMainWindow):
         if (event.type() == QtCore.QEvent.ContextMenu and source is self.fileListWidget):
             if self.fileListWidget.count() > 0:
                 menu = QtWidgets.QMenu()
-                delete_action = menu.addAction(newIcon('delete'), _('Delete file'))
+                delete_labels_action = menu.addAction(newIcon('eraser'), _('Delete labels'))
+                delete_file_action = menu.addAction(newIcon('delete'), _('Delete file'))
                 action = menu.exec_(event.globalPos())
-                if action == delete_action:
-                    item = source.itemAt(event.pos())
+                item = source.itemAt(event.pos())
+                if action == delete_file_action:
                     self.deleteImageFile(item)
+                elif action == delete_labels_action:
+                    self.deleteFile()
+                    self.loadFile(item.text())
                 return True
         return super().eventFilter(source, event)
 
