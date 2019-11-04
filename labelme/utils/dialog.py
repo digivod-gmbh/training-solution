@@ -28,8 +28,9 @@ def confirm(parent, title, message, kind, cancel=False):
     buttonYes.setText(_('Yes'))
     buttonNo = box.button(QtWidgets.QMessageBox.No)
     buttonNo.setText(_('No'))
-    buttonCancel = box.button(QtWidgets.QMessageBox.Cancel)
-    buttonCancel.setText(_('Cancel'))
+    if cancel:
+        buttonCancel = box.button(QtWidgets.QMessageBox.Cancel)
+        buttonCancel.setText(_('Cancel'))
     box.exec_()
     if box.clickedButton() == buttonYes:
         return True

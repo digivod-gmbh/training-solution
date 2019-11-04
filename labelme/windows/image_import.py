@@ -87,6 +87,8 @@ class ImageImportWindow(WorkerDialog):
         model.addImages(data['num_images'], data['all_shapes'])
 
         for item in data['items']:
+            #item.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+            #item.customContextMenuRequested.connect(self.parent.fileListContextMenu)
             self.parent.fileListWidget.addItem(item)
 
         for shapes in data['all_shapes']:

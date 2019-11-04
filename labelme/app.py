@@ -42,7 +42,7 @@ from labelme.windows import ImageImportWindow
 from labelme.utils import StatisticsModel
 
 from labelme.config import MessageType
-from labelme.utils import confirm
+from labelme.utils import confirm, newIcon
 
 
 # FIXME
@@ -168,6 +168,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fileSearch.setPlaceholderText(_('Search Filename'))
         self.fileListWidget = QtWidgets.QListWidget()
         self.fileListWidget.itemSelectionChanged.connect(self.fileSelectionChanged)
+        self.fileListWidget.installEventFilter(self)
+
         self.searchBtn = QtWidgets.QToolButton()
         self.searchBtn.setText(_('Search'))
         self.searchBtn.setFixedSize(80, 22)
@@ -1979,3 +1981,30 @@ class MainWindow(QtWidgets.QMainWindow):
     def hasAnyActiveFilters(self):
         return self.labelFilter.currentIndex() > 0 or self.hasLabelFilter.currentIndex() > 0
 
+    def deleteImageFile(self, item):
+        image_file = item.text()
+        logger.debug('Delete image file: {}'.format(image_file))
+        if not os.path.isfile(image_file):
+            mb = QtWidgets.QMessageBox
+            mb.warning(_('Delete file'), _('The file "{}" could not be found').format(image_file))
+            return
+        msg = _('Do you really want to delete this file? It will be deleted permanently from your hard drive.')
+        if confirm(self, _('Delete file'), msg, MessageType.Warning):
+            row = self.fileListWidget.row(item)
+            self.fileListWidget.takeItem(row)
+            os.remove(image_file)
+            label_file = os.path.splitext(image_file)[0] + '.json'
+            if os.path.isfile(label_file):
+                os.remove(label_file)
+
+    def eventFilter(self, source, event):
+        if (event.type() == QtCore.QEvent.ContextMenu and source is self.fileListWidget):
+            if self.fileListWidget.count() > 0:
+                menu = QtWidgets.QMenu()
+                delete_action = menu.addAction(newIcon('delete'), _('Delete file'))
+                action = menu.exec_(event.globalPos())
+                if action == delete_action:
+                    item = source.itemAt(event.pos())
+                    self.deleteImageFile(item)
+                return True
+        return super().eventFilter(source, event)
