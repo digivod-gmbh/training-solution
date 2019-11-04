@@ -152,7 +152,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.hasLabelFilter.addItem(_('- all images -'), StatisticsModel.STATISTICS_FILTER_ALL)
         self.hasLabelFilter.addItem(_('Labeled'), StatisticsModel.STATISTICS_FILTER_LABELED)
         self.hasLabelFilter.addItem(_('Unlabeled'), StatisticsModel.STATISTICS_FILTER_UNLABELED)
+        self.hasLabelFilter.activated.connect(self.hasLabelFilterChanged)
+        self.hasLabelFilterIndex = 0
         self.labelFilter = QtWidgets.QComboBox()
+        self.labelFilter.activated.connect(self.labelFilterChanged)
+        self.labelFilterIndex = 0
         self.updateFilterLabels()
         self.searchResetBtn = QtWidgets.QToolButton()
         self.searchResetBtn.setText(_('Reset'))
@@ -1869,7 +1873,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.importWindow.show()
 
     def exportDialog(self):
-        if self.hasAnyActiveFilters():
+        if self.hasAnyLimitingFilters():
             msg = _('You have active filters. Do you want to reset the filters before exporting in order to use all labeled images instead of only the filtered ones?')
             button = confirm(self, _('Export'), msg, MessageType.Warning, cancel=True)
             if button == QtWidgets.QMessageBox.Cancel:
@@ -1886,7 +1890,7 @@ class MainWindow(QtWidgets.QMainWindow):
     #     self.mergeWindow.show()
 
     def trainingDialog(self):
-        if self.hasAnyActiveFilters():
+        if self.hasAnyLimitingFilters():
             msg = _('You have active filters. Do you want to reset the filters before training in order to use all labeled images instead of only the filtered ones?')
             button = confirm(self, _('Training'), msg, MessageType.Warning, cancel=True)
             if button == QtWidgets.QMessageBox.Cancel:
@@ -1959,11 +1963,14 @@ class MainWindow(QtWidgets.QMainWindow):
         label = item.text()
         idx = self.labelFilter.findText(label, Qt.MatchExactly)
         self.labelFilter.setCurrentIndex(idx)
+        self.labelFilterIndex = idx
         self.fileSearchChanged()
 
     def searchResetBtnClicked(self, callback=None):
         self.labelFilter.setCurrentIndex(0)
+        self.labelFilterIndex = 0
         self.hasLabelFilter.setCurrentIndex(0)
+        self.hasLabelFilterIndex = 0
         self.fileSearch.setText('')
         self.fileSearchChanged(callback=callback)
 
@@ -1978,8 +1985,8 @@ class MainWindow(QtWidgets.QMainWindow):
         labels = self.statistics_model.getLabels()
         self.labelDialog.setLabelHistory(labels)
 
-    def hasAnyActiveFilters(self):
-        return self.labelFilter.currentIndex() > 0 or self.hasLabelFilter.currentIndex() > 0
+    def hasAnyLimitingFilters(self):
+        return self.labelFilter.currentIndex() > 0 or self.hasLabelFilter.currentIndex() > 1
 
     def deleteImageFile(self, item):
         image_file = item.text()
@@ -2008,3 +2015,13 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.deleteImageFile(item)
                 return True
         return super().eventFilter(source, event)
+
+    def hasLabelFilterChanged(self, selected_index):
+        if selected_index is not self.hasLabelFilterIndex:
+            self.fileSearchChanged()
+        self.hasLabelFilterIndex = selected_index
+
+    def labelFilterChanged(self, selected_index):
+        if selected_index is not self.labelFilterIndex:
+            self.fileSearchChanged()
+        self.labelFilterIndex = selected_index
