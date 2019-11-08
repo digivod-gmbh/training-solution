@@ -41,6 +41,23 @@ class SettingsWindow(QtWidgets.QDialog):
         project_folder_group_layout.addWidget(project_browse_btn)
         layout.addWidget(project_folder_group)
 
+        self.image_root_folder = QtWidgets.QLineEdit()
+        image_root_browse_btn = QtWidgets.QPushButton(_('Browse'))
+        image_root_browse_btn.clicked.connect(self.image_root_browse_btn_clicked)
+
+        saved_image_root_folder = self.parent.settings.value('settings/project/image_root_folder', '')
+        logger.debug('Restored value "{}" for setting settings/project/image_root_folder'.format(saved_image_root_folder))
+        self.image_root_folder.setText(saved_image_root_folder)
+        self.image_root_folder.setReadOnly(True)
+        self.image_root_folder.setFixedWidth(250)
+
+        image_root_folder_group = HelpGroupBox('Settings_ImageRootFolder', _('Image folder'))
+        image_root_folder_group_layout = QtWidgets.QHBoxLayout()
+        image_root_folder_group.widget.setLayout(image_root_folder_group_layout)
+        image_root_folder_group_layout.addWidget(self.image_root_folder)
+        image_root_folder_group_layout.addWidget(image_root_browse_btn)
+        layout.addWidget(image_root_folder_group)
+
         saved_single_label_mode = self.parent.settings.value('settings/project/single_label_mode', '0')
         logger.debug('Restored value "{}" for setting settings/project/single_label_mode'.format(saved_single_label_mode))
         self.single_label_mode_checkbox = HelpCheckbox('Settings_SingleLabelMode', _('Single-label mode'))
@@ -81,6 +98,12 @@ class SettingsWindow(QtWidgets.QDialog):
             project_folder = os.path.normpath(project_folder)
             self.project_folder.setText(project_folder)
 
+    def image_root_browse_btn_clicked(self):
+        image_root_folder = QtWidgets.QFileDialog.getExistingDirectory(self, _('Select image folder'))
+        if image_root_folder:
+            image_root_folder = os.path.normpath(image_root_folder)
+            self.image_root_folder.setText(image_root_folder)
+
     def on_change_single_label_mode(self):
         if self.single_label_mode_checkbox.widget.isChecked():
             self.single_label_name_label.show()
@@ -105,6 +128,13 @@ class SettingsWindow(QtWidgets.QDialog):
             abs_directory = os.path.join(project_folder, directory)
             if not os.path.isdir(abs_directory):
                 os.makedirs(abs_directory)
+
+        # Image folder
+        image_root_folder = self.image_root_folder.text()
+        if not self.check_folder(image_root_folder):
+            return
+        image_root_folder = os.path.normpath(image_root_folder)
+        self.parent.settings.setValue('settings/project/image_root_folder', image_root_folder)
 
         # Single label mode
         single_label_mode = self.single_label_mode_checkbox.widget.isChecked()

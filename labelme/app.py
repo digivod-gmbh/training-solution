@@ -1852,11 +1852,12 @@ class MainWindow(QtWidgets.QMainWindow):
             return
 
         defaultOpenDirPath = dirpath if dirpath else '.'
+        defaultOpenDirPath = self.settings.value('settings/project/image_root_folder', defaultOpenDirPath)
         if self.lastOpenDir and osp.exists(self.lastOpenDir):
             defaultOpenDirPath = self.lastOpenDir
         else:
             defaultOpenDirPath = osp.dirname(self.filename) \
-                if self.filename else '.'
+                if self.filename else defaultOpenDirPath
 
         targetDirPath = str(QtWidgets.QFileDialog.getExistingDirectory(
             self, _('%s - Open Directory') % __appname__, defaultOpenDirPath,

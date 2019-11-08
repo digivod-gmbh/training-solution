@@ -23,6 +23,7 @@
     
     "Settings_ProjectFolder": "In the project folder, all files such as images, datasets and trained networks are stored. The subfolders <i>datasets, imports, trainings</i> are automatically created in the project folder.",
     "Settings_SingleLabelMode": "In single-label mode, each drawn polygon or rectangle is given the same label. This speeds up the work when annotating a dataset in which only one label is represented anyway.",
+    "Settings_ImageRootFolder": "For the image folder, select a directory in which you have already stored all images for the training. The directory specified here serves as a starting point when you click <i>Open folder</i> in the menu.",
     
     "__last__": "The last entry MUST NOT be followed by a , (comma)"
 }
