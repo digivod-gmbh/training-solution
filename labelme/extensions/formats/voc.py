@@ -105,7 +105,10 @@ class FormatVoc(DatasetFormat):
             raise Exception('Input folder must be initialized for import')
 
         self.intermediate = IntermediateFormat()
+        self.intermediate.setAbortable(self.abortable)
+        self.intermediate.setThread(self.thread)
         self.importToIntermediate(self.output_folder, self.input_folder_or_file)
+        self.thread.update.emit(_('Writing label files ...'), 90, -1)
         self.intermediate.toLabelFiles()
 
     def importToIntermediate(self, output_folder, input_folder_or_file):

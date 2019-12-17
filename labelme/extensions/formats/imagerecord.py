@@ -103,7 +103,10 @@ class FormatImageRecord(DatasetFormat):
         output_folder = self.output_folder
 
         self.intermediate = IntermediateFormat()
+        self.intermediate.setAbortable(self.abortable)
+        self.intermediate.setThread(self.thread)
         self.importToIntermediate(self.input_folder_or_file, output_folder)
+        self.thread.update.emit(_('Writing label files ...'), 90, -1)
         self.intermediate.toLabelFiles()
 
     def importToIntermediate(self, rec_file, output_folder):

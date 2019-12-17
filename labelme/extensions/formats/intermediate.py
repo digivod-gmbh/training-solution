@@ -31,7 +31,7 @@ class IntermediateFormat(WorkerExecutor):
         self.validation_ratio = 0.0
 
     def addSample(self, image, image_size, label, points, shape_type):
-        if len(self.included_labels) > 0 and label not in self.included_labels:
+        if len(self.included_labels) > 0 and label not in self.included_labels or len(points) == 0:
             return
         sample = IntermediateSample(image, image_size, label, points, shape_type)
         self.samples.append(sample)
@@ -58,14 +58,17 @@ class IntermediateFormat(WorkerExecutor):
                     else:
                         val_samples.append(sample)
                 i += len(samples)
+                self.checkAborted()
         else:
             for label in self.labels:
                 train_for_label, val_for_label = self.getTrainValidateSamplesPerLabel(label, shuffle)
                 train_samples += train_for_label
                 val_samples += val_for_label
+                self.checkAborted()
         if shuffle:
             random.shuffle(train_samples)
             random.shuffle(val_samples)
+        self.checkAborted()
         return train_samples, val_samples
 
     def getTrainValidateSamplesPerLabel(self, label, shuffle=False):
@@ -80,6 +83,7 @@ class IntermediateFormat(WorkerExecutor):
             logger.debug('Use {} validate samples for label {}'.format(num_val_samples, label))
             for i in range(num_val_samples):
                 val_samples.append(train_samples.pop(-1))
+                self.checkAborted()
         return train_samples, val_samples
 
     def getSamplesPerImage(self, samples=[]):
@@ -90,6 +94,7 @@ class IntermediateFormat(WorkerExecutor):
             if sample.image not in samples_per_image:
                 samples_per_image[sample.image] = []
             samples_per_image[sample.image].append(sample)
+            self.checkAborted()
         return samples_per_image
 
     def getLabelFilesFromDataFolder(self, data_folder):
@@ -99,6 +104,7 @@ class IntermediateFormat(WorkerExecutor):
                 if LabelFile.is_label_file(f):
                     full_path = os.path.normpath(os.path.join(root, f))
                     label_files.append(full_path)
+                self.checkAborted()
         return label_files
 
     def addFromLabelFiles(self, data_folder, shuffle=False):
@@ -119,12 +125,19 @@ class IntermediateFormat(WorkerExecutor):
         for s in lf.shapes:
             image_path = os.path.normpath(os.path.join(image_dir, lf.imagePath))
             self.addSample(image_path, image_size, s[0], s[1], s[4])
+            self.checkAborted()
 
     def toLabelFiles(self):
         samples_per_image = self.getSamplesPerImage()
+        num_images = len(samples_per_image)
+        num_counter = 0
         for image in samples_per_image:
             samples = samples_per_image[image]
             self.toLabelFile(image, samples)
+            percent = num_counter / num_images * 10 + 90
+            self.thread.update.emit(_('Writing label files ...'), percent, -1)
+            num_counter += 1
+            self.checkAborted()
 
     def toLabelFile(self, image_path, samples):
         shapes = []
@@ -136,6 +149,7 @@ class IntermediateFormat(WorkerExecutor):
                 'points': sample.points,
                 'shape_type': sample.shape_type,
             })
+            self.checkAborted()
         local_image_path = os.path.basename(image_path)
         image_data = LabelFile.load_image_file(image_path)
         label_file_name = os.path.splitext(image_path)[0] + LabelFile.suffix

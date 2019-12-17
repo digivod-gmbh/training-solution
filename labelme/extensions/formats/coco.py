@@ -84,8 +84,10 @@ class FormatCoco(DatasetFormat):
         output_folder = self.output_folder
 
         self.intermediate = IntermediateFormat()
+        self.intermediate.setAbortable(self.abortable)
+        self.intermediate.setThread(self.thread)
         self.importToIntermediate(self.input_folder_or_file, output_folder, input_folder)
-        self.thread.update.emit(_('Writing label files ...'), 95, -1)
+        self.thread.update.emit(_('Writing label files ...'), 90, -1)
         self.intermediate.toLabelFiles()
 
     def fileNameToSplit(self, file_name):
@@ -132,17 +134,27 @@ class FormatCoco(DatasetFormat):
             image_size = image_id_to_size[image_id]
             label_name = class_id_to_name[annotation['category_id']]
             segmentations = annotation['segmentation']
+            # In case segmentation is in form [[x1, y1, x2, y2, ...]]
+            if len(segmentations) == 1 and len(segmentations[0]) > 1:
+                segmentations = annotation['segmentation'][0]
+            is_crowd = annotation['iscrowd'] == 1
             points = []
-            for i in range(0, len(segmentations)-1, 2):
-                points.append([segmentations[i], segmentations[i+1]])
-            if self.isPolygon(points):
-                if self.isBBox(points):
-                    points = self.bboxToPolygon(points)
-                self.intermediate.addSample(image_path, image_size, label_name, points, 'polygon')
-            else:
-                bbox = annotation['bbox']
-                points = [bbox[0], bbox[1], bbox[0]+bbox[2], bbox[1]+bbox[3]]
-                self.intermediate.addSample(image_path, image_size, label_name, points, 'rectangle')
+
+            try:
+                # Skip annotations with flag iscrowd
+                if not is_crowd:
+                    for i in range(0, len(segmentations)-1, 2):
+                        points.append([float(segmentations[i]), float(segmentations[i+1])])
+                    if self.isPolygon(points):
+                        if self.isBBox(points):
+                            points = self.bboxToPolygon(points)
+                        self.intermediate.addSample(image_path, image_size, label_name, points, 'polygon')
+                    else:
+                        bbox = annotation['bbox']
+                        points = [bbox[0], bbox[1], bbox[0]+bbox[2], bbox[1]+bbox[3]]
+                        self.intermediate.addSample(image_path, image_size, label_name, points, 'rectangle')
+            except Exception as e:
+                logger.error(traceback.format_exc())
 
             percentage = idx / len(data['annotations']) * 40
             self.thread.update.emit(_('Loading dataset ...'), 50 + percentage, -1)
